@@ -48,7 +48,9 @@ class View:
 
         # Initialize textures
         self.textures = Textures()
-        self.textures.load(self.renderer)
+        layer_dimensions = self.textures.load(self.renderer)
+        self.layer_width = layer_dimensions[0]
+        self.layer_height = layer_dimensions[1]
 
         # Initialize fonts
         self.small_text = sdl2.sdlttf.TTF_OpenFont(b'cour.ttf', 18)
@@ -127,8 +129,8 @@ class View:
             self.renderer, self.textures.get_layer(layer), None,
             sdl2.SDL_Rect(int(-self.camera_x),
                           int(-self.camera_y),
-                          int(5000 * self.camera_scale),
-                          int(5000 * self.camera_scale)))
+                          int(self.layer_width * self.camera_scale),
+                          int(self.layer_height * self.camera_scale)))
 
     def render_ui_text(self, controller):
         """Renders all text in text displayers from the user interface
@@ -354,6 +356,7 @@ class Textures:
 
     def load(self, renderer):
         """Creates and stores textures from file and initializes layers.
+        Returns the dimensions of the layer textures.
         :param renderer: The SDL renderer used to create the textures
         :type renderer: SDL_Renderer
         """
@@ -364,15 +367,23 @@ class Textures:
         self.textures[EntityType.BUTTON_PANEL] = self.create(
             renderer, b'textures/button_panel.png')
 
+        # Get maximum texture size
+        info = sdl2.SDL_RendererInfo()
+        sdl2.SDL_GetRendererInfo(renderer, info)
+        layer_width = int(info.max_texture_width * 0.25)
+        layer_height = int(info.max_texture_height * 0.25)
+
         # Create layers
         self.layers[0] = sdl2.SDL_CreateTexture(renderer,
                                        sdl2.SDL_PIXELFORMAT_RGBA8888,
                                        sdl2.SDL_TEXTUREACCESS_TARGET,
-                                       5000, 5000)
+                                       layer_width, layer_height)
         sdl2.SDL_SetRenderTarget(renderer, self.layers[0])
         sdl2.SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255)
         sdl2.SDL_RenderClear(renderer)
         sdl2.SDL_SetRenderTarget(renderer, None)
+
+        return (layer_width, layer_height)
 
     def unload(self):
         """Frees memory allocated by SDL for each texture and layer.
