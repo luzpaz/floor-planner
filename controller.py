@@ -6,7 +6,7 @@ from ctypes import c_int, pointer
 from entity_types import EntityType
 from view import FontSize
 from entities import Line
-from tools import Tools
+from tools import Tools, ExportCommand
 
 class Controller:
     """The class responsible for handling user input on the model."""
@@ -32,7 +32,7 @@ class Controller:
 
         self.current_layer = 0
 
-    def handle_input(self, model):
+    def handle_input(self, model, commands = []):
         """Handles user mouse and keyboard input and operates on the model.
         :param model: The app model
         :type model: Model from 'model.py'
@@ -117,6 +117,11 @@ class Controller:
                     for entity in self.selected_entities:
                         model.remove_entity(entity)
                     self.selected_entities.clear()
+
+                # Export drawing to png file
+                if keystate[sdl2.SDL_SCANCODE_LCTRL]\
+                    and keystate[sdl2.SDL_SCANCODE_E]:
+                    commands.append(ExportCommand())
 
             # If any errors occur, reset the UI state
             except:

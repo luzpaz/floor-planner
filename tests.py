@@ -2,6 +2,7 @@ import ctypes
 import sdl2
 import threading
 import unittest
+import os.path
 
 from app import App
 from controller import Controller, Camera, Text, CenterText
@@ -9,7 +10,7 @@ from ctypes import c_int, pointer
 from entities import Line
 from entity_types import EntityType
 from model import Model
-from tools import Tools
+from tools import Tools, ExportCommand
 from view import View, Textures, FontSize
 
 class LineTests(unittest.TestCase):
@@ -827,11 +828,22 @@ class CameraTests(unittest.TestCase):
 
 class ToolsTests(unittest.TestCase):
     def test_base_convert_to_unit_system(self):
+        """Ensure converting to ft and inches returns the expected values.
+        """
         self.assertEqual(Tools.convert_to_unit_system(12), '1 ft 0 in')
         self.assertEqual(Tools.convert_to_unit_system(15), '1 ft 3 in')
         self.assertEqual(Tools.convert_to_unit_system(50), '4 ft 2 in')
         self.assertEqual(Tools.convert_to_unit_system(-5), '0 ft 5 in')
         self.assertEqual(Tools.convert_to_unit_system(0, ''), '')
+
+    def test_export_command(self):
+        """Ensure the export command creates an export.png file, signaling
+        that it has successfully exported the texture.
+        """
+        app = App()
+        export = ExportCommand()
+        export.execute(app)
+        self.assertTrue(os.path.isfile('export.png'))
 
 if __name__ == '__main__':
     unittest.main()
