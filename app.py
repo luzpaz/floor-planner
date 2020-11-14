@@ -5,6 +5,9 @@ from controller import Controller
 from view import View
 
 class App:
+    """The class responsible for housing the MVC components and executing
+    the application loop."""
+
     def __init__(self):
         """Initialize the application MVC components"""
         self.model = Model()

@@ -9,9 +9,12 @@ from ctypes import c_int, pointer
 from entities import Line
 from entity_types import EntityType
 from model import Model
+from tools import Tools
 from view import View, Textures, FontSize
 
 class LineTests(unittest.TestCase):
+    """Tests for the Line (entities.py) class."""
+
     horizontal_line = Line((0, 0), (5, 0))
     vertical_line = Line((0, 0), (0, 5))
     diagonal_line = Line((0, 0), (5, 5))
@@ -101,9 +104,9 @@ class LineTests(unittest.TestCase):
         # Overlap only
         self.assertFalse(Line.intersect((0, 0), (5, 5), (0, 0), (5, 5)))
 
-
-
 class ControllerTests(unittest.TestCase):
+    """Tests for the Controller (controller.py) class."""
+
     def test_handle_text_input(self):
         """Ensure user typing (from the keyboard) is properly captured. Ensure
         only digits are accepted as input. If the user enters something that is
@@ -445,6 +448,7 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(controller.get_mouse_selection(), expected)
 
 class ModelTests(unittest.TestCase):
+    """Tests for the Model (model.py) class."""
     app = App()
 
     def test_add_exterior_wall(self):
@@ -641,6 +645,7 @@ class ModelTests(unittest.TestCase):
         ModelTests.app.model.vertices.clear()
 
 class AppTests(unittest.TestCase):
+    """Tests for the App (app.py) class."""
 
     def test_initialization(self):
         """Ensure the app constructor properly initializes the components.
@@ -656,6 +661,7 @@ class AppTests(unittest.TestCase):
         pass
 
 class ViewTests(unittest.TestCase):
+    """Tests for the View (view.py) class."""
     app = App()
 
     def test_initialization(self):
@@ -751,6 +757,7 @@ class ViewTests(unittest.TestCase):
         self.assertEqual(len(view.textures.textures), 0)
         
 class TexturesTests(unittest.TestCase):
+    """Tests for the Texture (view.py) class."""
     app = App()
 
     def test_create_and_get(self):
@@ -780,6 +787,8 @@ class TexturesTests(unittest.TestCase):
         self.assertEqual(len(TexturesTests.app.view.textures.layers), 0)
 
 class CameraTests(unittest.TestCase):
+    """Tests for the Camera (controller.py) class."""
+
     def test_up_and_down_scrolling(self):
         """Ensure user can scroll the camera up and down.
         """
@@ -815,6 +824,14 @@ class CameraTests(unittest.TestCase):
         camera.last_scrolled = -1000
         camera.scroll(keystate)
         self.assertTrue(camera.x >= 0)
+
+class ToolsTests(unittest.TestCase):
+    def test_base_convert_to_unit_system(self):
+        self.assertEqual(Tools.convert_to_unit_system(12), '1 ft 0 in')
+        self.assertEqual(Tools.convert_to_unit_system(15), '1 ft 3 in')
+        self.assertEqual(Tools.convert_to_unit_system(50), '4 ft 2 in')
+        self.assertEqual(Tools.convert_to_unit_system(-5), '0 ft 5 in')
+        self.assertEqual(Tools.convert_to_unit_system(0, ''), '')
 
 if __name__ == '__main__':
     unittest.main()

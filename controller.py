@@ -9,23 +9,35 @@ from entities import Line
 from tools import Tools
 
 class Controller:
+    """The class responsible for handling user input on the model."""
+
     def __init__(self):
+        """Initializes the user camera, UI text displayers, and UI panels."""
+        self.reset()
+
+        # User camera
         self.camera = Camera()
 
+        # User interface text displayers
         self.text_displayers = []
         self.middle_text = CenterText()
         self.text_displayers.append(self.middle_text)
 
+        # User interface panels
         self.panels = []
         self.panels.append(CenterButtonPanel())
 
+        # Interval to snap the mouse (px)
         self.snap_interval = 6
 
         self.current_layer = 0
 
-        self.reset()
-
     def handle_input(self, model):
+        """Handles user mouse and keyboard input and operates on the model.
+        :param model: The app model
+        :type model: Model from 'model.py'
+        """
+
         # Retrive keys currently being pressed
         keystate = sdl2.SDL_GetKeyboardState(None)
 
@@ -159,7 +171,7 @@ class Controller:
 
     def handle_single_entity_selection(self, model):
         """Selects a single entity that the user clicked on.
-        :param model: The game model
+        :param model: The app model
         :type model: Model from 'model.py'
         """
         mouse_x_on_camera = self.mouse_x + self.camera.x
@@ -175,7 +187,7 @@ class Controller:
     def handle_multiple_entity_selection(self, model):
         """Selects entities that collide with the user's mouse selection
         (press and drag input).
-        :param model: The game model
+        :param model: The app model
         :type model: Model from 'model.py'
         """
         self.selected_entities.clear()
@@ -268,7 +280,7 @@ class Controller:
         :type event: SDL_Event
         :param keystate: SDL keystate for checking if using is pressing SHIFT
         :type keystate: int[]
-        :param model: The game model
+        :param model: The app model
         :type model: Model from 'model.py'
         """
 

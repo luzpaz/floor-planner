@@ -6,8 +6,8 @@ from entities import Line
 from entity_types import EntityType
 
 class Model:
-    """Class responsible for managing entities and performing queries on them.
-    """
+    """The class responsible for containing entities and
+    performing queries on them."""
 
     def __init__(self):
         """Initializes entity containers.
