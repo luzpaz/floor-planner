@@ -841,8 +841,8 @@ class ToolsTests(unittest.TestCase):
         that it has successfully exported the texture.
         """
         app = App()
-        export = ExportCommand()
-        export.execute(app)
+        app.commands.append(ExportCommand())
+        app.execute_commands()
         self.assertTrue(os.path.isfile('export.png'))
 
 if __name__ == '__main__':

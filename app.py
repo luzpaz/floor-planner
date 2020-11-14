@@ -9,13 +9,15 @@ class App:
     the application loop."""
 
     def __init__(self):
-        """Initialize the application MVC components"""
+        """Initialize the application MVC components."""
         self.model = Model()
         self.view = View()
         self.controller = Controller()
 
+        # Whether the application loop is executing
         self.running = False
 
+        # Commands received from the controller
         self.commands = []
 
     def run(self):
@@ -36,6 +38,7 @@ class App:
         return True
 
     def execute_commands(self):
+        """Executes commands received from the controller."""
         for command in self.commands:
             command.execute(self)
 
