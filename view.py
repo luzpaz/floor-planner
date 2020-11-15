@@ -115,6 +115,21 @@ class View:
 
         entities_rendered = 0
 
+        # Render drawing grid
+        if controller.display_grid:
+            sdl2.SDL_SetRenderDrawColor(self.renderer, 0xB2, 0xB2, 0xB2, 0xFF);
+            for i in range(self.layer_width):
+                sdl2.SDL_RenderDrawLine(
+                    self.renderer, -controller.snap_interval,
+                    i * controller.snap_interval * 2,
+                    self.layer_width,
+                    i * controller.snap_interval * 2)
+                sdl2.SDL_RenderDrawLine(
+                    self.renderer, i * controller.snap_interval * 2,
+                    -controller.snap_interval,
+                    i * controller.snap_interval * 2,
+                    self.layer_width)
+
         # Render lines
         for line in model.lines:
             self.render_line(line, controller.current_layer)

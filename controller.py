@@ -44,6 +44,9 @@ class Controller:
         # Whether a task is blocking the application
         self.loading = False
 
+        # Whether to display the drawing grid
+        self.display_grid = False
+
         self.reset()
 
     def handle_input(self, model, screen_dimensions, commands = []):
@@ -150,6 +153,11 @@ class Controller:
                 and keystate[sdl2.SDL_SCANCODE_E]:
                 commands.append(ExportCommand())
 
+            # Display the drawing grid
+            if keystate[sdl2.SDL_SCANCODE_LCTRL]\
+                and keystate[sdl2.SDL_SCANCODE_G]:
+                self.display_grid = not self.display_grid
+                model.update_needed = True
 
             # If any errors occur, reset the UI state
             #except:
