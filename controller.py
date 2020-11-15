@@ -1,4 +1,5 @@
 import math
+import polling
 import sdl2
 import sdl2.ext
 
@@ -7,6 +8,7 @@ from entity_types import EntityType
 from view import FontSize
 from entities import Line
 from tools import Tools, ExportCommand
+from polling import PollingType
 
 class Controller:
     """The class responsible for handling user input on the model."""
@@ -27,6 +29,9 @@ class Controller:
         self.panels = []
         self.panels.append(CenterButtonPanel())
 
+        self.handlers = [None] * PollingType.NUM_TYPES
+        self.init_handlers()
+
         # Interval to snap the mouse (px)
         self.snap_interval = 6
 
@@ -41,103 +46,97 @@ class Controller:
         # Retrive keys currently being pressed
         keystate = sdl2.SDL_GetKeyboardState(None)
 
+        if self.polling != PollingType.SELECTING:
+            return self.handlers[self.polling].handle(
+                self, model, screen_dimensions, commands)
+
         for event in sdl2.ext.get_events():
             # User exited the app window
             if event.type == sdl2.SDL_QUIT:
                 return False
 
-            try:
-                # Retrive mouse location
-                self.get_mouse_location()
+            #try:
+            # Retrive mouse location
+            self.get_mouse_location()
                 
-                # Handle text input
-                self.reset_text()
-                self.handle_text_input(event)
+            # Handle text input
+            self.reset_text()
+            self.handle_text_input(event)
 
-                # Update text diplayers
-                self.update_bottom_right_text()
-                self.update_bottom_center_text(model)
+            # Update text diplayers
+            self.update_bottom_right_text()
+            self.update_bottom_center_text(model)
 
-                # Zoom camera in/out
-                if event.type == sdl2.SDL_MOUSEWHEEL:
-                    self.handle_camera_zoom(event)
+            # Zoom camera in/out
+            if event.type == sdl2.SDL_MOUSEWHEEL:
+                self.handle_camera_zoom(event)
 
-                # Resize the screen
-                if event.type == sdl2.SDL_WINDOWEVENT:
-                    model.update_needed = True
+            # Resize the screen
+            if event.type == sdl2.SDL_WINDOWEVENT:
+                model.update_needed = True
 
-                # Select a single entity
-                if event.type == sdl2.SDL_MOUSEBUTTONDOWN:
-                    self.handle_single_entity_selection(model)
+            # Select a single entity
+            if event.type == sdl2.SDL_MOUSEBUTTONDOWN:
+                self.handle_single_entity_selection(model)
                 
-                # Select multiple entities
-                self.handle_mouse_drag(event)
-                if self.mouse_selection.w != 0 and self.mouse_selection.h != 0:
-                    self.handle_multiple_entity_selection(model)
+            # Select multiple entities
+            self.handle_mouse_drag(event)
+            if self.mouse_selection.w != 0 and self.mouse_selection.h != 0:
+                self.handle_multiple_entity_selection(model)
 
-                # Panning camera
-                if keystate[sdl2.SDL_SCANCODE_LSHIFT]\
-                    or keystate[sdl2.SDL_SCANCODE_RSHIFT]:
-                    self.handle_camera_pan(event)
+            # Panning camera
+            if keystate[sdl2.SDL_SCANCODE_LSHIFT]\
+                or keystate[sdl2.SDL_SCANCODE_RSHIFT]:
+                self.handle_camera_pan(event)
 
-                # Reset the camera position and scale
-                if keystate[sdl2.SDL_SCANCODE_Z]:
-                    self.camera.x = 0
-                    self.camera.y = 0
-                    self.camera.scale = 1.0
+            # Reset the camera position and scale
+            if keystate[sdl2.SDL_SCANCODE_Z]:
+                self.camera.x = 0
+                self.camera.y = 0
+                self.camera.scale = 1.0
 
-                # Place entity
-                if not self.place_two_points:
-                    if keystate[sdl2.SDL_SCANCODE_KP_0]: # exterior wall
-                        self.reset()
-                        self.line_type = EntityType.EXTERIOR_WALL
-                        self.line_thickness = Line.EXTERIOR_WALL
-                        self.place_two_points = True
-                    elif keystate[sdl2.SDL_SCANCODE_KP_1]: # interior wall
-                        self.reset()
-                        self.line_type = EntityType.INTERIOR_WALL
-                        self.line_thickness = Line.INTERIOR_WALL
-                        self.place_two_points = True
-                    elif keystate[sdl2.SDL_SCANCODE_M]: # measurement
-                        self.reset()
-                        self.line_type = EntityType.NONE
-                        self.line_thickness = 1
-                        self.place_two_points = True
-
-                # Place line based entity
-                if self.place_two_points:
-                    self.handle_two_point_placement(event, keystate, model)
-
-                # Handle input on user interface panels
-                for panel in self.panels:
-                    if panel.mouse_over(
-                        self.mouse_x, self.mouse_y, screen_dimensions):
-
-                        if event.type == sdl2.SDL_MOUSEBUTTONDOWN:
-                            panel.handle_mouse_click(self.mouse_x, self.mouse_y,
-                                                     self.center_text)
-                        else:
-                            panel.handle_mouse_hover(self.mouse_x, self.mouse_y,
-                                                     self.center_text)
-                        
-                # Cancel any polling
-                if keystate[sdl2.SDL_SCANCODE_ESCAPE]:
+            # Place entity
+            if not self.place_two_points:
+                if keystate[sdl2.SDL_SCANCODE_KP_0]: # exterior wall
                     self.reset()
+                    self.line_type = EntityType.EXTERIOR_WALL
+                    self.line_thickness = Line.EXTERIOR_WALL
+                    self.place_two_points = True
+                elif keystate[sdl2.SDL_SCANCODE_KP_1]: # interior wall
+                    self.reset()
+                    self.line_type = EntityType.INTERIOR_WALL
+                    self.line_thickness = Line.INTERIOR_WALL
+                    self.place_two_points = True
+                elif keystate[sdl2.SDL_SCANCODE_M]: # measurement
+                    self.reset()
+                    self.line_type = EntityType.NONE
+                    self.line_thickness = 1
+                    self.place_two_points = True
 
-                # Delete selected entities
-                if keystate[sdl2.SDL_SCANCODE_DELETE]:
-                    for entity in self.selected_entities:
-                        model.remove_entity(entity)
-                    self.selected_entities.clear()
+            # Place line based entity
+            if self.place_two_points:
+                self.handle_two_point_placement(event, keystate, model)
 
-                # Export drawing to png file
-                if keystate[sdl2.SDL_SCANCODE_LCTRL]\
-                    and keystate[sdl2.SDL_SCANCODE_E]:
-                    commands.append(ExportCommand())
+            self.handle_panel_input(event, screen_dimensions)
+                        
+            # Cancel any polling
+            if keystate[sdl2.SDL_SCANCODE_ESCAPE]:
+                self.reset()
+
+            # Delete selected entities
+            if keystate[sdl2.SDL_SCANCODE_DELETE]:
+                for entity in self.selected_entities:
+                    model.remove_entity(entity)
+                self.selected_entities.clear()
+
+            # Export drawing to png file
+            if keystate[sdl2.SDL_SCANCODE_LCTRL]\
+                and keystate[sdl2.SDL_SCANCODE_E]:
+                commands.append(ExportCommand())
 
             # If any errors occur, reset the UI state
-            except:
-                self.reset()
+            #except:
+            #    self.reset()
 
         # Scroll camera using keyboard input
         self.camera.scroll(keystate)
@@ -215,6 +214,8 @@ class Controller:
     def handle_camera_pan(self, event):
         """Handles user input for panning the camera. User can pan the camera
         by holding the SHIFT key and pressing and moving the mouse.
+        :param event: SDL event for checking mouse clicks
+        :type event: SDL_Event
         """
         if not self.panning_camera and event.type == sdl2.SDL_MOUSEBUTTONDOWN:
             self.panning_camera = True
@@ -371,6 +372,27 @@ class Controller:
 
             self.reset()
 
+    def handle_panel_input(self, event, screen_dimensions):
+        """
+        """
+        for panel in self.panels:
+            polling_event = [PollingType.SELECTING]
+
+            if panel.mouse_over(
+                self.mouse_x, self.mouse_y, screen_dimensions):
+
+                if event.type == sdl2.SDL_MOUSEBUTTONDOWN:
+                    panel.handle_mouse_click(self.mouse_x, self.mouse_y,
+                                             self.center_text, polling_event)
+                else:
+                    panel.handle_mouse_hover(self.mouse_x, self.mouse_y,
+                                             self.center_text)
+
+            # Return if input on the panels created a polling event
+            if polling_event[0] != PollingType.SELECTING:
+                self.polling = polling_event[0]
+                return
+
     def get_adjusted_mouse(self, model):
         """Returns the mouse's current position, adjusted to the snap interval
         or any nearby vertex or axis to snap to
@@ -467,6 +489,8 @@ class Controller:
     def reset(self):
         """Resets the controller's state.
         """
+        self.polling = PollingType.SELECTING
+
         self.panning_camera = False
         self.pan_start_x = 0
         self.pan_start_y = 0
@@ -499,6 +523,23 @@ class Controller:
         """
         self.center_text.set_top_text('')
         self.center_text.set_bottom_text('')
+
+    def init_handlers(self):
+        """Initializes the poll event handlers.
+        """
+        self.handlers[PollingType.ERASING] = polling.Erasing()
+        self.handlers[PollingType.DRAWING] = polling.Drawing()
+        self.handlers[PollingType.MOVING] = polling.Moving()
+        self.handlers[PollingType.MEASURING] = polling.Measuring()
+        self.handlers[PollingType.ADDING_TEXT] = polling.AddingText()
+        self.handlers[PollingType.PANNING] = polling.Panning()
+        self.handlers[PollingType.ZOOMING] = polling.Zooming()
+        self.handlers[PollingType.LAYERS] = polling.Layers()
+        self.handlers[PollingType.SETTINGS] = polling.Settings()
+        self.handlers[PollingType.UNDOING] = polling.Undoing()
+        self.handlers[PollingType.REDOING] = polling.Redoing()
+        self.handlers[PollingType.SAVING] = polling.Saving()
+        self.handlers[PollingType.EXPORTING] = polling.Exporting()
 
 class Camera:
     # Regular camera scrolling speed (in/s)
@@ -692,7 +733,7 @@ class Panel:
             self.button_over = None
         return False
 
-    def handle_mouse_click(self, mouse_x, mouse_y, center_text):
+    def handle_mouse_click(self, mouse_x, mouse_y, center_text, polling_event):
         """Abstract method for the logic that occurs if the user presses the
         mouse on this panel.
         :param mouse_x: Mouse x-position
@@ -715,21 +756,7 @@ class CenterButtonPanel(Panel):
     which contains the following buttons.
     """
 
-    SELECT = 0
-    ERASE = 1
-    DRAW = 2
-    MOVE = 3
-    MEASURE = 4
-    ADD_TEXT = 5
-    PAN = 6
-    ZOOM = 7
-    LAYERS = 8
-    SETTINGS = 9
-    UNDO = 10
-    REDO = 11
-    SAVE = 12
-
-    NUM_BUTTONS = 13
+    NUM_BUTTONS = 14
 
     RELATIVE_X = 0.0
     RELATIVE_Y = 0.0
@@ -737,7 +764,7 @@ class CenterButtonPanel(Panel):
     RELATIVE_HEIGHT = 0.05
 
     BUTTON_RELATIVE_SIZE = 0.03
-    BUTTONS_TOTAL_WIDTH = 0.45
+    BUTTONS_TOTAL_WIDTH = 0.50
     BUTTONS_SIDE_BUFFER = 0.3
 
     def get_relative_x(self):
@@ -821,6 +848,11 @@ class CenterButtonPanel(Panel):
             CenterButtonPanel.RELATIVE_Y + 0.01,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE))
+        self.buttons.add(Button(len(self.buttons), EntityType.EXPORT_BUTTON,
+            self.get_relative_x(),
+            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE))
 
         self.button_labels =\
             [
@@ -836,11 +868,12 @@ class CenterButtonPanel(Panel):
                 'Settings',
                 'Undo',
                 'Redo',
-                'Save'
+                'Save',
+                'Export',
             ]
 
-    def handle_mouse_click(self, mouse_x, mouse_y, center_text):
-        pass
+    def handle_mouse_click(self, mouse_x, mouse_y, center_text, polling_event):
+        polling_event[0] = self.button_over
 
     def handle_mouse_hover(self, mouse_x, mouse_y, center_text):
         center_text.set_bottom_text(self.button_labels[self.button_over])

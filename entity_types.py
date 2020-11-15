@@ -19,4 +19,5 @@ EntityType = Enum(
     SETTINGS_BUTTON\
     UNDO_BUTTON\
     REDO_BUTTON\
-    SAVE_BUTTON')
+    SAVE_BUTTON\
+    EXPORT_BUTTON')
