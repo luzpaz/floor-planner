@@ -20,8 +20,8 @@ class Controller:
 
         # User interface text displayers
         self.text_displayers = []
-        self.middle_text = CenterText()
-        self.text_displayers.append(self.middle_text)
+        self.center_text = CenterText()
+        self.text_displayers.append(self.center_text)
 
         # User interface panels
         self.panels = []
@@ -32,7 +32,7 @@ class Controller:
 
         self.current_layer = 0
 
-    def handle_input(self, model, commands = []):
+    def handle_input(self, model, screen_dimensions, commands = []):
         """Handles user mouse and keyboard input and operates on the model.
         :param model: The app model
         :type model: Model from 'model.py'
@@ -56,7 +56,7 @@ class Controller:
 
                 # Update text diplayers
                 self.update_bottom_right_text()
-                self.update_bottom_middle_text(model)
+                self.update_bottom_center_text(model)
 
                 # Zoom camera in/out
                 if event.type == sdl2.SDL_MOUSEWHEEL:
@@ -108,6 +108,18 @@ class Controller:
                 if self.place_two_points:
                     self.handle_two_point_placement(event, keystate, model)
 
+                # Handle input on user interface panels
+                for panel in self.panels:
+                    if panel.mouse_over(
+                        self.mouse_x, self.mouse_y, screen_dimensions):
+
+                        if event.type == sdl2.SDL_MOUSEBUTTONDOWN:
+                            panel.handle_mouse_click(self.mouse_x, self.mouse_y,
+                                                     self.center_text)
+                        else:
+                            panel.handle_mouse_hover(self.mouse_x, self.mouse_y,
+                                                     self.center_text)
+                        
                 # Cancel any polling
                 if keystate[sdl2.SDL_SCANCODE_ESCAPE]:
                     self.reset()
@@ -159,20 +171,20 @@ class Controller:
         adjusted_mouse_x = (self.mouse_x + self.camera.x) / self.camera.scale
         adjusted_mouse_y = (self.mouse_y + self.camera.y) / self.camera.scale
 
-        self.middle_text.set_right_text('X: {} Y: {} Zoom: {}'.format(
+        self.center_text.set_right_text('X: {} Y: {} Zoom: {}'.format(
             int(adjusted_mouse_x), int(adjusted_mouse_y),
             round(self.camera.scale, 10)))
 
-    def update_bottom_middle_text(self, model):
+    def update_bottom_center_text(self, model):
         """Updates text displayed on the bottom middle of the screen to
         the entity type of the entity the user has their mouse hovered over
         """
         entity = model.get_entity_on_location(self.get_adjusted_mouse(model))
 
         if entity == None:
-            self.middle_text.set_bottom_text()
+            self.center_text.set_bottom_text()
         else:
-            self.middle_text.set_bottom_text(str(entity))
+            self.center_text.set_bottom_text(str(entity))
 
     def handle_single_entity_selection(self, model):
         """Selects a single entity that the user clicked on.
@@ -232,13 +244,13 @@ class Controller:
         """
         if event.wheel.y > 0: # zooming in
             self.camera.scale += 0.05
-            self.camera.x += 1920 * 0.025
-            self.camera.y += 1080 * 0.025
+            self.camera.x += 1930 * 0.030
+            self.camera.y += 1080 * 0.030
 
         elif event.wheel.y < 0: # zooming out
             self.camera.scale -= 0.05
-            self.camera.x -= 1920 * 0.025
-            self.camera.y -= 1080 * 0.025
+            self.camera.x -= 1930 * 0.030
+            self.camera.y -= 1080 * 0.030
 
         # Keep camera scroll above 0
         if self.camera.scale <= 0.0:
@@ -331,11 +343,11 @@ class Controller:
                 length = math.sqrt(
                     (self.first_point_x - adjusted_mouse_x) ** 2
                     +  (self.first_point_y - adjusted_mouse_y) ** 2)
-            self.middle_text.set_bottom_text(
+            self.center_text.set_bottom_text(
                 "Length: " + Tools.convert_to_unit_system(length))
 
         # Display hint text
-        self.middle_text.set_top_text(
+        self.center_text.set_top_text(
             'Select starting and ending point. '
             + 'Press ESC to cancel placement. Hold SHIFT to align line to axis')
 
@@ -485,15 +497,15 @@ class Controller:
     def reset_text(self):
         """Resets the text being displayed on the user interface.
         """
-        self.middle_text.set_top_text('')
-        self.middle_text.set_bottom_text('')
+        self.center_text.set_top_text('')
+        self.center_text.set_bottom_text('')
 
 class Camera:
     # Regular camera scrolling speed (in/s)
     REGULAR_SCROLL_SPEED = 500
 
     # Fast camera scrolling (in/s)
-    FAST_SCROLL_SPEED = 2000
+    FAST_SCROLL_SPEED = 3000
 
     def __init__(self):
         """Initializes the camera class."""
@@ -614,12 +626,40 @@ class CenterText(TextDisplayer):
 class Button:
     """Button that the user can click in the application window."""
 
-    def __init__(self, texture, relative_x = 0, relative_y = 0,
+    def __init__(self, id, texture, relative_x = 0, relative_y = 0,
                  relative_width = 0, relative_height = 0):
         """Initializes the button."""
+        self.id = id
         self.texture = texture
-        self.location = (relative_x, relative_y,
-                         relative_width, relative_height)
+        self.relative_x = relative_x
+        self.relative_y = relative_y
+        self.relative_width = relative_width
+        self.relative_height = relative_height
+
+    def mouse_over(self, mouse_x, mouse_y, screen_dimensions):
+        """Returns true if the mouse positions collide with the button.
+        :param mouse_x: Mouse x-position
+        :param mouse_y: Mouse y-position
+        :type mouse_x, mouse_y: int
+        :param screen_dimensions: Screen width and height
+        :type screen_dimensions: tuple(int, int)
+        """
+
+        # Screen dimensions
+        screen_width = screen_dimensions[0]
+        screen_height = screen_dimensions[1]
+
+        location = sdl2.SDL_Rect(
+            int(self.relative_x * screen_width),
+            int(self.relative_y * screen_height),
+            int(self.relative_width * screen_width),
+            int(self.relative_height * screen_height))
+
+        if mouse_x > location.x + location.w: return False
+        if mouse_x < location.x: return False
+        if mouse_y > location.y + location.h: return False
+        if mouse_y < location.y: return False
+        return True
 
 class Panel:
     """Base class for a user interface button panel."""
@@ -633,9 +673,12 @@ class Panel:
         self.relative_width = relative_width
         self.relative_height = relative_height
 
+        # The button the user currently has their mouse over
+        self.button_over = None
+
         self.buttons = set()
 
-    def mouse_over(self, mouse_x, mouse_y):
+    def mouse_over(self, mouse_x, mouse_y, screen_dimensions):
         """Returns true if mouse positions collide with any of the buttons
         in the panel.
         :param mouse_x: Mouse x-position
@@ -643,26 +686,13 @@ class Panel:
         :type mouse_x, mouse_y: int
         """
         for button in self.buttons:
-            if mouse_over(mouse_x, mouse_y, button.location):
+            if button.mouse_over(mouse_x, mouse_y, screen_dimensions):
+                self.button_over = button.id
                 return True
+            self.button_over = None
         return False
 
-    def mouse_over_on_button(mouse_x, mouse_y, location):
-        """Returns true if the mouse positions collide with the button
-         at the location.
-        :param mouse_x: Mouse x-position
-        :param mouse_y: Mouse y-position
-        :type mouse_x, mouse_y: int
-        :param location: Location to check mouse collision against
-        :type location: SDL_Rect
-        """
-        if mouse_x > location.x + location.w: return False
-        if mouse_x < location.x: return False
-        if mouse_y > location.y + location.h: return False
-        if mouse_y < location.y: return False
-        return True
-
-    def handle_mouse_click(self, mouse_x, mouse_y):
+    def handle_mouse_click(self, mouse_x, mouse_y, center_text):
         """Abstract method for the logic that occurs if the user presses the
         mouse on this panel.
         :param mouse_x: Mouse x-position
@@ -671,7 +701,7 @@ class Panel:
         """
         pass
 
-    def handle_mouse_hover(self, mouse_x, mouse_y):
+    def handle_mouse_hover(self, mouse_x, mouse_y, center_text):
         """Abstract method for the logic that occurs if the user hovers their
         mouse on this panel.
         :param mouse_x: Mouse x-position
@@ -686,7 +716,7 @@ class CenterButtonPanel(Panel):
     """
 
     SELECT = 0
-    DELETE = 1
+    ERASE = 1
     DRAW = 2
     MOVE = 3
     MEASURE = 4
@@ -699,10 +729,23 @@ class CenterButtonPanel(Panel):
     REDO = 11
     SAVE = 12
 
+    NUM_BUTTONS = 13
+
     RELATIVE_X = 0.0
     RELATIVE_Y = 0.0
     RELATIVE_WIDTH = 1.0
     RELATIVE_HEIGHT = 0.05
+
+    BUTTON_RELATIVE_SIZE = 0.03
+    BUTTONS_TOTAL_WIDTH = 0.45
+    BUTTONS_SIDE_BUFFER = 0.3
+
+    def get_relative_x(self):
+        """Returns the relative x-position of the button based on the
+        number of buttons already added."""
+        return len(self.buttons) / CenterButtonPanel.NUM_BUTTONS\
+            * CenterButtonPanel.BUTTONS_TOTAL_WIDTH\
+            + CenterButtonPanel.BUTTONS_SIDE_BUFFER;
 
     def __init__(self):
         """Initializes the buttons."""
@@ -712,16 +755,92 @@ class CenterButtonPanel(Panel):
                         CenterButtonPanel.RELATIVE_WIDTH,
                         CenterButtonPanel.RELATIVE_HEIGHT)
 
-        self.buttons.add(Button(EntityType.SELECT_BUTTON))
-        self.buttons.add(Button(EntityType.DELETE_BUTTON))
-        self.buttons.add(Button(EntityType.DRAW_BUTTON))
-        self.buttons.add(Button(EntityType.MOVE_BUTTON))
-        self.buttons.add(Button(EntityType.MEASURE_BUTTON))
-        self.buttons.add(Button(EntityType.ADD_TEXT_BUTTON))
-        self.buttons.add(Button(EntityType.PAN_BUTTON))
-        self.buttons.add(Button(EntityType.ZOOM_BUTTON))
-        self.buttons.add(Button(EntityType.LAYERS_BUTTON))
-        self.buttons.add(Button(EntityType.SETTINGS_BUTTON))
-        self.buttons.add(Button(EntityType.UNDO_BUTTON))
-        self.buttons.add(Button(EntityType.REDO_BUTTON))
-        self.buttons.add(Button(EntityType.SAVE_BUTTON))
+        # TO DO: find a way to put these in a loop:
+        self.buttons.add(Button(len(self.buttons), EntityType.SELECT_BUTTON,
+            self.get_relative_x(),
+            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE))
+        self.buttons.add(Button(len(self.buttons), EntityType.ERASE_BUTTON,
+            self.get_relative_x(),
+            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE))
+        self.buttons.add(Button(len(self.buttons), EntityType.DRAW_BUTTON,
+            self.get_relative_x(),
+            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE))
+        self.buttons.add(Button(len(self.buttons), EntityType.MOVE_BUTTON,
+            self.get_relative_x(),
+            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE))
+        self.buttons.add(Button(len(self.buttons), EntityType.MEASURE_BUTTON,
+            self.get_relative_x(),
+            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE))
+        self.buttons.add(Button(len(self.buttons), EntityType.ADD_TEXT_BUTTON,
+            self.get_relative_x(),
+            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE))
+        self.buttons.add(Button(len(self.buttons), EntityType.PAN_BUTTON,
+            self.get_relative_x(),
+            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE))
+        self.buttons.add(Button(len(self.buttons), EntityType.ZOOM_BUTTON,
+            self.get_relative_x(),
+            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE))
+        self.buttons.add(Button(len(self.buttons), EntityType.LAYERS_BUTTON,
+            self.get_relative_x(),
+            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE))
+        self.buttons.add(Button(len(self.buttons), EntityType.SETTINGS_BUTTON,
+            self.get_relative_x(),
+            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE))
+        self.buttons.add(Button(len(self.buttons), EntityType.UNDO_BUTTON,
+            self.get_relative_x(),
+            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE))
+        self.buttons.add(Button(len(self.buttons), EntityType.REDO_BUTTON,
+            self.get_relative_x(),
+            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE))
+        self.buttons.add(Button(len(self.buttons), EntityType.SAVE_BUTTON,
+            self.get_relative_x(),
+            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE))
+
+        self.button_labels =\
+            [
+                'Select',
+                'Erase',
+                'Draw',
+                'Move',
+                'Measure',
+                'Add Text',
+                'Pan',
+                'Zoom',
+                'Layers',
+                'Settings',
+                'Undo',
+                'Redo',
+                'Save'
+            ]
+
+    def handle_mouse_click(self, mouse_x, mouse_y, center_text):
+        pass
+
+    def handle_mouse_hover(self, mouse_x, mouse_y, center_text):
+        center_text.set_bottom_text(self.button_labels[self.button_over])

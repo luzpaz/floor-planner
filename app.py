@@ -24,17 +24,15 @@ class App:
         """Begins execution of application loop, which handles user input and
         renders entities onto the window. Returns true if closed with no error.
         """
-        
         self.running = True
 
         while self.running:
             self.running = self.controller.handle_input(
-                self.model, self.commands)
+                self.model, self.view.get_screen_dimensions(), self.commands)
             self.view.update(self.model, self.controller)
             self.execute_commands()
 
         self.view.exit()
-
         return True
 
     def execute_commands(self):
@@ -43,7 +41,6 @@ class App:
             command.execute(self)
 
         self.commands.clear()
-
 
 if __name__ == '__main__':
     app = App()

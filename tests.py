@@ -5,7 +5,7 @@ import unittest
 import os.path
 
 from app import App
-from controller import Controller, Camera, Text, CenterText
+from controller import Controller, Camera, Text, CenterText, Button, Panel
 from ctypes import c_int, pointer
 from entities import Line
 from entity_types import EntityType
@@ -138,7 +138,7 @@ class ControllerTests(unittest.TestCase):
         controller.mouse_y = 0
 
         controller.update_bottom_right_text()
-        self.assertEqual(controller.middle_text.text[
+        self.assertEqual(controller.center_text.text[
             CenterText.BOTTOM_RIGHT_TEXT].text, 'X: 500 Y: 0 Zoom: 1.0')
 
     def test_update_bottom_text(self):
@@ -149,8 +149,8 @@ class ControllerTests(unittest.TestCase):
         line = app.model.add_line(EntityType.EXTERIOR_WALL, (0, 0), (12, 0))
         app.controller.mouse_x = 1
         app.controller.mouse_y = 0
-        app.controller.update_bottom_middle_text(app.model)
-        self.assertEqual(app.controller.middle_text.text[
+        app.controller.update_bottom_center_text(app.model)
+        self.assertEqual(app.controller.center_text.text[
             CenterText.BOTTOM_CENTER_TEXT].text, 'Exterior Wall (1 ft 0 in)')
 
     def test_single_entity_selection(self):
@@ -287,7 +287,7 @@ class ControllerTests(unittest.TestCase):
         interactive testing.
         """
         app = App()
-        self.assertTrue(app.controller.handle_input(app.model))
+        self.assertTrue(app.controller.handle_input(app.model, (1920, 1080)))
 
     def test_two_point_placement_horizontal(self):
         """Ensure user holding Shift and creating a line with less than a 45
@@ -389,9 +389,9 @@ class ControllerTests(unittest.TestCase):
 
         expected_message = "Length: 10 ft 0 in"
         app.controller.handle_two_point_placement(event, keystate, app.model)
-        self.assertEqual(app.controller.middle_text.text[
+        self.assertEqual(app.controller.center_text.text[
             CenterText.BOTTOM_CENTER_TEXT].text, expected_message)
-        self.assertTrue(app.controller.middle_text.text[
+        self.assertTrue(app.controller.center_text.text[
             CenterText.TOP_CENTER_TEXT].text != '')
 
     def test_base_adjusted_mouse(self):
@@ -825,6 +825,19 @@ class CameraTests(unittest.TestCase):
         camera.last_scrolled = -1000
         camera.scroll(keystate)
         self.assertTrue(camera.x >= 0)
+
+class PanelTests(unittest.TestCase):
+    def test_mouse_over(self):
+        """Ensure that mouse_over properly detects the user placing their
+        mouse over a button.
+        """
+        panel = Panel(1)
+        panel.buttons.add(Button(1, 1, 0, 0, 0.1, 0.1))
+        panel.buttons.add(Button(2, 1, 0.2, 0, 0.1, 0.1))
+
+        self.assertFalse(panel.mouse_over(500, 500, [1920, 1080]))
+        self.assertTrue(panel.mouse_over(0, 0, [1920, 1080]))
+        self.assertEqual(panel.button_over, 1)
 
 class ToolsTests(unittest.TestCase):
     def test_base_convert_to_unit_system(self):

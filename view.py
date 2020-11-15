@@ -212,10 +212,13 @@ class View:
         for panel in controller.panels:
             self.render_panel(panel)
 
+            for button in panel.buttons:
+                self.render_button(button)
+
     def render_panel(self, panel):
         """Renders the panel onto the screen.
         :param panel: The panel to render
-        :type panel: IPanel from 'controller.py'
+        :type panel: Panel from 'controller.py'
         """
         location = sdl2.SDL_Rect(
             int(panel.relative_x * self.screen_width),
@@ -224,6 +227,32 @@ class View:
             int(panel.relative_height * self.screen_height))
         sdl2.SDL_RenderCopy(
             self.renderer, self.textures.get(panel.texture), None, location)
+        
+    def render_button(self, button):
+        """Renders the buttons onto the screen.
+        :param button: The button to render
+        :type button: Button from 'controller.py'
+        """
+        location = sdl2.SDL_Rect(
+            int(button.relative_x * self.screen_width),
+            int(button.relative_y * self.screen_height),
+            int(button.relative_width * self.screen_width),
+            int(button.relative_height * self.screen_height))
+        sdl2.SDL_RenderCopy(
+            self.renderer, self.textures.get(EntityType.BUTTON_BACKGROUND),
+            None, location)
+        
+        # Change render location to a square
+        previous_width = location.w
+        location.x += int(previous_width / 4)
+
+        if location.w < location.h:
+            location.h = location.w
+        elif location.h < location.w:
+            location.w = location.h
+
+        sdl2.SDL_RenderCopy(
+            self.renderer, self.textures.get(button.texture), None, location)
 
     def render_two_point_placement(self, controller, model):
         """Renders current line placement by the user and indicators
@@ -312,6 +341,10 @@ class View:
         awareness = ctypes.c_int()
         error = ctypes.windll.shcore.SetProcessDpiAwareness(2)
 
+    def get_screen_dimensions(self):
+        """Returns the screen dimensions as a tuple."""
+        return (self.screen_width, self.screen_height)
+
     def exit(self):
         """Exits SDL subsystems, unloads textures, and frees memory allocated
         by SDL for the window and renderer.
@@ -366,6 +399,35 @@ class Textures:
         # Create textures...
         self.textures[EntityType.BUTTON_PANEL] = self.create(
             renderer, b'textures/button_panel.png')
+        
+        self.textures[EntityType.BUTTON_BACKGROUND] = self.create(
+            renderer, b'textures/button.png')
+        self.textures[EntityType.SELECT_BUTTON] = self.create(
+            renderer, b'textures/select_button.png')
+        self.textures[EntityType.ERASE_BUTTON] = self.create(
+            renderer, b'textures/erase_button.png')
+        self.textures[EntityType.DRAW_BUTTON] = self.create(
+            renderer, b'textures/draw_button.png')
+        self.textures[EntityType.MOVE_BUTTON] = self.create(
+            renderer, b'textures/move_button.png')
+        self.textures[EntityType.MEASURE_BUTTON] = self.create(
+            renderer, b'textures/measure_button.png')
+        self.textures[EntityType.ADD_TEXT_BUTTON] = self.create(
+            renderer, b'textures/add_text_button.png')
+        self.textures[EntityType.PAN_BUTTON] = self.create(
+            renderer, b'textures/pan_button.png')
+        self.textures[EntityType.ZOOM_BUTTON] = self.create(
+            renderer, b'textures/zoom_button.png')
+        self.textures[EntityType.LAYERS_BUTTON] = self.create(
+            renderer, b'textures/layers_button.png')
+        self.textures[EntityType.SETTINGS_BUTTON] = self.create(
+            renderer, b'textures/settings_button.png')
+        self.textures[EntityType.UNDO_BUTTON] = self.create(
+            renderer, b'textures/undo_button.png')
+        self.textures[EntityType.REDO_BUTTON] = self.create(
+            renderer, b'textures/redo_button.png')
+        self.textures[EntityType.SAVE_BUTTON] = self.create(
+            renderer, b'textures/save_button.png')
 
         # Get maximum texture size
         info = sdl2.SDL_RendererInfo()
