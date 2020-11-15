@@ -238,7 +238,13 @@ class View:
             int(button.relative_y * self.screen_height),
             int(button.relative_width * self.screen_width),
             int(button.relative_height * self.screen_height))
-        sdl2.SDL_RenderCopy(
+
+        if button.selected:
+            sdl2.SDL_RenderCopy(
+            self.renderer, self.textures.get(EntityType.SELECTED_BUTTON),
+            None, location)
+        else:
+            sdl2.SDL_RenderCopy(
             self.renderer, self.textures.get(EntityType.BUTTON_BACKGROUND),
             None, location)
         
@@ -402,6 +408,8 @@ class Textures:
         
         self.textures[EntityType.BUTTON_BACKGROUND] = self.create(
             renderer, b'textures/button.png')
+        self.textures[EntityType.SELECTED_BUTTON] = self.create(
+            renderer, b'textures/button_alternate.png')
         self.textures[EntityType.SELECT_BUTTON] = self.create(
             renderer, b'textures/select_button.png')
         self.textures[EntityType.ERASE_BUTTON] = self.create(
