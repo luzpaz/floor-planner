@@ -31,6 +31,7 @@ class Controller:
         # User interface panels
         self.panels = []
         self.panels.append(CenterButtonPanel())
+        self.panels.append(LeftButtonPanel())
 
         # Polling event handlers
         self.handlers = [None] * PollingType.NUM_TYPES
@@ -102,13 +103,6 @@ class Controller:
                 or keystate[sdl2.SDL_SCANCODE_RSHIFT]:
                 self.handle_camera_pan(event)
 
-            # Reset the camera position and scale
-            if keystate[sdl2.SDL_SCANCODE_LCTRL]\
-                and keystate[sdl2.SDL_SCANCODE_R]:
-                self.camera.x = 0
-                self.camera.y = 0
-                self.camera.scale = 1.0
-
             # Place entity hotkeys
             if not self.place_two_points:
                 if keystate[sdl2.SDL_SCANCODE_KP_0]: # exterior wall
@@ -121,7 +115,8 @@ class Controller:
                     self.line_type = EntityType.INTERIOR_WALL
                     self.line_thickness = Line.INTERIOR_WALL
                     self.place_two_points = True
-                elif keystate[sdl2.SDL_SCANCODE_M]: # measurement
+                elif keystate[sdl2.SDL_SCANCODE_LCTRL]\
+                    and keystate[sdl2.SDL_SCANCODE_M]: # measurement
                     self.reset()
                     self.line_type = EntityType.NONE
                     self.line_thickness = Line.REGULAR_LINE
@@ -133,6 +128,10 @@ class Controller:
 
             self.handle_panel_input(event, screen_dimensions)
                      
+            # User pressed the exit button
+            if self.polling == PollingType.EXITING:
+                return False
+
             # Cancel any polling
             if keystate[sdl2.SDL_SCANCODE_ESCAPE]:
                 self.reset()
@@ -141,6 +140,8 @@ class Controller:
                 self.handlers[self.polling].handle(
                     self, model, keystate, event,
                     screen_dimensions, commands)
+
+            # Hotkeys for polling:
 
             # Delete selected entities
             if keystate[sdl2.SDL_SCANCODE_DELETE]:
@@ -151,20 +152,40 @@ class Controller:
             # Export drawing to png file
             if keystate[sdl2.SDL_SCANCODE_LCTRL]\
                 and keystate[sdl2.SDL_SCANCODE_E]:
-                commands.append(ExportCommand())
+                self.polling = PollingType.EXPORTING
 
             # Display the drawing grid
             if keystate[sdl2.SDL_SCANCODE_LCTRL]\
                 and keystate[sdl2.SDL_SCANCODE_G]:
-                self.display_grid = not self.display_grid
-                model.update_needed = True
+                self.polling = PollingType.DISPLAY_GRID
+
+            # Drawing a regular line
+            if keystate[sdl2.SDL_SCANCODE_LCTRL]\
+                and keystate[sdl2.SDL_SCANCODE_D]:
+                self.polling = PollingType.DRAWING
+
+            # Adding user text
+            if keystate[sdl2.SDL_SCANCODE_LCTRL]\
+                and keystate[sdl2.SDL_SCANCODE_T]:
+                self.polling = PollingType.ADDING_TEXT
+
+            # Reset the camera position and scale
+            if keystate[sdl2.SDL_SCANCODE_LCTRL]\
+                and keystate[sdl2.SDL_SCANCODE_R]:
+                self.camera.x = 0
+                self.camera.y = 0
+                self.camera.scale = 1.0
 
             # If any errors occur, reset the UI state
             #except:
                 #self.reset()
 
         # Scroll camera using keyboard input
-        self.camera.scroll(keystate)
+        # Do not scroll the camera if the user is typing text or if they
+        # are pressing the CTRL key
+        if self.polling != PollingType.ADDING_TEXT\
+            and not keystate[sdl2.SDL_SCANCODE_LCTRL]:   
+            self.camera.scroll(keystate)
 
         # Remove expired user interface messages and adjust positioning
         self.message_stack.update()
@@ -846,22 +867,26 @@ class Panel:
         return False
 
     def handle_mouse_click(self, mouse_x, mouse_y, center_text, polling_event):
-        """Abstract method for the logic that occurs if the user presses the
-        mouse on this panel.
+        """Sets the selected button and adds a polling event.
         :param mouse_x: Mouse x-position
         :param mouse_y: Mouse y-position
         :type mouse_x, mouse_y: int
         """
-        pass
+        for button in self.buttons:
+            if button.id == self.button_over:
+                button.selected = True
+            else:
+                button.selected = False
+
+        polling_event.append(self.button_over)
 
     def handle_mouse_hover(self, mouse_x, mouse_y, center_text):
-        """Abstract method for the logic that occurs if the user hovers their
-        mouse on this panel.
+        """Sets the center bottom text to the button the user is hovering over.
         :param mouse_x: Mouse x-position
         :param mouse_y: Mouse y-position
         :type mouse_x, mouse_y: int
         """
-        pass
+        center_text.set_bottom_text(self.button_labels[self.button_over])
 
     def reset(self):
         """Resets the selected attribute of all buttons."""
@@ -882,14 +907,15 @@ class CenterButtonPanel(Panel):
 
     BUTTON_RELATIVE_SIZE = 0.03
     BUTTONS_TOTAL_WIDTH = 0.50
-    BUTTONS_SIDE_BUFFER = 0.3
+    BUTTONS_X_BUFFER = (RELATIVE_WIDTH - BUTTONS_TOTAL_WIDTH) / 2
+    BUTTONS_Y_BUFFER = 0.01
 
     def get_relative_x(self):
         """Returns the relative x-position of the button based on the
         number of buttons already added."""
         return len(self.buttons) / CenterButtonPanel.NUM_BUTTONS\
             * CenterButtonPanel.BUTTONS_TOTAL_WIDTH\
-            + CenterButtonPanel.BUTTONS_SIDE_BUFFER;
+            + CenterButtonPanel.BUTTONS_X_BUFFER;
 
     def __init__(self):
         """Initializes the buttons."""
@@ -902,85 +928,90 @@ class CenterButtonPanel(Panel):
         # TO DO: find a way to put these in a loop:
         self.buttons.add(Button(len(self.buttons), EntityType.SELECT_BUTTON,
             self.get_relative_x(),
-            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE))
         self.buttons.add(Button(len(self.buttons), EntityType.ERASE_BUTTON,
             self.get_relative_x(),
-            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE))
         self.buttons.add(Button(len(self.buttons), EntityType.DRAW_BUTTON,
             self.get_relative_x(),
-            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE))
         self.buttons.add(Button(len(self.buttons), EntityType.MOVE_BUTTON,
             self.get_relative_x(),
-            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE))
         self.buttons.add(Button(len(self.buttons), EntityType.MEASURE_BUTTON,
             self.get_relative_x(),
-            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE))
         self.buttons.add(Button(len(self.buttons), EntityType.ADD_TEXT_BUTTON,
             self.get_relative_x(),
-            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE))
         self.buttons.add(Button(len(self.buttons), EntityType.PAN_BUTTON,
             self.get_relative_x(),
-            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE))
         self.buttons.add(Button(len(self.buttons), EntityType.ZOOM_BUTTON,
             self.get_relative_x(),
-            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE))
         self.buttons.add(Button(len(self.buttons), EntityType.GRID_BUTTON,
             self.get_relative_x(),
-            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE))
         self.buttons.add(Button(len(self.buttons), EntityType.LAYERS_BUTTON,
             self.get_relative_x(),
-            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE))
         self.buttons.add(Button(len(self.buttons), EntityType.SETTINGS_BUTTON,
             self.get_relative_x(),
-            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE))
         self.buttons.add(Button(len(self.buttons), EntityType.UNDO_BUTTON,
             self.get_relative_x(),
-            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE))
         self.buttons.add(Button(len(self.buttons), EntityType.REDO_BUTTON,
             self.get_relative_x(),
-            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE))
         self.buttons.add(Button(len(self.buttons), EntityType.SAVE_BUTTON,
             self.get_relative_x(),
-            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE))
         self.buttons.add(Button(len(self.buttons), EntityType.EXPORT_BUTTON,
             self.get_relative_x(),
-            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE))
+        self.buttons.add(Button(len(self.buttons), EntityType.EXIT_BUTTON,
+            self.get_relative_x(),
+            CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE))
 
         self.button_labels =\
             [
                 'Select',
-                'Erase',
-                'Draw',
+                'Eraser',
+                'Draw Line',
                 'Move',
                 'Measure',
                 'Add Text',
@@ -993,16 +1024,69 @@ class CenterButtonPanel(Panel):
                 'Redo',
                 'Save',
                 'Export',
+                'Exit',
             ]
 
-    def handle_mouse_click(self, mouse_x, mouse_y, center_text, polling_event):
-        for button in self.buttons:
-            if button.id == self.button_over:
-                button.selected = True
-            else:
-                button.selected = False
+class LeftButtonPanel(Panel):
+    NUM_BUTTONS = 4
 
-        polling_event.append(self.button_over)
+    BUTTON_RELATIVE_SIZE = 0.03
+    BUTTONS_TOTAL_HEIGHT = 0.14
+    BUTTONS_X_BUFFER = 0.005
+    BUTTONS_Y_BUFFER = 0.01
 
-    def handle_mouse_hover(self, mouse_x, mouse_y, center_text):
-        center_text.set_bottom_text(self.button_labels[self.button_over])
+    RELATIVE_X = 0.0
+    RELATIVE_WIDTH = 0.04
+    RELATIVE_HEIGHT = BUTTONS_TOTAL_HEIGHT + 1.5 * BUTTONS_Y_BUFFER
+    RELATIVE_Y = (1.0 - RELATIVE_HEIGHT) / 2
+
+    BUTTONS_Y_BUFFER = RELATIVE_Y + BUTTONS_Y_BUFFER
+
+    def get_relative_y(self):
+        """Returns the relative y-position of the button based on the
+        number of buttons already added."""
+        return len(self.buttons) / LeftButtonPanel.NUM_BUTTONS\
+            * LeftButtonPanel.BUTTONS_TOTAL_HEIGHT\
+            + LeftButtonPanel.BUTTONS_Y_BUFFER
+
+    def __init__(self):
+        """Initializes the buttons."""
+        Panel.__init__(self, EntityType.BUTTON_PANEL,
+                        LeftButtonPanel.RELATIVE_X,
+                        LeftButtonPanel.RELATIVE_Y,
+                        LeftButtonPanel.RELATIVE_WIDTH,
+                        LeftButtonPanel.RELATIVE_HEIGHT)
+
+        self.buttons.add(Button(len(self.buttons),
+            EntityType.EXTERIOR_WALL_BUTTON,
+            LeftButtonPanel.RELATIVE_X + LeftButtonPanel.BUTTONS_X_BUFFER,
+            self.get_relative_y(),
+            LeftButtonPanel.BUTTON_RELATIVE_SIZE,
+            LeftButtonPanel.BUTTON_RELATIVE_SIZE))
+        self.buttons.add(Button(len(self.buttons),
+            EntityType.INTERIOR_WALL_BUTTON,
+            LeftButtonPanel.RELATIVE_X + LeftButtonPanel.BUTTONS_X_BUFFER,
+            self.get_relative_y(),
+            LeftButtonPanel.BUTTON_RELATIVE_SIZE,
+            LeftButtonPanel.BUTTON_RELATIVE_SIZE))
+        self.buttons.add(Button(len(self.buttons),
+            EntityType.WINDOW_BUTTON,
+            LeftButtonPanel.RELATIVE_X + LeftButtonPanel.BUTTONS_X_BUFFER,
+            self.get_relative_y(),
+            LeftButtonPanel.BUTTON_RELATIVE_SIZE,
+            LeftButtonPanel.BUTTON_RELATIVE_SIZE))
+        self.buttons.add(Button(len(self.buttons),
+            EntityType.DOOR_BUTTON,
+            LeftButtonPanel.RELATIVE_X + LeftButtonPanel.BUTTONS_X_BUFFER,
+            self.get_relative_y(),
+            LeftButtonPanel.BUTTON_RELATIVE_SIZE,
+            LeftButtonPanel.BUTTON_RELATIVE_SIZE))
+
+        self.button_labels =\
+            [
+                'Draw Exterior Wall',
+                'Draw Interior Wall',
+                'Draw Window',
+                'Draw Door',
+            ]
+

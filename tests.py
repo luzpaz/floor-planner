@@ -951,6 +951,16 @@ class PollingTests(unittest.TestCase):
         app.controller.polling = PollingType.DISPLAY_GRID
         app.controller.handle_input(app.model, (1920, 1080), [])
         self.assertTrue(app.controller.display_grid)
+        self.assertTrue(app.model.update_needed)
+
+    def test_exit(self):
+        """Ensure the exit poll event handler returns False (signaling to stop
+        the execution of the application loop.
+        """
+        app = App()
+        app.controller.polling = PollingType.EXITING
+        self.assertFalse(
+            app.controller.handle_input(app.model, (1920, 1080), []))
 
 class ToolsTests(unittest.TestCase):
     """Tests for classes in the tools.py module."""

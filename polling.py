@@ -89,6 +89,7 @@ class DisplayGrid:
         """Toggles whether to display the drawing grid lines.
         """
         controller.display_grid = not controller.display_grid
+        model.update_needed = True
         controller.reset()
 
 class Layers:
@@ -150,5 +151,6 @@ class PollingType:
     REDOING = 12
     SAVING = 13
     EXPORTING = 14
+    EXITING = 15
 
-    NUM_TYPES = EXPORTING + 1
+    NUM_TYPES = EXITING + 1

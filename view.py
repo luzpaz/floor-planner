@@ -506,6 +506,17 @@ class Textures:
             renderer, b'textures/save_button.png')
         self.textures[EntityType.EXPORT_BUTTON] = self.create(
             renderer, b'textures/export_button.png')
+        self.textures[EntityType.EXIT_BUTTON] = self.create(
+            renderer, b'textures/exit_button.png')
+
+        self.textures[EntityType.EXTERIOR_WALL_BUTTON] = self.create(
+            renderer, b'textures/exterior_wall_button.png')
+        self.textures[EntityType.INTERIOR_WALL_BUTTON] = self.create(
+            renderer, b'textures/interior_wall_button.png')
+        self.textures[EntityType.WINDOW_BUTTON] = self.create(
+            renderer, b'textures/window_button.png')
+        self.textures[EntityType.DOOR_BUTTON] = self.create(
+            renderer, b'textures/door_button.png')
 
         self.textures[EntityType.LOADING] = self.create(
             renderer, b'textures/loading.png')
