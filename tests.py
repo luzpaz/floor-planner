@@ -451,8 +451,33 @@ class ControllerTests(unittest.TestCase):
         expected = sdl2.SDL_Rect(0, 0, 50, 50)
         self.assertEqual(controller.get_mouse_selection(), expected)
 
+    def test_get_two_point_placement(self):
+        """Ensure get_two_point_placement returns the expected line starting
+        and ending vertices for diagonal, vertical, and horizontal lines."""
+
+        app = App()
+        app.controller.place_two_points = True
+        app.controller.first_point_placed = True
+        
+        app.controller.line_thickness = 1
+        app.controller.mouse_x = 48
+        app.controller.mouse_y = 48
+
+        self.assertEqual(app.controller.get_two_point_placement(app.model),
+                         ((0, 0), (48, 48), 1))
+
+        app.controller.horizontal_line = True
+        self.assertEqual(app.controller.get_two_point_placement(app.model),
+                         ((0, 0), (48, 0), 1))
+
+        app.controller.horizontal_line = False
+        app.controller.vertical_line = True
+        self.assertEqual(app.controller.get_two_point_placement(app.model),
+                         ((0, 0), (0, 48), 1))
+
     def test_message_stack(self):
-        """Ensure that the message stack removes expired messages."""
+        """Ensure that the message stack removes expired messages.
+        """
         MessageStack.DURATION = 10
         message_stack = MessageStack()
         message_stack.insert(['message 1', 'message 2', 'message 3'])
