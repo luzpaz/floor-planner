@@ -895,12 +895,23 @@ class PollingTests(unittest.TestCase):
         self.assertEqual(len(app.model.lines), 0)
 
     def test_drawing(self):
-        """Ensure the drawing poll event handler begins two point placement.
+        """Ensure the drawing poll event handler begins two point placement
+        for a regular line.
         """
         app = App()
         app.controller.polling = PollingType.DRAWING
         app.controller.handle_input(app.model, (1920, 1080), [])
         self.assertTrue(app.controller.place_two_points)
+        self.assertEqual(app.controller.line_type, EntityType.REGULAR_LINE)
+
+    def test_measuring(self):
+        """Ensure the measuring poll event handler begins two point placement.
+        """
+        app = App()
+        app.controller.polling = PollingType.MEASURING
+        app.controller.handle_input(app.model, (1920, 1080), [])
+        self.assertTrue(app.controller.place_two_points)
+        self.assertEqual(app.controller.line_type, EntityType.NONE)
 
 class ToolsTests(unittest.TestCase):
     """Tests for classes in the tools.py module."""

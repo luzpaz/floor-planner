@@ -32,9 +32,16 @@ class Moving:
         print("Moving")
         
 class Measuring:
+    """The polling event handler for measuring a line."""
+
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
-        print("Measuring")
+        """Begins two-point placement for a measurement."""
+        controller.reset()
+        controller.line_type = EntityType.NONE
+        controller.line_thickness = Line.REGULAR_LINE
+        controller.place_two_points = True
+        controller.polling = PollingType.SELECTING
         
 
 class AddingText:
