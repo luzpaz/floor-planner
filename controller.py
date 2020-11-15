@@ -905,8 +905,7 @@ class Panel:
             button.selected = False
 
 class CenterButtonPanel(Panel):
-    """The main user interface panel appearing at the top center of the screen
-    which contains the following buttons.
+    """The main user interface panel appearing at the top center of the screen.
     """
 
     NUM_BUTTONS = 16
@@ -1039,6 +1038,9 @@ class CenterButtonPanel(Panel):
             ]
 
 class LeftButtonPanel(Panel):
+    """The user interface panel appearing at the left side of the screen.
+    """
+
     NUM_BUTTONS = 4
 
     BUTTON_RELATIVE_SIZE = 0.03

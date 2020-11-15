@@ -30,18 +30,19 @@ class Model:
         """
         line = None
 
+        # TO DO: use abstract factory
         if type == EntityType.EXTERIOR_WALL:
             line = Line(start, end, Line.EXTERIOR_WALL, color)
             self.lines.add(line)
-            self.add_vertices_from_line(line)
+            self.update_verticies()
         elif type == EntityType.INTERIOR_WALL:
             line = Line(start, end, Line.INTERIOR_WALL, color)
             self.lines.add(line)
-            self.add_vertices_from_line(line)
+            self.update_verticies()
         elif type == EntityType.REGULAR_LINE:
             line = Line(start, end, Line.REGULAR_LINE, color)
             self.lines.add(line)
-            self.add_vertices_from_line(line)
+            self.update_verticies()
 
         self.update_needed = True
         return line
@@ -68,16 +69,18 @@ class Model:
         if isinstance(entity, Line):
             start = entity.start
             end = entity.end
-
             self.lines.remove(entity)
-
-            # Remove line vertices
-            self.vertices.remove(start)
-            
-            if start != end:
-                self.vertices.remove(end)
+            self.update_verticies()
 
         self.update_needed = True
+
+    def update_verticies(self):
+        """Clears current vertices and re-adds them for each line.
+        """
+        self.vertices = set()
+
+        for line in self.lines:
+            self.add_vertices_from_line(line)
 
     def get_vertex_within_range(self, origin = (0, 0), range = 12):
         """Returns nearest vertex from the origin that is within the range
