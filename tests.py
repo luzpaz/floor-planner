@@ -929,7 +929,7 @@ class PollingTests(unittest.TestCase):
         self.assertEqual(app.controller.line_type, EntityType.NONE)
 
     def test_adding_text(self):
-        """Ensure the measuring poll event handler begins two point placement.
+        """Ensure the adding text poll event handler begins two point placement.
         """
         app = App()
         app.controller.text = 'text'
@@ -942,6 +942,15 @@ class PollingTests(unittest.TestCase):
         
         for text in app.model.user_text:
             self.assertEqual(text.text, 'text')
+
+    def test_display_grid(self):
+        """Ensure the display grid poll event handler toggles the display
+        grid attribute of the controller.
+        """
+        app = App()
+        app.controller.polling = PollingType.DISPLAY_GRID
+        app.controller.handle_input(app.model, (1920, 1080), [])
+        self.assertTrue(app.controller.display_grid)
 
 class ToolsTests(unittest.TestCase):
     """Tests for classes in the tools.py module."""

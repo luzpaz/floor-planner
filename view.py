@@ -492,6 +492,8 @@ class Textures:
             renderer, b'textures/pan_button.png')
         self.textures[EntityType.ZOOM_BUTTON] = self.create(
             renderer, b'textures/zoom_button.png')
+        self.textures[EntityType.GRID_BUTTON] = self.create(
+            renderer, b'textures/grid_button.png')
         self.textures[EntityType.LAYERS_BUTTON] = self.create(
             renderer, b'textures/layers_button.png')
         self.textures[EntityType.SETTINGS_BUTTON] = self.create(

@@ -81,6 +81,16 @@ class Zooming:
         controller.message_stack.insert(['Not implemented'])
         controller.reset()
 
+class DisplayGrid:
+    """The polling event handler for displaying the drawing grid."""
+
+    def handle(self, controller, model, keystate, event,
+               screen_dimensions, commands):
+        """Toggles whether to display the drawing grid lines.
+        """
+        controller.display_grid = not controller.display_grid
+        controller.reset()
+
 class Layers:
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
@@ -125,8 +135,6 @@ class Exporting:
         
 class PollingType:
     """Enum for indexing handlers list in the controller."""
-    NUM_TYPES = 14
-
     SELECTING = 0
     ERASING = 1
     DRAWING = 2
@@ -135,9 +143,12 @@ class PollingType:
     ADDING_TEXT = 5
     PANNING = 6
     ZOOMING = 7
-    LAYERS = 8
-    SETTINGS = 9
-    UNDOING = 10
-    REDOING = 11
-    SAVING = 12
-    EXPORTING = 13
+    DISPLAY_GRID = 8
+    LAYERS = 9
+    SETTINGS = 10
+    UNDOING = 11
+    REDOING = 12
+    SAVING = 13
+    EXPORTING = 14
+
+    NUM_TYPES = EXPORTING + 1

@@ -570,6 +570,7 @@ class Controller:
         self.handlers[PollingType.ADDING_TEXT] = polling.AddingText()
         self.handlers[PollingType.PANNING] = polling.Panning()
         self.handlers[PollingType.ZOOMING] = polling.Zooming()
+        self.handlers[PollingType.DISPLAY_GRID] = polling.DisplayGrid()
         self.handlers[PollingType.LAYERS] = polling.Layers()
         self.handlers[PollingType.SETTINGS] = polling.Settings()
         self.handlers[PollingType.UNDOING] = polling.Undoing()
@@ -872,7 +873,7 @@ class CenterButtonPanel(Panel):
     which contains the following buttons.
     """
 
-    NUM_BUTTONS = 14
+    NUM_BUTTONS = 15
 
     RELATIVE_X = 0.0
     RELATIVE_Y = 0.0
@@ -939,6 +940,11 @@ class CenterButtonPanel(Panel):
             CenterButtonPanel.RELATIVE_Y + 0.01,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE))
+        self.buttons.add(Button(len(self.buttons), EntityType.GRID_BUTTON,
+            self.get_relative_x(),
+            CenterButtonPanel.RELATIVE_Y + 0.01,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE))
         self.buttons.add(Button(len(self.buttons), EntityType.LAYERS_BUTTON,
             self.get_relative_x(),
             CenterButtonPanel.RELATIVE_Y + 0.01,
@@ -980,6 +986,7 @@ class CenterButtonPanel(Panel):
                 'Add Text',
                 'Pan',
                 'Zoom',
+                'Display Grid',
                 'Layers',
                 'Settings',
                 'Undo',
