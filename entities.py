@@ -14,6 +14,9 @@ class Line:
     # Interior wall thickness (inch)
     INTERIOR_WALL = 4
 
+    # Regular line thickness (inch)
+    REGULAR_LINE = 1
+
     def __init__(self, start = (0, 0), end = (0, 0),
                  thickness = 1, color = (0, 0, 0)):
         """ Initalizes the line class.
@@ -115,3 +118,7 @@ class Line:
             type = "Line"
         return type + ' (' + Tools.convert_to_unit_system(self.length) + ')'
 
+class UserText:
+    def __init__(self, text = '', position = (0, 0)):
+        self.text = text
+        self.position = position

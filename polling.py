@@ -1,3 +1,5 @@
+import os
+import sdl2
 import sdl2.ext
 
 from entities import Line
@@ -31,7 +33,8 @@ class Drawing:
 class Moving:
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
-        print("Moving")
+        controller.message_stack.insert(['Not implemented'])
+        controller.reset()
         
 class Measuring:
     """The polling event handler for measuring a line."""
@@ -47,9 +50,20 @@ class Measuring:
         
 
 class AddingText:
+    """The polling event handler for adding user text."""
+
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
-        print("Adding Text")
+        """Adds user text to the mouse location after the user presses ENTER."""
+
+        controller.center_text.set_top_text(
+            'Move cursor to text location, type text, and press ENTER.')
+        controller.center_text.set_bottom_text(controller.text)
+
+        if keystate[sdl2.SDL_SCANCODE_RETURN]:
+            mouse = controller.get_adjusted_mouse(model)
+            model.add_user_text(controller.text, (mouse[0], mouse[1]))
+            controller.reset()
      
 class Panning:
     """The polling event handler for panning the camera."""
@@ -64,39 +78,39 @@ class Panning:
 class Zooming:
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
-        print("Zooming")
-        
+        controller.message_stack.insert(['Not implemented'])
+        controller.reset()
 
 class Layers:
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
-        print("Layers")
-        
+        controller.message_stack.insert(['Not implemented'])
+        controller.reset()
 
 class Settings:
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
-        print("Settings")
-        
+        controller.message_stack.insert(['Not implemented'])
+        controller.reset()
 
 class Undoing:
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
-        print("Undoing")
-        
+        controller.message_stack.insert(['Not implemented'])
+        controller.reset()
 
 class Redoing:
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
-        print("Redoing")
+        controller.message_stack.insert(['Not implemented'])
+        controller.reset()
         
-
 class Saving:
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
-        print("Undoing")
+        controller.message_stack.insert(['Not implemented'])
+        controller.reset()
         
-
 class Exporting:
     """The polling event handler for exporting the drawing to png."""
 
@@ -105,6 +119,9 @@ class Exporting:
         """Adds the export command to be executed by the application."""
         commands.append(ExportCommand())
         controller.reset()
+        controller.message_stack.insert(['Exported drawing: '\
+            + str(os.getcwd()) + '\export.png'])
+        controller.loading = True
         
 class PollingType:
     """Enum for indexing handlers list in the controller."""

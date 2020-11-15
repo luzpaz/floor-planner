@@ -95,6 +95,9 @@ class View:
             self.render_two_point_placement(controller, model)
             self.render_mouse_selection(controller)
 
+            if controller.loading:
+                self.render_loading()
+
             # Update window with new contents
             sdl2.SDL_RenderPresent(self.renderer)
         except:
@@ -116,8 +119,13 @@ class View:
         for line in model.lines:
             self.render_line(line, controller.current_layer)
             entities_rendered += 1
-        sdl2.SDL_SetRenderTarget(self.renderer, None)
 
+        # Render user text
+        for text in model.user_text:
+            self.render_absolute_text(text)
+            entities_rendered += 1
+
+        sdl2.SDL_SetRenderTarget(self.renderer, None)
         return entities_rendered
 
     def render_layer(self, layer):
@@ -133,19 +141,21 @@ class View:
                           int(self.layer_height * self.camera_scale)))
 
     def render_ui_text(self, controller):
-        """Renders all text in text displayers from the user interface
+        """Renders all text in text displayers from the user interface.
         :param controller: The application controller.
         :type controller: Controller from 'controller.py'
         """
         text_rendered = 0
+
         for text_displayer in controller.text_displayers:
             for text in text_displayer.text:
-                self.render_text(text)
+                self.render_relative_text(text)
                 text_rendered += 1
+
         return text_rendered
 
-    def render_text(self, text):
-        """Renders text at its location with its specified font and color.
+    def render_relative_text(self, text):
+        """Renders text at its relative location with its font and color.
         :param text: The text to render
         :type text: Text from 'controller.py'
         """
@@ -189,6 +199,40 @@ class View:
 
         if text.relative_x > 0.50:
             text_x -= width
+
+        sdl2.SDL_RenderCopyEx(self.renderer, texture, None,
+                              sdl2.SDL_Rect(text_x, text_y, width, height),
+                              0.0, None, sdl2.SDL_FLIP_NONE)
+        sdl2.SDL_DestroyTexture(texture)
+        return True
+
+    def render_absolute_text(self, text):
+        """Renders text at its absolute location in black with small font.
+        :param text: The text to render
+        :type text: UserText from 'entities.py'
+        """
+        if not text or not text.text:
+            return None
+
+        font = self.small_text
+
+        surface = sdl2.sdlttf.TTF_RenderText_Solid(
+            font, str.encode(text.text), sdl2.SDL_Color(0, 0, 0))
+
+        # Failed to create surface
+        if not surface: return None
+
+        texture = sdl2.SDL_CreateTextureFromSurface(self.renderer, surface)
+        sdl2.SDL_FreeSurface(surface)
+
+        width = pointer(c_int(0))
+        height = pointer(c_int(0))
+        sdl2.SDL_QueryTexture(texture, None, None, width, height)
+        width = width.contents.value
+        height = height.contents.value
+
+        text_x = text.position[0]
+        text_y = text.position[1]
 
         sdl2.SDL_RenderCopyEx(self.renderer, texture, None,
                               sdl2.SDL_Rect(text_x, text_y, width, height),
@@ -340,6 +384,12 @@ class View:
             line.get_color()[0], line.get_color()[1], line.get_color()[2], 255)
         return True
 
+    def render_loading(self):
+        """Renders the loading screen as a task is blocking the renderer."""
+        sdl2.SDL_RenderCopy(
+            self.renderer, self.textures.get(EntityType.LOADING), None,
+            sdl2.SDL_Rect(0, 0, self.screen_width, self.screen_height))
+
     def set_dpi_awareness(self):
         """Sets the applications DPI awareness to per-monitor-aware,
         so that the window scale is always absolute (100%).
@@ -410,6 +460,7 @@ class Textures:
             renderer, b'textures/button.png')
         self.textures[EntityType.SELECTED_BUTTON] = self.create(
             renderer, b'textures/button_alternate.png')
+
         self.textures[EntityType.SELECT_BUTTON] = self.create(
             renderer, b'textures/select_button.png')
         self.textures[EntityType.ERASE_BUTTON] = self.create(
@@ -438,6 +489,9 @@ class Textures:
             renderer, b'textures/save_button.png')
         self.textures[EntityType.EXPORT_BUTTON] = self.create(
             renderer, b'textures/export_button.png')
+
+        self.textures[EntityType.LOADING] = self.create(
+            renderer, b'textures/loading.png')
 
         # Get maximum texture size
         info = sdl2.SDL_RendererInfo()

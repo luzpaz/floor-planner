@@ -41,6 +41,7 @@ class App:
             command.execute(self)
 
         self.commands.clear()
+        self.controller.loading = False
 
 if __name__ == '__main__':
     app = App()

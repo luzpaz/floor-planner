@@ -5,6 +5,7 @@ EntityType = Enum(
     'NONE\
     EXTERIOR_WALL\
     INTERIOR_WALL\
+    REGULAR_LINE\
     BUTTON_PANEL\
     SELECTED_BUTTON\
     BUTTON_BACKGROUND\
@@ -21,4 +22,5 @@ EntityType = Enum(
     UNDO_BUTTON\
     REDO_BUTTON\
     SAVE_BUTTON\
-    EXPORT_BUTTON')
+    EXPORT_BUTTON\
+    LOADING')

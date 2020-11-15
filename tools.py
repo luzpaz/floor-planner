@@ -54,6 +54,8 @@ class Exporter:
             - Exporter.last_export:
             return
 
+        start_time = sdl2.SDL_GetTicks()
+
         sdl2.SDL_SetRenderTarget(renderer, texture)
 
         width = pointer(c_int(0))
@@ -74,3 +76,6 @@ class Exporter:
 
         sdl2.SDL_SetRenderTarget(renderer, None)
         last_export = sdl2.SDL_GetTicks()
+
+        print('Exported drawing to png: {} seconds'.format(
+            (sdl2.SDL_GetTicks() - start_time) / 1000.0))

@@ -39,6 +39,9 @@ class Controller:
 
         self.current_layer = 0
 
+        # Whether a task is blocking the application
+        self.loading = False
+
         self.reset()
 
     def handle_input(self, model, screen_dimensions, commands = []):
@@ -95,7 +98,8 @@ class Controller:
                 self.handle_camera_pan(event)
 
             # Reset the camera position and scale
-            if keystate[sdl2.SDL_SCANCODE_Z]:
+            if keystate[sdl2.SDL_SCANCODE_LCTRL]\
+                and keystate[sdl2.SDL_SCANCODE_R]:
                 self.camera.x = 0
                 self.camera.y = 0
                 self.camera.scale = 1.0
@@ -169,10 +173,11 @@ class Controller:
 
     def handle_text_input(self, event):
         """Updates the text the user is currently typing. Text can only
-        consist of numbers. Otherwise, it resets.
+        consist of numbers if adding text is not the current polling event.
         """
         if event.type == sdl2.SDL_TEXTINPUT:
-            if not str(event.text.text)[2:3].isdigit():
+            if not self.polling == PollingType.ADDING_TEXT\
+                and not str(event.text.text)[2:3].isdigit():
                 self.text = ''
             else:
                 self.text += str(event.text.text)[2:3]
@@ -383,7 +388,6 @@ class Controller:
                     self.line_type,
                     (self.first_point_x, self.first_point_y),
                     (adjusted_mouse_x, adjusted_mouse_y))
-                self.message_stack.insert(['Line added'])
 
             self.reset()
 
@@ -471,9 +475,7 @@ class Controller:
         if not (self.place_two_points and self.first_point_placed):
             return ((0, 0), (0, 0), 0)
 
-        if self.text and int(self.text) != 0:
-            return ((self.first_point_x, self.first_point_y),
-                (self.second_point_x, self.second_point_y), self.line_thickness)
+        # TO DO: return the line created from the text input length
 
         adjusted_mouse = self.get_adjusted_mouse(model)
         adjusted_mouse_x = adjusted_mouse[0]

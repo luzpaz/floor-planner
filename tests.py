@@ -11,7 +11,7 @@ from controller import Controller, Camera, Text, CenterText, Button, Panel,\
 from ctypes import c_int, pointer
 from entities import Line
 from entity_types import EntityType
-from model import Model
+from model import Model, UserText
 from polling import PollingType
 from tools import Tools, ExportCommand
 from view import View, Textures, FontSize
@@ -744,6 +744,7 @@ class ViewTests(unittest.TestCase):
     def test_render_ui_text(self):
         """Ensure correct number of text displayers are rendered from the UI.
         """
+        ViewTests.app.model.add_user_text('text')
         self.assertEqual(ViewTests.app.view.render_ui_text(
             ViewTests.app.controller), 3)
 
@@ -751,8 +752,8 @@ class ViewTests(unittest.TestCase):
         """Ensure render text returns None if the text is None or if the text
         string is empty.
         """
-        self.assertIsNone(ViewTests.app.view.render_text(None))
-        self.assertIsNone(ViewTests.app.view.render_text(Text()))
+        self.assertIsNone(ViewTests.app.view.render_relative_text(None))
+        self.assertIsNone(ViewTests.app.view.render_relative_text(Text()))
 
     def test_render_text(self):
         """Ensure render_text completes rendering of a non-empty text.
@@ -760,13 +761,13 @@ class ViewTests(unittest.TestCase):
         text = Text()
         text.text = 'Non empty text'
 
-        self.assertTrue(ViewTests.app.view.render_text(text))
+        self.assertTrue(ViewTests.app.view.render_relative_text(text))
 
         text.font = FontSize.MEDIUM
-        self.assertTrue(ViewTests.app.view.render_text(text))
+        self.assertTrue(ViewTests.app.view.render_relative_text(text))
 
         text.font = FontSize.LARGE
-        self.assertTrue(ViewTests.app.view.render_text(text))
+        self.assertTrue(ViewTests.app.view.render_relative_text(text))
 
     def test_center_text(self):
         """Ensures center_text returns the correct values for base cases.
@@ -786,6 +787,9 @@ class ViewTests(unittest.TestCase):
 
         self.assertTrue(ViewTests.app.view.render_mouse_selection(
             ViewTests.app.controller))
+
+        self.assertTrue(ViewTests.app.view.render_absolute_text(
+            UserText('text')))
 
     def test_destructor(self):
         """Ensures destructor clears textures and sets SDL components to None.
@@ -912,6 +916,21 @@ class PollingTests(unittest.TestCase):
         app.controller.handle_input(app.model, (1920, 1080), [])
         self.assertTrue(app.controller.place_two_points)
         self.assertEqual(app.controller.line_type, EntityType.NONE)
+
+    def test_adding_text(self):
+        """Ensure the measuring poll event handler begins two point placement.
+        """
+        app = App()
+        app.controller.text = 'text'
+        keystate = sdl2.SDL_GetKeyboardState(None)
+        keystate[sdl2.SDL_SCANCODE_RETURN] = 1
+
+        handler = polling.AddingText()
+        handler.handle(app.controller, app.model, keystate, None, (0, 0), [])
+        self.assertEqual(len(app.model.user_text), 1)
+        
+        for text in app.model.user_text:
+            self.assertEqual(text.text, 'text')
 
 class ToolsTests(unittest.TestCase):
     """Tests for classes in the tools.py module."""

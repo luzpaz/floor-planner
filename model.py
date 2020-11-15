@@ -2,7 +2,7 @@ import math
 import sdl2
 import sys
 
-from entities import Line
+from entities import Line, UserText
 from entity_types import EntityType
 
 class Model:
@@ -15,6 +15,8 @@ class Model:
 
         self.lines = set()
         self.vertices = set()
+
+        self.user_text = set()
 
         self.update_needed = False
 
@@ -36,6 +38,10 @@ class Model:
             line = Line(start, end, Line.INTERIOR_WALL, color)
             self.lines.add(line)
             self.add_vertices_from_line(line)
+        elif type == EntityType.REGULAR_LINE:
+            line = Line(start, end, Line.REGULAR_LINE, color)
+            self.lines.add(line)
+            self.add_vertices_from_line(line)
 
         self.update_needed = True
         return line
@@ -48,6 +54,10 @@ class Model:
 
         self.vertices.add((line.start[0], line.start[1]))
         self.vertices.add((line.end[0], line.end[1]))
+
+    def add_user_text(self, text = '', position = (0, 0)):
+        self.user_text.add(UserText(text, position))
+        self.update_needed = True
 
     def remove_entity(self, entity):
         """Removes entity from the model.
@@ -63,7 +73,9 @@ class Model:
 
             # Remove line vertices
             self.vertices.remove(start)
-            self.vertices.remove(end)
+            
+            if start != end:
+                self.vertices.remove(end)
 
         self.update_needed = True
 
