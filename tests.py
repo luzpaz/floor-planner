@@ -1,4 +1,5 @@
 import ctypes
+import polling
 import sdl2
 import threading
 import unittest
@@ -10,11 +11,12 @@ from ctypes import c_int, pointer
 from entities import Line
 from entity_types import EntityType
 from model import Model
+from polling import PollingType
 from tools import Tools, ExportCommand
 from view import View, Textures, FontSize
 
 class LineTests(unittest.TestCase):
-    """Tests for the Line (entities.py) class."""
+    """Tests for the Line class (entities.py)."""
 
     horizontal_line = Line((0, 0), (5, 0))
     vertical_line = Line((0, 0), (0, 5))
@@ -106,7 +108,7 @@ class LineTests(unittest.TestCase):
         self.assertFalse(Line.intersect((0, 0), (5, 5), (0, 0), (5, 5)))
 
 class ControllerTests(unittest.TestCase):
-    """Tests for the Controller (controller.py) class."""
+    """Tests for the Controller class (controller.py)."""
 
     def test_handle_text_input(self):
         """Ensure user typing (from the keyboard) is properly captured. Ensure
@@ -449,7 +451,7 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(controller.get_mouse_selection(), expected)
 
 class ModelTests(unittest.TestCase):
-    """Tests for the Model (model.py) class."""
+    """Tests for the Model class (model.py)."""
     app = App()
 
     def test_add_exterior_wall(self):
@@ -646,7 +648,7 @@ class ModelTests(unittest.TestCase):
         ModelTests.app.model.vertices.clear()
 
 class AppTests(unittest.TestCase):
-    """Tests for the App (app.py) class."""
+    """Tests for the App class (app.py)."""
 
     def test_initialization(self):
         """Ensure the app constructor properly initializes the components.
@@ -662,7 +664,7 @@ class AppTests(unittest.TestCase):
         pass
 
 class ViewTests(unittest.TestCase):
-    """Tests for the View (view.py) class."""
+    """Tests for the View class (view.py)."""
     app = App()
 
     def test_initialization(self):
@@ -758,7 +760,7 @@ class ViewTests(unittest.TestCase):
         self.assertEqual(len(view.textures.textures), 0)
         
 class TexturesTests(unittest.TestCase):
-    """Tests for the Texture (view.py) class."""
+    """Tests for the Texture class (view.py)."""
     app = App()
 
     def test_create_and_get(self):
@@ -788,7 +790,7 @@ class TexturesTests(unittest.TestCase):
         self.assertEqual(len(TexturesTests.app.view.textures.layers), 0)
 
 class CameraTests(unittest.TestCase):
-    """Tests for the Camera (controller.py) class."""
+    """Tests for the Camera class (controller.py)."""
 
     def test_up_and_down_scrolling(self):
         """Ensure user can scroll the camera up and down.
@@ -827,6 +829,8 @@ class CameraTests(unittest.TestCase):
         self.assertTrue(camera.x >= 0)
 
 class PanelTests(unittest.TestCase):
+    """Tests for the Panel class (controller.py)."""
+
     def test_mouse_over(self):
         """Ensure that mouse_over properly detects the user placing their
         mouse over a button.
@@ -839,7 +843,31 @@ class PanelTests(unittest.TestCase):
         self.assertTrue(panel.mouse_over(0, 0, [1920, 1080]))
         self.assertEqual(panel.button_over, 1)
 
+class PollingTests(unittest.TestCase):
+    """Tests for classes in the polling.py module."""
+
+    def test_erasing(self):
+        """Ensure the erasing poll event handler clears the selected entities.
+        """
+        app = App()
+        line = app.model.add_line(EntityType.EXTERIOR_WALL, (0, 0), (0, 0))
+
+        app.controller.selected_entities.add(line)
+        app.controller.polling = PollingType.ERASING
+        app.controller.handle_input(app.model, (1920, 1080), [])
+        self.assertEqual(len(app.model.lines), 0)
+
+    def test_drawing(self):
+        """Ensure the drawing poll event handler begins two point placement.
+        """
+        app = App()
+        app.controller.polling = PollingType.DRAWING
+        app.controller.handle_input(app.model, (1920, 1080), [])
+        self.assertTrue(app.controller.place_two_points)
+
 class ToolsTests(unittest.TestCase):
+    """Tests for classes in the tools.py module."""
+
     def test_base_convert_to_unit_system(self):
         """Ensure converting to ft and inches returns the expected values.
         """
