@@ -134,6 +134,42 @@ class Exporting:
             + str(os.getcwd()) + '\export.png'])
         controller.loading = True
         
+class DrawExteriorWall:
+    """The polling event handler for drawing a exterior wall."""
+
+    def handle(self, controller, model, keystate, event,
+               screen_dimensions, commands):
+        """Begins two-point placement for a exterior wall."""
+        controller.reset()
+        controller.line_type = EntityType.EXTERIOR_WALL
+        controller.line_thickness = Line.EXTERIOR_WALL
+        controller.place_two_points = True
+        controller.polling = PollingType.SELECTING
+        
+class DrawInteriorWall:
+    """The polling event handler for drawing a interior wall."""
+
+    def handle(self, controller, model, keystate, event,
+               screen_dimensions, commands):
+        """Begins two-point placement for a interior wall."""
+        controller.reset()
+        controller.line_type = EntityType.INTERIOR_WALL
+        controller.line_thickness = Line.INTERIOR_WALL
+        controller.place_two_points = True
+        controller.polling = PollingType.SELECTING
+        
+class DrawWindow:
+    def handle(self, controller, model, keystate, event,
+               screen_dimensions, commands):
+        controller.message_stack.insert(['Not implemented'])
+        controller.reset()
+        
+class DrawDoor:
+    def handle(self, controller, model, keystate, event,
+               screen_dimensions, commands):
+        controller.message_stack.insert(['Not implemented'])
+        controller.reset()
+        
 class PollingType:
     """Enum for indexing handlers list in the controller."""
     SELECTING = 0
@@ -152,5 +188,9 @@ class PollingType:
     SAVING = 13
     EXPORTING = 14
     EXITING = 15
+    DRAW_EXTERIOR_WALL = 16
+    DRAW_INTERIOR_WALL = 17
+    DRAW_WINDOW = 18
+    DRAW_DOOR = 19
 
-    NUM_TYPES = EXITING + 1
+    NUM_TYPES = DRAW_DOOR + 1

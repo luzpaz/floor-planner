@@ -962,6 +962,26 @@ class PollingTests(unittest.TestCase):
         self.assertFalse(
             app.controller.handle_input(app.model, (1920, 1080), []))
 
+    def test_draw_exterior_wall(self):
+        """Ensure the draw exterior wall poll event handler begins two point
+        placement for a exterior wall.
+        """
+        app = App()
+        app.controller.polling = PollingType.DRAW_EXTERIOR_WALL
+        app.controller.handle_input(app.model, (1920, 1080), [])
+        self.assertTrue(app.controller.place_two_points)
+        self.assertEqual(app.controller.line_type, EntityType.EXTERIOR_WALL)
+
+    def test_draw_interior_wall(self):
+        """Ensure the draw interior wall poll event handler begins two point
+        placement for a interior wall.
+        """
+        app = App()
+        app.controller.polling = PollingType.DRAW_INTERIOR_WALL
+        app.controller.handle_input(app.model, (1920, 1080), [])
+        self.assertTrue(app.controller.place_two_points)
+        self.assertEqual(app.controller.line_type, EntityType.INTERIOR_WALL)
+
 class ToolsTests(unittest.TestCase):
     """Tests for classes in the tools.py module."""
 

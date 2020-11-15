@@ -584,6 +584,7 @@ class Controller:
     def init_handlers(self):
         """Initializes the poll event handlers.
         """
+        # Top button panel
         self.handlers[PollingType.ERASING] = polling.Erasing()
         self.handlers[PollingType.DRAWING] = polling.Drawing()
         self.handlers[PollingType.MOVING] = polling.Moving()
@@ -598,6 +599,16 @@ class Controller:
         self.handlers[PollingType.REDOING] = polling.Redoing()
         self.handlers[PollingType.SAVING] = polling.Saving()
         self.handlers[PollingType.EXPORTING] = polling.Exporting()
+
+        # Left button panel
+        self.handlers[PollingType.DRAW_EXTERIOR_WALL]\
+            = polling.DrawExteriorWall()
+        self.handlers[PollingType.DRAW_INTERIOR_WALL]\
+            = polling.DrawInteriorWall()
+        self.handlers[PollingType.DRAW_WINDOW]\
+            = polling.DrawWindow()
+        self.handlers[PollingType.DRAW_DOOR]\
+            = polling.DrawDoor()
 
 class Camera:
     # Regular camera scrolling speed (in/s)
@@ -898,7 +909,7 @@ class CenterButtonPanel(Panel):
     which contains the following buttons.
     """
 
-    NUM_BUTTONS = 15
+    NUM_BUTTONS = 16
 
     RELATIVE_X = 0.0
     RELATIVE_Y = 0.0
@@ -1090,3 +1101,10 @@ class LeftButtonPanel(Panel):
                 'Draw Door',
             ]
 
+    def handle_mouse_click(self, mouse_x, mouse_y, center_text, polling_event):
+        """Same as Panel.handle_mouse_click but adjusts the polling event
+        to account for the number of buttons in the central button panel.
+        """
+        Panel.handle_mouse_click(self, mouse_x, mouse_y,
+                                 center_text, polling_event)
+        polling_event[0] += CenterButtonPanel.NUM_BUTTONS
