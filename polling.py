@@ -2,9 +2,11 @@ import sdl2.ext
 
 from entities import Line
 from entity_types import EntityType
+from tools import ExportCommand
 
 class Erasing:
     """The polling event handler for erasing entities."""
+
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
         """Allows the user to erase entities simply by clicking them.
@@ -16,10 +18,10 @@ class Erasing:
 
 class Drawing:
     """The polling event handler for drawing a regular line."""
+
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
-        """Begins two-point placement for a regular line.
-        """
+        """Begins two-point placement for a regular line."""
         controller.reset()
         controller.line_type = EntityType.REGULAR_LINE
         controller.line_thickness = Line.REGULAR_LINE
@@ -51,6 +53,7 @@ class AddingText:
      
 class Panning:
     """The polling event handler for panning the camera."""
+
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
         """Allows user to pan the camera simply by pressing and dragging
@@ -95,11 +98,14 @@ class Saving:
         
 
 class Exporting:
+    """The polling event handler for exporting the drawing to png."""
+
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
-        print("Exporting")
+        """Adds the export command to be executed by the application."""
+        commands.append(ExportCommand())
+        controller.reset()
         
-
 class PollingType:
     """Enum for indexing handlers list in the controller."""
     NUM_TYPES = 14
