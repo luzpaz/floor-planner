@@ -23,8 +23,10 @@ class Controller:
         self.text_displayers = []
         self.center_text = CenterText()
         self.message_stack = MessageStack()
+        self.fps_displayer = FPSDisplayer()
         self.text_displayers.append(self.center_text)
         self.text_displayers.append(self.message_stack)
+        self.text_displayers.append(self.fps_displayer)
 
         # User interface panels
         self.panels = []
@@ -158,6 +160,7 @@ class Controller:
 
         # Remove expired user interface messages and adjust positioning
         self.message_stack.update()
+        self.fps_displayer.update()
 
         return True
 
@@ -735,6 +738,31 @@ class MessageStack(TextDisplayer):
         for message in list:
             self.text.append(TimeStampedMessage(
                 message, MessageStack.RELATIVE_X))
+
+class FPSDisplayer(TextDisplayer):
+    """Text displayer responsible for displaying the average FPS every second
+    on the top right corner of the screen."""
+
+    # Relative positions
+    RELATIVE_X = 0.99
+    RELATIVE_Y = 0.06
+
+    def __init__(self):
+        """Initializes the FPS displayer."""
+        TextDisplayer.__init__(self)
+        self.text.append(Text(FPSDisplayer.RELATIVE_X, FPSDisplayer.RELATIVE_Y))
+
+        self.last_fps = sdl2.SDL_GetTicks()
+        self.frames = 0
+
+    def update(self):
+        """Updates the average frames per second of the controller thread.
+        """
+        self.frames += 1
+        if 1000 < sdl2.SDL_GetTicks() - self.last_fps:
+            self.text[0].text = 'FPS: ' + str(self.frames)
+            self.last_fps = sdl2.SDL_GetTicks()
+            self.frames = 0
 
 class Button:
     """Button that the user can click in the application window."""

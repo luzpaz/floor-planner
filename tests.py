@@ -7,7 +7,7 @@ import os.path
 
 from app import App
 from controller import Controller, Camera, Text, CenterText, Button, Panel,\
-    MessageStack
+    MessageStack, FPSDisplayer
 from ctypes import c_int, pointer
 from entities import Line
 from entity_types import EntityType
@@ -475,6 +475,17 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(app.controller.get_two_point_placement(app.model),
                          ((0, 0), (0, 48), 1))
 
+    def test_fps_displayer(self):
+        """Ensure the FPS displayer correctly counts the FPS each frame
+        and updates the text to display FPS: #
+        """
+        fps_displayer = FPSDisplayer()
+        for i in range(50):
+            fps_displayer.update()
+        fps_displayer.last_fps = -5000
+        fps_displayer.update()
+        self.assertEqual(fps_displayer.text[0].text, 'FPS: 51')
+
     def test_message_stack(self):
         """Ensure that the message stack removes expired messages.
         """
@@ -746,7 +757,7 @@ class ViewTests(unittest.TestCase):
         """
         ViewTests.app.model.add_user_text('text')
         self.assertEqual(ViewTests.app.view.render_ui_text(
-            ViewTests.app.controller), 3)
+            ViewTests.app.controller), 4)
 
     def test_empty_render_text(self):
         """Ensure render text returns None if the text is None or if the text
