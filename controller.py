@@ -22,7 +22,9 @@ class Controller:
         # User interface text displayers
         self.text_displayers = []
         self.center_text = CenterText()
+        self.message_stack = MessageStack()
         self.text_displayers.append(self.center_text)
+        self.text_displayers.append(self.message_stack)
 
         # User interface panels
         self.panels = []
@@ -58,97 +60,100 @@ class Controller:
             if event.type == sdl2.SDL_QUIT:
                 return False
 
-            try:
-                # Retrive mouse location
-                self.get_mouse_location()
+            #try:
+            # Retrive mouse location
+            self.get_mouse_location()
                 
-                # Handle text input
-                self.reset_text()
-                self.handle_text_input(event)
+            # Handle text input
+            self.reset_text()
+            self.handle_text_input(event)
 
-                # Update text diplayers
-                self.update_bottom_right_text()
-                self.update_bottom_center_text(model)
+            # Update text diplayers
+            self.update_bottom_right_text()
+            self.update_bottom_center_text(model)
 
-                # Zoom camera in/out
-                if event.type == sdl2.SDL_MOUSEWHEEL:
-                    self.handle_camera_zoom(event)
+            # Zoom camera in/out
+            if event.type == sdl2.SDL_MOUSEWHEEL:
+                self.handle_camera_zoom(event)
 
-                # Resize the screen
-                if event.type == sdl2.SDL_WINDOWEVENT:
-                    model.update_needed = True
+            # Resize the screen
+            if event.type == sdl2.SDL_WINDOWEVENT:
+                model.update_needed = True
 
-                # Select a single entity
-                if event.type == sdl2.SDL_MOUSEBUTTONDOWN:
-                    self.handle_single_entity_selection(model)
+            # Select a single entity
+            if event.type == sdl2.SDL_MOUSEBUTTONDOWN:
+                self.handle_single_entity_selection(model)
                 
-                # Select multiple entities
-                self.handle_mouse_drag(event)
-                if self.mouse_selection.w != 0 and self.mouse_selection.h != 0:
-                    self.handle_multiple_entity_selection(model)
+            # Select multiple entities
+            self.handle_mouse_drag(event)
+            if self.mouse_selection.w != 0 and self.mouse_selection.h != 0:
+                self.handle_multiple_entity_selection(model)
 
-                # Panning camera
-                if keystate[sdl2.SDL_SCANCODE_LSHIFT]\
-                    or keystate[sdl2.SDL_SCANCODE_RSHIFT]:
-                    self.handle_camera_pan(event)
+            # Panning camera
+            if keystate[sdl2.SDL_SCANCODE_LSHIFT]\
+                or keystate[sdl2.SDL_SCANCODE_RSHIFT]:
+                self.handle_camera_pan(event)
 
-                # Reset the camera position and scale
-                if keystate[sdl2.SDL_SCANCODE_Z]:
-                    self.camera.x = 0
-                    self.camera.y = 0
-                    self.camera.scale = 1.0
+            # Reset the camera position and scale
+            if keystate[sdl2.SDL_SCANCODE_Z]:
+                self.camera.x = 0
+                self.camera.y = 0
+                self.camera.scale = 1.0
 
-                # Place entity
-                if not self.place_two_points:
-                    if keystate[sdl2.SDL_SCANCODE_KP_0]: # exterior wall
-                        self.reset()
-                        self.line_type = EntityType.EXTERIOR_WALL
-                        self.line_thickness = Line.EXTERIOR_WALL
-                        self.place_two_points = True
-                    elif keystate[sdl2.SDL_SCANCODE_KP_1]: # interior wall
-                        self.reset()
-                        self.line_type = EntityType.INTERIOR_WALL
-                        self.line_thickness = Line.INTERIOR_WALL
-                        self.place_two_points = True
-                    elif keystate[sdl2.SDL_SCANCODE_M]: # measurement
-                        self.reset()
-                        self.line_type = EntityType.NONE
-                        self.line_thickness = 1
-                        self.place_two_points = True
-
-                # Place line based entity
-                if self.place_two_points:
-                    self.handle_two_point_placement(event, keystate, model)
-
-                self.handle_panel_input(event, screen_dimensions)
-                     
-                # Cancel any polling
-                if keystate[sdl2.SDL_SCANCODE_ESCAPE]:
+            # Place entity hotkeys
+            if not self.place_two_points:
+                if keystate[sdl2.SDL_SCANCODE_KP_0]: # exterior wall
                     self.reset()
+                    self.line_type = EntityType.EXTERIOR_WALL
+                    self.line_thickness = Line.EXTERIOR_WALL
+                    self.place_two_points = True
+                elif keystate[sdl2.SDL_SCANCODE_KP_1]: # interior wall
+                    self.reset()
+                    self.line_type = EntityType.INTERIOR_WALL
+                    self.line_thickness = Line.INTERIOR_WALL
+                    self.place_two_points = True
+                elif keystate[sdl2.SDL_SCANCODE_M]: # measurement
+                    self.reset()
+                    self.line_type = EntityType.NONE
+                    self.line_thickness = Line.REGULAR_LINE
+                    self.place_two_points = True
+
+            # Place line based entity
+            if self.place_two_points:
+                self.handle_two_point_placement(event, keystate, model)
+
+            self.handle_panel_input(event, screen_dimensions)
+                     
+            # Cancel any polling
+            if keystate[sdl2.SDL_SCANCODE_ESCAPE]:
+                self.reset()
                     
-                if self.polling != PollingType.SELECTING:
-                    self.handlers[self.polling].handle(
-                        self, model, keystate, event,
-                        screen_dimensions, commands)
+            if self.polling != PollingType.SELECTING:
+                self.handlers[self.polling].handle(
+                    self, model, keystate, event,
+                    screen_dimensions, commands)
 
-                # Delete selected entities
-                if keystate[sdl2.SDL_SCANCODE_DELETE]:
-                    for entity in self.selected_entities:
-                        model.remove_entity(entity)
-                    self.selected_entities.clear()
+            # Delete selected entities
+            if keystate[sdl2.SDL_SCANCODE_DELETE]:
+                for entity in self.selected_entities:
+                    model.remove_entity(entity)
+                self.selected_entities.clear()
 
-                # Export drawing to png file
-                if keystate[sdl2.SDL_SCANCODE_LCTRL]\
-                    and keystate[sdl2.SDL_SCANCODE_E]:
-                    commands.append(ExportCommand())
+            # Export drawing to png file
+            if keystate[sdl2.SDL_SCANCODE_LCTRL]\
+                and keystate[sdl2.SDL_SCANCODE_E]:
+                commands.append(ExportCommand())
 
 
             # If any errors occur, reset the UI state
-            except:
-                self.reset()
+            #except:
+                #self.reset()
 
         # Scroll camera using keyboard input
         self.camera.scroll(keystate)
+
+        # Remove expired user interface messages and adjust positioning
+        self.message_stack.update()
 
         return True
 
@@ -378,6 +383,7 @@ class Controller:
                     self.line_type,
                     (self.first_point_x, self.first_point_y),
                     (adjusted_mouse_x, adjusted_mouse_y))
+                self.message_stack.insert(['Line added'])
 
             self.reset()
 
@@ -625,6 +631,16 @@ class Text:
         self.color = sdl2.SDL_Color(color[0], color[1], color[2])
         self.text = ''
 
+class TimeStampedMessage(Text):
+    """A text object with a time stamp (when the text was created)."""
+
+    def __init__(self, text, relative_x = 0, relative_y = 0,
+                 font = FontSize.SMALL, color = (0, 0, 0)):
+        """Initializes the text."""
+        Text.__init__(self, relative_x, relative_y, font, color)
+        self.text = text
+        self.time = sdl2.SDL_GetTicks()
+
 class TextDisplayer:
     """Base class for a user interface object that displays text."""
 
@@ -634,8 +650,7 @@ class TextDisplayer:
 
 class CenterText(TextDisplayer):
     """Text displayer responsible for displaying text on the top center,
-    bottom center, and bottom right of the application window.
-    """
+    bottom center, and bottom right of the application window."""
 
     # Indices in text list for each text
     TOP_CENTER_TEXT = 0
@@ -680,6 +695,44 @@ class CenterText(TextDisplayer):
         :type right_text: str
         """
         self.text[CenterText.BOTTOM_RIGHT_TEXT].text = right_text
+
+class MessageStack(TextDisplayer):
+    """Text displayer responsible for displaying stacking messages to the user
+    on the bottom left of the screen. Messages stay on the screen for the
+    duration and stack as more messages appear."""
+
+    # Time the message stays in the stack (ms)
+    DURATION = 5000
+    
+    # Relative positions
+    RELATIVE_X = 0.05
+    RELATIVE_Y = 0.95
+
+    # Spacing between texts
+    SPACING = 0.03
+
+    def update(self):
+        """Removes expired messages and adjusts the positions of the messages
+        so that they stack.
+        """
+        index = 0
+        for message in self.text:
+            message.relative_y = MessageStack.RELATIVE_Y\
+                - MessageStack.SPACING * index
+            index += 1
+
+            if MessageStack.DURATION < sdl2.SDL_GetTicks() - message.time:
+                self.text.remove(message)
+                return
+
+    def insert(self, list):
+        """Inserts the messages from the list into the stack.
+        :param list: List of messages to insert
+        :type list: list
+        """
+        for message in list:
+            self.text.append(TimeStampedMessage(
+                message, MessageStack.RELATIVE_X))
 
 class Button:
     """Button that the user can click in the application window."""

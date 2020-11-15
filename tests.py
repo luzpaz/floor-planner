@@ -6,7 +6,8 @@ import unittest
 import os.path
 
 from app import App
-from controller import Controller, Camera, Text, CenterText, Button, Panel
+from controller import Controller, Camera, Text, CenterText, Button, Panel,\
+    MessageStack
 from ctypes import c_int, pointer
 from entities import Line
 from entity_types import EntityType
@@ -449,6 +450,17 @@ class ControllerTests(unittest.TestCase):
 
         expected = sdl2.SDL_Rect(0, 0, 50, 50)
         self.assertEqual(controller.get_mouse_selection(), expected)
+
+    def test_message_stack(self):
+        """Ensure that the message stack removes expired messages."""
+        MessageStack.DURATION = 10
+        message_stack = MessageStack()
+        message_stack.insert(['message 1', 'message 2', 'message 3'])
+        self.assertEqual(len(message_stack.text), 3)
+        sdl2.SDL_Delay(MessageStack.DURATION * 2)
+        for i in range(3):
+            message_stack.update()
+        self.assertEqual(len(message_stack.text), 0)
 
 class ModelTests(unittest.TestCase):
     """Tests for the Model class (model.py)."""
