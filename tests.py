@@ -24,7 +24,7 @@ class LineTests(unittest.TestCase):
     diagonal_line = Line((0, 0), (5, 5))
 
     def test_base_point_collision(self):
-        """Ensures check_point_collision properly catches a point collision
+        """Ensures check_point_collision catches a point collision
         where the location is colliding with the line.
         """
         self.assertTrue(
@@ -35,7 +35,7 @@ class LineTests(unittest.TestCase):
             LineTests.horizontal_line.check_point_collision((5, 0)))
 
     def test_no_point_collision(self):
-        """Ensures check_point_collision properly ignores a point collision
+        """Ensures check_point_collision ignores a point collision
         where the location is not colliding with the line.
         """
         self.assertFalse(
@@ -46,7 +46,7 @@ class LineTests(unittest.TestCase):
             LineTests.horizontal_line.check_point_collision((6, 0)))
 
     def test_base_rectangle_collision(self):
-        """Ensures check_rectangle_collision properly catches a rectangle
+        """Ensures check_rectangle_collision catches a rectangle
         collision where the rectangle is overlapping with the line.
         """
 
@@ -67,7 +67,7 @@ class LineTests(unittest.TestCase):
                         sdl2.SDL_Rect(5, 0, 5, 5)))
 
     def test_no_rectangle_collision(self):
-        """Ensures check_rectangle_collision properly ignores a rectangle
+        """Ensures check_rectangle_collision ignores a rectangle
         collision where the rectangle is not overlapping with the line.
         """
         self.assertFalse(LineTests.horizontal_line.check_rectangle_collision(
@@ -81,7 +81,7 @@ class LineTests(unittest.TestCase):
         self.assertEqual(Line.distance((10, 15), (10, 15)), 0.0)
 
     def test_base_distance(self):
-        """Ensure distance returns correct answer for a base case.
+        """Ensure distance returns expected answer for a base case.
         """
         self.assertEqual(Line.distance((0, 5), (5, 5)), 5.0)
 
@@ -91,7 +91,7 @@ class LineTests(unittest.TestCase):
         self.assertEqual(Line.distance((1E20, 5E30), (1E15, 3E6)), 5E30)
 
     def test_base_intersection(self):
-        """Ensure intersect properly detects lines intersecting.
+        """Ensure intersect detects lines intersecting.
         """
         # Diagonal and horizontal
         self.assertTrue(Line.intersect((0, 0), (5, 5), (0, 2), (5, 2)))
@@ -100,7 +100,7 @@ class LineTests(unittest.TestCase):
         self.assertTrue(Line.intersect((0, 0), (25, 25), (25, 0), (0, 25)))
 
     def test_no_intersection(self):
-        """Ensure intersect properly ignores non-intersecting lines.
+        """Ensure intersect ignores non-intersecting lines.
         """
         # Parallel
         self.assertFalse(Line.intersect((0, 0), (5, 0), (0, 2), (5, 2)))
@@ -108,11 +108,17 @@ class LineTests(unittest.TestCase):
         # Overlap only
         self.assertFalse(Line.intersect((0, 0), (5, 5), (0, 0), (5, 5)))
 
+    def test_point_intersection(self):
+        """Ensure intersection returns the intersecting point between two lines.
+        """
+        self.assertEqual(Line.intersection((0, 0), (5, 0), (2, -1), (2, 4)),
+                         (2, 0))
+
 class ControllerTests(unittest.TestCase):
     """Tests for the Controller class (controller.py)."""
 
     def test_handle_text_input(self):
-        """Ensure user typing (from the keyboard) is properly captured. Ensure
+        """Ensure user typing (from the keyboard) is captured. Ensure
         only digits are accepted as input. If the user enters something that is
         not a digit, ensure the text is cleared.
         """
@@ -178,7 +184,7 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(len(app.controller.selected_entities), 2)
 
     def test_camera_pan(self):
-        """Ensure handle_camera_pan correctly adjusts the camera position
+        """Ensure handle_camera_pan expectedly adjusts the camera position
         when the user moves the mouse.
         """
         controller = Controller()
@@ -224,7 +230,7 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(controller.camera.scale, 0.05)
 
     def test_mouse_drag_start(self):
-        """Ensure handle_mouse_drag properly captures the starting point
+        """Ensure handle_mouse_drag captures the starting point
         of the user's mouse drag input.
         """
         controller = Controller()
@@ -243,7 +249,7 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(controller.mouse_down_starting_y, 1000)
 
     def test_mouse_drag(self):
-        """Ensure handle_mouse_drag properly updates the mouse_selection
+        """Ensure handle_mouse_drag updates the mouse_selection
         rectangle as the user presses and drags the mouse.
         """
         controller = Controller()
@@ -329,7 +335,7 @@ class ControllerTests(unittest.TestCase):
 
     def test_two_point_placement_first_point(self):
         """Ensure that if user is placing the first point,
-        handle_two_point_placement properly sets the class values.
+        handle_two_point_placement sets the class values.
         """
         app = App()
         event = sdl2.SDL_Event()
@@ -377,7 +383,7 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(len(app.model.lines), 3)
 
     def test_two_point_placement_text(self):
-        """Ensure the correct length text is displayed when the user is
+        """Ensure the expected length text is displayed when the user is
         placing the second point.
         """
         app = App()
@@ -476,7 +482,7 @@ class ControllerTests(unittest.TestCase):
                          ((0, 0), (0, 48), 1))
 
     def test_fps_displayer(self):
-        """Ensure the FPS displayer correctly counts the FPS each frame
+        """Ensure the FPS displayer expectedly counts the FPS each frame
         and updates the text to display FPS: #
         """
         fps_displayer = FPSDisplayer()
@@ -503,7 +509,7 @@ class ModelTests(unittest.TestCase):
     app = App()
 
     def test_add_exterior_wall(self):
-        """Ensure add_line properly adds a new exterior wall.
+        """Ensure add_line adds a new exterior wall.
         """
         ModelTests.app.model.add_line(EntityType.EXTERIOR_WALL, (0, 0), (5, 5))
         self.assertEqual(len(ModelTests.app.model.lines), 1)
@@ -512,7 +518,7 @@ class ModelTests(unittest.TestCase):
         self.assertTrue(ModelTests.app.model.update_needed)
 
     def test_add_interior_wall(self):
-        """Ensure add_line properly adds a new interior wall.
+        """Ensure add_line adds a new interior wall.
         """
         ModelTests.app.model.add_line(EntityType.INTERIOR_WALL, (0, 0), (3, 3))
         self.assertEqual(len(ModelTests.app.model.lines), 1)
@@ -521,7 +527,7 @@ class ModelTests(unittest.TestCase):
         self.assertTrue(ModelTests.app.model.update_needed)
 
     def test_add_vertices_from_line(self):
-        """Ensure add_vertices_from_line properly adds line
+        """Ensure add_vertices_from_line adds line
         vertices after adding a new line.
         """
         ModelTests.app.model.add_line(EntityType.EXTERIOR_WALL, (2, 6), (1, 3))
@@ -533,7 +539,7 @@ class ModelTests(unittest.TestCase):
         ModelTests.clear_lines_and_verticies()
 
     def test_remove_line(self):
-        """Ensure remove_entity properly removes a line and its vertices
+        """Ensure remove_entity removes a line and its vertices
         from the model.
         """
         ModelTests.app.model.vertices.clear()
@@ -649,7 +655,7 @@ class ModelTests(unittest.TestCase):
         self.assertIsNone(ModelTests.app.model.get_entity_on_location((0, 0)))
 
     def test_base_entities_in_rectangle(self):
-        """Ensure get_entities_in_rectangle returns correct set of entities
+        """Ensure get_entities_in_rectangle returns expected set of entities
         when rectangle collides with a single entity
         """
 
@@ -667,7 +673,7 @@ class ModelTests(unittest.TestCase):
         ModelTests.clear_lines_and_verticies()
 
     def test_multiple_entities_in_rectangle(self):
-        """Ensure get_entities_in_rectangle returns correct set of entities
+        """Ensure get_entities_in_rectangle returns expected set of entities
         when rectangle collides with multiple entities
         """
 
@@ -699,7 +705,7 @@ class AppTests(unittest.TestCase):
     """Tests for the App class (app.py)."""
 
     def test_initialization(self):
-        """Ensure the app constructor properly initializes the components.
+        """Ensure the app constructor initializes the components.
         """
         app = App()
         self.assertIsInstance(app.model, Model)
@@ -716,7 +722,7 @@ class ViewTests(unittest.TestCase):
     app = App()
 
     def test_initialization(self):
-        """Ensure the view constructor properly initializes the SDL
+        """Ensure the view constructor initializes the SDL
         components and textures.
         """
         self.assertIsNotNone(ViewTests.app.view.window)
@@ -724,7 +730,7 @@ class ViewTests(unittest.TestCase):
         self.assertIsInstance(ViewTests.app.view.textures, Textures)
 
     def test_camera_values(self):
-        """Ensure view properly takes in the UI camera's position and scale.
+        """Ensure view takes in the UI camera's position and scale.
         """
         ViewTests.app.controller.camera.x = 500
         ViewTests.app.controller.camera.y = 1000
@@ -742,7 +748,7 @@ class ViewTests(unittest.TestCase):
             ViewTests.app.model, ViewTests.app.controller), 0)
 
     def test_base_update_layers(self):
-        """Ensure correct number of entities are rendered onto the layer.
+        """Ensure expected number of entities are rendered onto the layer.
         """
         for i in range(5):
             ViewTests.app.model.add_line(EntityType.EXTERIOR_WALL)
@@ -753,7 +759,7 @@ class ViewTests(unittest.TestCase):
         ViewTests.app.model.lines.clear()
 
     def test_render_ui_text(self):
-        """Ensure correct number of text displayers are rendered from the UI.
+        """Ensure expected number of text displayers are rendered from the UI.
         """
         ViewTests.app.model.add_user_text('text')
         self.assertEqual(ViewTests.app.view.render_ui_text(
@@ -781,7 +787,7 @@ class ViewTests(unittest.TestCase):
         self.assertTrue(ViewTests.app.view.render_relative_text(text))
 
     def test_center_text(self):
-        """Ensures center_text returns the correct values for base cases.
+        """Ensures center_text returns the expected values for base cases.
         """
         self.assertEqual(ViewTests.app.view.center_text(250), 835)
         self.assertEqual(ViewTests.app.view.center_text(0), 960)
@@ -825,7 +831,7 @@ class TexturesTests(unittest.TestCase):
         texture = TexturesTests.app.view.textures.get(0)
         self.assertIsNotNone(texture)
 
-        # Ensure texture has correct size (matches png file).
+        # Ensure texture has expected size (matches png file).
         width = pointer(c_int(0))
         height = pointer(c_int(0))
         sdl2.SDL_QueryTexture(texture, None, None, width, height)
@@ -884,7 +890,7 @@ class PanelTests(unittest.TestCase):
     """Tests for the Panel class (controller.py)."""
 
     def test_mouse_over(self):
-        """Ensure that mouse_over properly detects the user placing their
+        """Ensure that mouse_over detects the user placing their
         mouse over a button.
         """
         panel = Panel(1)
