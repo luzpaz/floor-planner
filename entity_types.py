@@ -30,3 +30,9 @@ EntityType = Enum(
     WINDOW_BUTTON\
     DOOR_BUTTON\
     LOADING')
+
+ModelMutex = Enum(
+    'ModelMutex',
+    'LINES\
+    VERTICES\
+    RECTANGLES')

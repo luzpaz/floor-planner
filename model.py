@@ -1,9 +1,11 @@
 import math
 import sdl2
 import sys
+import threading
 
-from entities import Line, UserText
-from entity_types import EntityType
+from entities import Line, Rectangle, UserText
+from entity_types import EntityType, ModelMutex
+from threading import Lock
 
 class Model:
     """The class responsible for containing entities and
@@ -12,13 +14,22 @@ class Model:
     def __init__(self):
         """Initializes entity containers.
         """
-
         self.lines = set()
         self.vertices = set()
+        self.rectangles = set()
 
         self.user_text = set()
 
+        # Whether the renderer must update the layers
         self.update_needed = False
+
+        self.update_background = threading.Condition()
+
+        # Mutexes for accessing the sets
+        self.mutexes = {}
+        self.mutexes[ModelMutex.LINES] = Lock()
+        self.mutexes[ModelMutex.VERTICES] = Lock()
+        self.mutexes[ModelMutex.RECTANGLES] = Lock()
 
     def add_line(self, type, start = (0, 0), end = (0, 0), color = (0, 0, 0)):
         """Adds a line and its vertices to the model.
@@ -32,19 +43,26 @@ class Model:
 
         # TO DO: use abstract factory
         if type == EntityType.EXTERIOR_WALL:
-            line = Line(start, end, Line.EXTERIOR_WALL, color)
-            self.lines.add(line)
-            self.update_verticies()
+            with self.mutexes[ModelMutex.LINES]:
+                line = Line(start, end, Line.EXTERIOR_WALL, color)
+                self.lines.add(line)
+                self.update_verticies()
         elif type == EntityType.INTERIOR_WALL:
-            line = Line(start, end, Line.INTERIOR_WALL, color)
-            self.lines.add(line)
-            self.update_verticies()
+            with self.mutexes[ModelMutex.LINES]:
+                line = Line(start, end, Line.INTERIOR_WALL, color)
+                self.lines.add(line)
+                self.update_verticies()
         elif type == EntityType.REGULAR_LINE:
-            line = Line(start, end, Line.REGULAR_LINE, color)
-            self.lines.add(line)
-            self.update_verticies()
+            with self.mutexes[ModelMutex.LINES]:
+                line = Line(start, end, Line.REGULAR_LINE, color)
+                self.lines.add(line)
+                self.update_verticies()
 
         self.update_needed = True
+
+        with self.update_background:
+            self.update_background.notify_all()
+
         return line
 
     def add_vertices_from_line(self, line):
@@ -57,6 +75,12 @@ class Model:
         self.vertices.add((line.end[0], line.end[1]))
 
     def add_user_text(self, text = '', position = (0, 0)):
+        """Adds user text to the absolute position.
+        :param text: Text to add
+        :type text: str
+        :param position: Absolute position of the text
+        :type position: tuple(int, int)
+        """
         self.user_text.add(UserText(text, position))
         self.update_needed = True
 
@@ -67,20 +91,25 @@ class Model:
         """
 
         if isinstance(entity, Line):
-            start = entity.start
-            end = entity.end
-            self.lines.remove(entity)
-            self.update_verticies()
+            with self.mutexes[ModelMutex.LINES]:
+                start = entity.start
+                end = entity.end
+                self.lines.remove(entity)
+                self.update_verticies()
 
         self.update_needed = True
+
+        with self.update_background:
+            self.update_background.notify_all()
 
     def update_verticies(self):
         """Clears current vertices and re-adds them for each line.
         """
-        self.vertices = set()
+        with self.mutexes[ModelMutex.VERTICES]:
+            self.vertices = set()
 
-        for line in self.lines:
-            self.add_vertices_from_line(line)
+            for line in self.lines:
+                self.add_vertices_from_line(line)
 
     def get_vertex_within_range(self, origin = (0, 0), range = 12):
         """Returns nearest vertex from the origin that is within the range

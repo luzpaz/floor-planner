@@ -98,9 +98,33 @@ class Line:
                and Line.ccw(first_start, first_end, second_start)\
                != Line.ccw(first_start, second_start, second_end)
 
+    def intersection(first_start, first_end, second_start, second_end):
+        """Returns the intersection point between two line segments.
+        :param first_start: first line starting vertex
+        :param first_end: first line ending vertex
+        :param second_start: second line starting vertex
+        :param second_end: second line ending vertex
+        :type first_start, first_end, second_start, second_end: tuple(int, int)
+        """
+        a1 = first_end[1] - first_start[1]
+        b1 = first_start[0] - first_end[0]
+        c1 = a1 * first_start[0] + b1 * first_start[1]
+
+        a2 = second_end[1] - second_start[1]
+        b2 = second_start[0] - second_end[0]
+        c2 = a2 * second_start[0] + b2 * second_start[1]
+
+        determinant = a1 * b2 - a2 * b1
+
+        if determinant == 0:
+            return None
+
+        return ((b2 * c1 - b1 * c2) / determinant,\
+            (a1 * c2 - a2 * c1) / determinant)
+
     def get_color(self):
         """Returns line's color if it is not selected. Otherwise, returns
-        color denoting selection
+        color denoting selection.
         """
         if not self.selected:
             return self.color
@@ -108,15 +132,29 @@ class Line:
             return (34, 139, 34) # green
 
     def __str__(self):
-        """Returns line type string based on the thickness and the length
+        """Returns line type string based on the thickness and the length.
         """
         if self.thickness == Line.EXTERIOR_WALL:
-            type = "Exterior Wall"
+            type = 'Exterior Wall'
         elif self.thickness == Line.INTERIOR_WALL:
-            type = "Interior Wall"
+            type = 'Interior Wall'
         else:
-            type = "Line"
+            type = 'Line'
         return type + ' (' + Tools.convert_to_unit_system(self.length) + ')'
+
+    def __repr__(self):
+        """Returns the starting and ending verticies.
+        """
+        return str(self.start) + ' - ' + str(self.end)
+
+    def __deepcopy__(self, memodict = {}):
+        """Copy constructor for line.
+        """
+        return Line(self.start, self.end, self.thickness, self.color)
+
+class Rectangle:
+    def __init__(self, rectangle = (0, 0, 0, 0)):
+        pass
 
 class UserText:
     def __init__(self, text = '', position = (0, 0)):

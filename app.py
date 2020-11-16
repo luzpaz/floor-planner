@@ -1,5 +1,7 @@
 import sdl2
+import threading
 
+from background_updates import BackgroundUpdater
 from model import Model
 from controller import Controller
 from view import View
@@ -22,9 +24,14 @@ class App:
 
     def run(self):
         """Begins execution of application loop, which handles user input and
-        renders entities onto the window. Returns true if closed with no error.
+        renders entities onto the window.
         """
         self.running = True
+
+        background_thread = threading.Thread(
+            target = App.background_updates,
+            args = (self, self.model.update_background))
+        background_thread.start()
 
         while self.running:
             self.running = self.controller.handle_input(
@@ -33,7 +40,20 @@ class App:
             self.execute_commands()
 
         self.view.exit()
+        background_thread.join()
+
         return True
+
+    def background_updates(app, condition):
+        """Thread function for running background updates. Thread stops when
+        the application loop ends.
+        :param app: The application
+        :type app: App from 'app.py'
+        """
+        background_updater = BackgroundUpdater()
+
+        while app.running:
+            background_updater.update(app, condition)
 
     def execute_commands(self):
         """Executes commands received from the controller."""
