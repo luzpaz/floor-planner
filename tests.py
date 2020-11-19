@@ -280,16 +280,6 @@ class ControllerTests(unittest.TestCase):
         self.assertFalse(controller.mouse_down)
         self.assertEqual(controller.mouse_selection, sdl2.SDL_Rect())
 
-    def test_get_mouse_location(self):
-        """Ensure get_mouse_location gets called with no error.
-        This functionality is better tested with other methods
-        and interactive testing.
-        """
-        controller = Controller()
-        controller.get_mouse_location()
-        self.assertEqual(controller.mouse_x, 0)
-        self.assertEqual(controller.mouse_y, 0)
-
     def test_loop(self):
         """Ensure handle_input runs and returns True on a base case.
         The functionality is better tested with other methods and
@@ -695,6 +685,22 @@ class ModelTests(unittest.TestCase):
             sdl2.SDL_Rect(10, 1, 4, 4)), entities)
         ModelTests.clear_lines_and_verticies()
 
+    def test_get_inventory(self):
+        self.assertEqual(ModelTests.app.model.get_inventory(), '')
+
+        for i in range(2):
+            ModelTests.app.model.add_line(EntityType.EXTERIOR_WALL,
+                                      (0, 0), (0, 12))
+        for i in range(4):
+            ModelTests.app.model.add_line(EntityType.INTERIOR_WALL,
+                                      (0, 0), (0, 24))
+
+        inventory = 'Exterior wall: 2 x 1 ft 0 in\n'\
+            + 'Interior wall: 4 x 2 ft 0 in\n'
+        
+        self.assertEqual(ModelTests.app.model.get_inventory(), inventory)
+        ModelTests.clear_lines_and_verticies()
+
     def clear_lines_and_verticies():
         """Removes lines and vertices from the model.
         """
@@ -958,6 +964,14 @@ class PollingTests(unittest.TestCase):
         app.controller.handle_input(app.model, (1920, 1080), [])
         self.assertTrue(app.controller.display_grid)
         self.assertTrue(app.model.update_needed)
+
+    def test_export_command(self):
+        """Ensure the writing inventory poll event handler creates a txt file.
+        """
+        app = App()
+        app.controller.polling = PollingType.WRITING_INVENTORY
+        app.controller.handle_input(app.model, (1920, 1080), [])
+        self.assertTrue(os.path.isfile('list.txt'))
 
     def test_exit(self):
         """Ensure the exit poll event handler returns False (signaling to stop

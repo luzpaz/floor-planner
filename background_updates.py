@@ -6,3 +6,5 @@ class BackgroundUpdater:
 
         with condition:
             condition.wait()
+            # Current does not do anything, but future background updates
+            # will be added here

@@ -122,6 +122,20 @@ class Saving:
         controller.message_stack.insert(['Not implemented'])
         controller.reset()
         
+class WritingInventory:
+    """The polling event handler for exporting the inventory to a txt tile."""
+
+    def handle(self, controller, model, keystate, event,
+               screen_dimensions, commands):
+        """Exports inventory to a txt file."""
+        controller.loading = True
+        controller.message_stack.insert(['Created list of entities: '\
+            + str(os.getcwd()) + '\list.txt'])
+        with open('list.txt', 'w') as file:
+            file.write(model.get_inventory())
+        controller.reset()
+        controller.loading = False
+        
 class Exporting:
     """The polling event handler for exporting the drawing to png."""
 
@@ -187,10 +201,11 @@ class PollingType:
     REDOING = 12
     SAVING = 13
     EXPORTING = 14
-    EXITING = 15
-    DRAW_EXTERIOR_WALL = 16
-    DRAW_INTERIOR_WALL = 17
-    DRAW_WINDOW = 18
-    DRAW_DOOR = 19
+    WRITING_INVENTORY = 15
+    EXITING = 16
+    DRAW_EXTERIOR_WALL = 17
+    DRAW_INTERIOR_WALL = 18
+    DRAW_WINDOW = 19
+    DRAW_DOOR = 20
 
     NUM_TYPES = DRAW_DOOR + 1

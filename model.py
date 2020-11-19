@@ -6,6 +6,7 @@ import threading
 from entities import Line, Rectangle, UserText
 from entity_types import EntityType, ModelMutex
 from threading import Lock
+from tools import Tools
 
 class Model:
     """The class responsible for containing entities and
@@ -191,3 +192,42 @@ class Model:
         
         self.update_needed = True
         return entities
+
+    def get_inventory(self):
+        """Returns a string of entities grouped by type and lengths.
+        For instance:
+        - 4 x 8' exterior wall
+        - 2 x 8' interior wall
+        """
+        inventory = ''
+
+        exterior_walls = {}
+        interior_walls = {}
+
+        # Tally up quantities for each wall length
+        for line in self.lines:
+            if line.thickness == Line.EXTERIOR_WALL:
+                if line.length in exterior_walls:
+                    exterior_walls[line.length] += 1
+                else:
+                    exterior_walls[line.length] = 1
+            elif line.thickness == Line.INTERIOR_WALL:
+                if line.length in interior_walls:
+                    interior_walls[line.length] += 1
+                else:
+                    interior_walls[line.length] = 1
+
+        # Add to inventory string
+
+        # TO DO: Make function for these calls
+        for wall in exterior_walls:
+            inventory += 'Exterior wall: '\
+                + str(exterior_walls[wall]) + ' x '\
+                + Tools.convert_to_unit_system(wall) + '\n'
+
+        for wall in interior_walls:
+            inventory += 'Interior wall: '\
+                + str(interior_walls[wall]) + ' x '\
+                + Tools.convert_to_unit_system(wall) + '\n'
+
+        return inventory

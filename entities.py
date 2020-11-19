@@ -131,15 +131,20 @@ class Line:
         else:
             return (34, 139, 34) # green
 
+    def get_type_str(self):
+        """Returns the string for the type of the line.
+        """
+        if self.thickness == Line.EXTERIOR_WALL:
+            return 'Exterior Wall'
+        elif self.thickness == Line.INTERIOR_WALL:
+            return 'Interior Wall'
+        else:
+            return 'Line'
+
     def __str__(self):
         """Returns line type string based on the thickness and the length.
         """
-        if self.thickness == Line.EXTERIOR_WALL:
-            type = 'Exterior Wall'
-        elif self.thickness == Line.INTERIOR_WALL:
-            type = 'Interior Wall'
-        else:
-            type = 'Line'
+        type = self.get_type_str()
         return type + ' (' + Tools.convert_to_unit_system(self.length) + ')'
 
     def __repr__(self):

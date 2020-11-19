@@ -598,6 +598,7 @@ class Controller:
         self.handlers[PollingType.UNDOING] = polling.Undoing()
         self.handlers[PollingType.REDOING] = polling.Redoing()
         self.handlers[PollingType.SAVING] = polling.Saving()
+        self.handlers[PollingType.WRITING_INVENTORY] = polling.WritingInventory()
         self.handlers[PollingType.EXPORTING] = polling.Exporting()
 
         # Left button panel
@@ -908,7 +909,7 @@ class CenterButtonPanel(Panel):
     """The main user interface panel appearing at the top center of the screen.
     """
 
-    NUM_BUTTONS = 16
+    NUM_BUTTONS = 17
 
     RELATIVE_X = 0.0
     RELATIVE_Y = 0.0
@@ -1011,6 +1012,11 @@ class CenterButtonPanel(Panel):
             CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE))
+        self.buttons.add(Button(len(self.buttons), EntityType.WRITING_INVENTORY_BUTTON,
+            self.get_relative_x(),
+            CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE))
         self.buttons.add(Button(len(self.buttons), EntityType.EXIT_BUTTON,
             self.get_relative_x(),
             CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
@@ -1033,7 +1039,8 @@ class CenterButtonPanel(Panel):
                 'Undo',
                 'Redo',
                 'Save',
-                'Export',
+                'Export to PNG',
+                'List Entities',
                 'Exit',
             ]
 
