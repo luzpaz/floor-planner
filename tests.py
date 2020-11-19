@@ -610,7 +610,7 @@ class ModelTests(unittest.TestCase):
 
     def test_none_vertex_on_axis(self):
         """Ensure get_vertex_on_axis returns None when there are no axises
-        that align with the origin
+        that align with the origin.
         """
         ModelTests.app.model.vertices.add((0, 0))
         self.assertIsNone(ModelTests.app.model.get_vertex_on_axis((1, 5)))
@@ -618,7 +618,7 @@ class ModelTests(unittest.TestCase):
 
     def test_base_entity_on_location(self):
         """Ensure get_entity_on_location returns the line that the location
-        collidies with when the location is directly on the line
+        collidies with when the location is directly on the line.
         """
         ModelTests.app.model.add_line(EntityType.INTERIOR_WALL, (0, 0), (2, 2))
         
@@ -632,7 +632,7 @@ class ModelTests(unittest.TestCase):
 
     def test_none_for_entity_on_location(self):
         """Ensure get_entity_on_location returns None when the location is not
-        colliding with the line
+        colliding with the line.
         """
         ModelTests.app.model.add_line(EntityType.INTERIOR_WALL, (0, 0), (2, 2))
         self.assertIsNone(ModelTests.app.model.get_entity_on_location((3, 1)))
@@ -640,13 +640,13 @@ class ModelTests(unittest.TestCase):
 
     def test_empty_entity_on_location(self):
         """Ensure get_entity_on_location returns None when there are no
-        entities to collide with
+        entities to collide with.
         """
         self.assertIsNone(ModelTests.app.model.get_entity_on_location((0, 0)))
 
     def test_base_entities_in_rectangle(self):
         """Ensure get_entities_in_rectangle returns expected set of entities
-        when rectangle collides with a single entity
+        when rectangle collides with a single entity.
         """
 
         ModelTests.app.model.add_line(EntityType.EXTERIOR_WALL, (0, 0), (5, 5))
@@ -664,7 +664,7 @@ class ModelTests(unittest.TestCase):
 
     def test_multiple_entities_in_rectangle(self):
         """Ensure get_entities_in_rectangle returns expected set of entities
-        when rectangle collides with multiple entities
+        when rectangle collides with multiple entities.
         """
 
         ModelTests.app.model.add_line(EntityType.EXTERIOR_WALL, (0, 0), (5, 5))
@@ -676,7 +676,7 @@ class ModelTests(unittest.TestCase):
 
     def test_no_enitities_rectangle(self):
         """Ensure get_entities_in_rectangle returns empty set of entities
-        when rectangle does not collide with any entities
+        when rectangle does not collide with any entities.
         """
 
         ModelTests.app.model.add_line(EntityType.EXTERIOR_WALL, (2, 3), (6, 7))
@@ -686,6 +686,10 @@ class ModelTests(unittest.TestCase):
         ModelTests.clear_lines_and_verticies()
 
     def test_get_inventory(self):
+        """Ensure get_inventory returns the expected output when adding
+        exterior walls and interior walls of the same length.
+        """
+
         self.assertEqual(ModelTests.app.model.get_inventory(), '')
 
         for i in range(2):
