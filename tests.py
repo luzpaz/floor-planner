@@ -777,6 +777,16 @@ class ModelTests(unittest.TestCase):
             sdl2.SDL_Rect(0, 0, 5, 5))), 3)
         ModelTests.clear_lines_and_verticies()
 
+    def test_entities_in_rectangle_for_rectangulars(self):
+        """Ensure get_entities_in_rectangle returns expected set of entities
+        when rectangle collides with multiple doors and windows.
+        """
+        app = App()
+        app.model.add_window((0, 0))
+        app.model.add_door((4, 2))
+        self.assertEqual(len(app.model.get_entities_in_rectangle(
+            sdl2.SDL_Rect(0, 0, 5, 5))), 2)
+
     def test_no_enitities_rectangle(self):
         """Ensure get_entities_in_rectangle returns empty set of entities
         when rectangle does not collide with any entities.
@@ -807,6 +817,22 @@ class ModelTests(unittest.TestCase):
         
         self.assertEqual(ModelTests.app.model.get_inventory(), inventory)
         ModelTests.clear_lines_and_verticies()
+
+    def test_remove_doors_and_windows(self):
+        """Ensure model can add and remove doors and windows.
+        """
+
+        window = ModelTests.app.model.add_window()
+        door = ModelTests.app.model.add_door()
+
+        self.assertEqual(len(ModelTests.app.model.windows), 1)
+        self.assertEqual(len(ModelTests.app.model.doors), 1)
+
+        ModelTests.app.model.remove_entity(window)
+        ModelTests.app.model.remove_entity(door)
+
+        self.assertEqual(len(ModelTests.app.model.windows), 0)
+        self.assertEqual(len(ModelTests.app.model.doors), 0)
 
     def clear_lines_and_verticies():
         """Removes lines and vertices from the model.
