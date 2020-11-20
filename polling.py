@@ -294,7 +294,32 @@ class AddAction:
         return self.entity.__repr__()
 
 class DeleteAction:
-    pass
+    """The action container for when a user deletes an entity."""
+    
+    def __init__(self, entity = None):
+        """Initializes the delete action.
+        :param entity: The entity the user deleteed
+        :type entity: Any entity class from 'entities.py'
+        """
+        self.entity = entity
+
+    def undo(self, controller, model):
+        """Defines what is needed to undo this action:
+        Adds the deleted entity into the model."""
+        controller.message_stack.insert(
+            ('Added ' + str(self.entity.__repr__()),))
+        model.add_entity(self.entity)
+
+    def redo(self, controller, model):
+        """Defines what is needed to redo this action:
+        Removes the added entity from the model."""
+        controller.message_stack.insert(
+            ('Removed ' + str(self.entity.__repr__()),))
+        model.remove_entity(self.entity)
+
+    def __repr__(self):
+        """Returns info needed for debugging."""
+        return self.entity.__repr__()
 
 class MoveAction:
     pass

@@ -3,7 +3,7 @@ import math, sdl2, sys, threading
 from collections import deque
 from entities import Line, Window, Door, UserText
 from entity_types import EntityType, ModelMutex
-from polling import AddAction
+from polling import AddAction, DeleteAction
 from threading import Lock
 from tools import Tools
 
@@ -194,6 +194,8 @@ class Model:
 
         with self.update_background:
             self.update_background.notify_all()
+
+        self.actions.append(DeleteAction(entity))
 
     def update_verticies(self):
         """Clears current vertices and re-adds them for each line.

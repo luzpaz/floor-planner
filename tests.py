@@ -1191,6 +1191,37 @@ class PollingTests(unittest.TestCase):
         self.assertEqual(len(app.model.lines), 1)
         self.assertEqual(len(app.model.actions), 1)
 
+    def test_undo_for_delete(self):
+        """Ensure the undo poll event handler readds the removed line.
+        """
+        app = App()
+
+        app.controller.handlers[PollingType.UNDOING].last_undo = -5000
+
+        line = app.model.add_line(EntityType.EXTERIOR_WALL)
+        self.assertEqual(len(app.model.lines), 1)
+
+        app.model.remove_entity(line)
+        self.assertEqual(len(app.model.lines), 0)
+
+        app.controller.polling = PollingType.UNDOING
+        app.controller.handle_input(app.model, (1920, 1080), [])
+        self.assertEqual(len(app.model.lines), 1)
+
+    def test_redo_for_delete(self):
+        """Ensure the redo poll event handler removes the readded line.
+        """
+        app = App()
+        
+        line = Line()
+        app.model.undos.append(polling.DeleteAction(line))
+        app.model.lines.add(line)
+
+        app.controller.handlers[PollingType.REDOING].last_redo = -5000
+        app.controller.polling = PollingType.REDOING
+        app.controller.handle_input(app.model, (1920, 1080), [])
+        self.assertEqual(len(app.model.lines), 0)
+
 class ToolsTests(unittest.TestCase):
     """Tests for classes in the tools.py module."""
 
