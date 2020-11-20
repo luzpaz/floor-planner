@@ -103,16 +103,62 @@ class Settings:
         controller.reset()
 
 class Undoing:
+    """The polling event handler for undoing the last action."""
+
+    # Minimum time required between undos (ms)
+    INTERVAL = 250
+
+    def __init__(self):
+        self.last_undo = sdl2.SDL_GetTicks()
+
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
-        controller.message_stack.insert(['Not implemented'])
+        """Undos the last action and moves it to the undo-ed actions.
+        """
         controller.reset()
+        
+        # Only undo every interval so that user holding Ctrl+Z does
+        # not rapidly undo many actions
+        if Undoing.INTERVAL > sdl2.SDL_GetTicks() - self.last_undo:
+            return
+
+        # Nothing to undo
+        if len(model.actions) == 0:
+            return
+
+        action = model.actions.pop()
+        action.undo(controller, model)
+        model.undos.append(action)
+        self.last_undo = sdl2.SDL_GetTicks()
 
 class Redoing:
+    """The polling event handler for redoing the last undo."""
+    
+    # Minimum time required between redos (ms)
+    INTERVAL = 250
+
+    def __init__(self):
+        self.last_redo = sdl2.SDL_GetTicks()
+
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
-        controller.message_stack.insert(['Not implemented'])
+        """Redos the last action and moves it to back to the actions.
+        """
         controller.reset()
+        
+        # Only redo every interval so that user holding Ctrl+Y does
+        # not rapidly redo many actions
+        if Redoing.INTERVAL > sdl2.SDL_GetTicks() - self.last_redo:
+            return
+
+        # Nothing to redo
+        if len(model.undos) == 0:
+            return
+
+        action = model.undos.pop()
+        action.redo(controller, model)
+        model.actions.append(action)
+        self.last_redo = sdl2.SDL_GetTicks()
         
 class Saving:
     def handle(self, controller, model, keystate, event,
@@ -211,9 +257,49 @@ class PollingType:
     EXPORTING = 14
     WRITING_INVENTORY = 15
     EXITING = 16
+
     DRAW_EXTERIOR_WALL = 17
     DRAW_INTERIOR_WALL = 18
     DRAW_WINDOW = 19
     DRAW_DOOR = 20
 
     NUM_TYPES = DRAW_DOOR + 1
+
+class AddAction:
+    """The action container for when a user adds an entity."""
+    
+    def __init__(self, entity = None):
+        """Initializes the add action.
+        :param entity: The entity the user added
+        :type entity: Any entity class from 'entities.py'
+        """
+        self.entity = entity
+
+    def undo(self, controller, model):
+        """Defines what is needed to undo this action:
+        Removes the added entity from the model."""
+        controller.message_stack.insert(
+            ('Removed ' + str(self.entity.__repr__()),))
+        model.remove_entity(self.entity)
+
+    def redo(self, controller, model):
+        """Defines what is needed to redo this action:
+        Adds the removed entity into the model."""
+        controller.message_stack.insert(
+            ('Added ' + str(self.entity.__repr__()),))
+        model.add_entity(self.entity)
+
+    def __repr__(self):
+        """Returns info needed for debugging."""
+        return self.entity.__repr__()
+
+class DeleteAction:
+    pass
+
+class MoveAction:
+    pass
+
+class ActionType:
+    ADD = 0
+    DELETE = 1
+    MOVE = 2

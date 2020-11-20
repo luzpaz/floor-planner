@@ -153,9 +153,8 @@ class Line:
         return type + ' (' + Tools.convert_to_unit_system(self.length) + ')'
 
     def __repr__(self):
-        """Returns the starting and ending verticies.
-        """
-        return str(self.start) + ' - ' + str(self.end)
+        """Returns info needed for debugging."""
+        return 'Line'
 
     def __deepcopy__(self, memodict = {}):
         """Copy constructor for line.
@@ -221,6 +220,10 @@ class Window(RectangularEntity):
         return 'Window' + ' ('\
             + Tools.convert_to_unit_system(Window.LENGTH) + ')'
 
+    def __repr__(self):
+        """Returns info needed for debugging."""
+        return 'Window'
+
 class Door(RectangularEntity):
     """The class representing a door that can be placed on a wall.
     """
@@ -238,6 +241,10 @@ class Door(RectangularEntity):
         """
         return 'Door' + ' ('\
             + Tools.convert_to_unit_system(Door.LENGTH) + ')'
+
+    def __repr__(self):
+        """Returns info needed for debugging."""
+        return 'Door'
 
 class UserText:
     """The class representing text that the user can place on the drawing.

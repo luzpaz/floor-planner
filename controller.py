@@ -177,6 +177,16 @@ class Controller:
                     self.camera.y = 0
                     self.camera.scale = 1.0
 
+                # Undo the last action
+                if keystate[sdl2.SDL_SCANCODE_LCTRL]\
+                    and keystate[sdl2.SDL_SCANCODE_Z]:
+                    self.polling = PollingType.UNDOING
+
+                # Redo the last undo
+                if keystate[sdl2.SDL_SCANCODE_LCTRL]\
+                    and keystate[sdl2.SDL_SCANCODE_Y]:
+                    self.polling = PollingType.REDOING
+
                 # If any errors occur, reset the UI state
             except:
                 print('Exception occurred')

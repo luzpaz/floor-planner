@@ -1,7 +1,9 @@
 import math, sdl2, sys, threading
 
+from collections import deque
 from entities import Line, Window, Door, UserText
 from entity_types import EntityType, ModelMutex
+from polling import AddAction
 from threading import Lock
 from tools import Tools
 
@@ -18,6 +20,9 @@ class Model:
         self.doors = set()
 
         self.user_text = set()
+
+        self.actions = deque()
+        self.undos = deque()
 
         # Whether the renderer must update the layers
         self.update_needed = False
@@ -63,6 +68,9 @@ class Model:
         with self.update_background:
             self.update_background.notify_all()
 
+        if line:
+            self.actions.append(AddAction(line))
+
         return line
 
     def add_window(self, location = (0, 0), horizontal = True):
@@ -89,6 +97,10 @@ class Model:
 
         self.windows.add(window)
         self.update_needed = True
+
+        if window:
+            self.actions.append(AddAction(window))
+
         return window
     
     def add_door(self, location = (0, 0), horizontal = True, thickness = 0):
@@ -115,6 +127,10 @@ class Model:
 
         self.doors.add(door)
         self.update_needed = True
+
+        if door:
+            self.actions.append(AddAction(door))
+
         return door
 
     def add_vertices_from_line(self, line):
@@ -135,6 +151,27 @@ class Model:
         """
         self.user_text.add(UserText(text, position))
         self.update_needed = True
+
+    def add_entity(self, entity):
+        """Adds the already created entity into the model.
+        :param entity: The entity to add
+        :type entity: Any entity type stored by the model
+        """
+
+        if isinstance(entity, Line):
+            with self.mutexes[ModelMutex.LINES]:
+                self.lines.add(entity)
+        elif isinstance(entity, Window):
+            with self.mutexes[ModelMutex.WINDOWS]:
+                self.windows.add(entity)
+        elif isinstance(entity, Door):
+            with self.mutexes[ModelMutex.DOORS]:
+                self.doors.add(entity)
+
+        self.update_needed = True
+
+        with self.update_background:
+            self.update_background.notify_all()
 
     def remove_entity(self, entity):
         """Removes entity from the model.
