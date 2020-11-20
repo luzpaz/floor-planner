@@ -34,6 +34,12 @@ class Line:
         self.color = color
         self.length = int(Line.distance(start, end))
 
+        # Whether the line is a horizontal line
+        self.horizontal = start[1] == end[1]
+
+        # Whether the line is a vertical line
+        self.vertical = start[0] == end[0]
+
         # Whether the line is currently selected by the user
         self.selected = False
 
@@ -157,11 +163,44 @@ class Line:
         """
         return Line(self.start, self.end, self.thickness, self.color)
 
-class Rectangle:
-    def __init__(self, rectangle = (0, 0, 0, 0)):
-        pass
+class RectangularEntity:
+    """Base class for an entity that can be rendered as a rectangle.
+    """
+
+    def __init__(self, rectangle = sdl2.SDL_Rect(0, 0, 0, 0)):
+        """Initializes the top left x and y coordinates and the width and height
+        of the rectangle.
+        """
+        self.x = rectangle.x
+        self.y = rectangle.y
+        self.width = rectangle.w
+        self.height = rectangle.h
+
+class Window(RectangularEntity):
+    """The class representing a window that can be placed on an exterior wall.
+    """
+    
+    # Default length (px)
+    LENGTH = 36
+
+    # Default widht (px)
+    WIDTH = 6
+
+    # Maximum distance an exterior wall can be from the user's mouse positions
+    # for the window to snap onto it (px)
+    MAX_DISTANCE = 100
+
+    def __init__(self, rectangle = sdl2.SDL_Rect(0, 0, 0, 0)):
+        """Initializes the window as a rectangular entity.
+        """
+        RectangularEntity.__init__(self, rectangle)
 
 class UserText:
+    """The class representing text that the user can place on the drawing.
+    """
+
     def __init__(self, text = '', position = (0, 0)):
+        """Initializes the text and its location.
+        """
         self.text = text
         self.position = position

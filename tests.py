@@ -350,7 +350,7 @@ class ControllerTests(unittest.TestCase):
         event.type = sdl2.SDL_MOUSEBUTTONDOWN
         keystate = sdl2.SDL_GetKeyboardState(None)
         app.controller.first_point_placed = True
-        app.controller.line_type = EntityType.EXTERIOR_WALL
+        app.controller.placement_type = EntityType.EXTERIOR_WALL
 
         # Horizontal line
         app.controller.horizontal_line = True
@@ -361,14 +361,14 @@ class ControllerTests(unittest.TestCase):
         app.controller.first_point_placed = True
         app.controller.horizontal_line = False
         app.controller.vertical_line = True
-        app.controller.line_type = EntityType.EXTERIOR_WALL
+        app.controller.placement_type = EntityType.EXTERIOR_WALL
         app.controller.handle_two_point_placement(event, keystate, app.model)
         self.assertEqual(len(app.model.lines), 2)
         
         # Diagonal line
         app.controller.first_point_placed = True
         app.controller.vertical_line = False
-        app.controller.line_type = EntityType.EXTERIOR_WALL
+        app.controller.placement_type = EntityType.EXTERIOR_WALL
         app.controller.handle_two_point_placement(event, keystate, app.model)
         self.assertEqual(len(app.model.lines), 3)
 
@@ -380,7 +380,7 @@ class ControllerTests(unittest.TestCase):
         event = sdl2.SDL_Event()
         keystate = sdl2.SDL_GetKeyboardState(None)
         app.controller.first_point_placed = True
-        app.controller.line_type = EntityType.EXTERIOR_WALL
+        app.controller.placement_type = EntityType.EXTERIOR_WALL
         app.controller.first_point_x = 0
         app.controller.first_point_y = 0
         app.controller.mouse_x = 8*12
@@ -392,6 +392,74 @@ class ControllerTests(unittest.TestCase):
             CenterText.BOTTOM_CENTER_TEXT].text, expected_message)
         self.assertTrue(app.controller.center_text.text[
             CenterText.TOP_CENTER_TEXT].text != '')
+
+    def test_horizontal_window_placement(self):
+        """Ensure handle_one_point_placement for a window on a horizontal wall
+        adds the window to the model.
+        """
+        app = App()
+        event = sdl2.SDL_Event()
+        event.type = sdl2.SDL_MOUSEBUTTONDOWN
+        
+        app.model.add_line(EntityType.EXTERIOR_WALL, (0, 0), (5, 0))
+
+        app.controller.mouse_x = 2
+        app.controller.mouse_y = 0
+        app.controller.placement_type = EntityType.WINDOW
+        app.controller.place_one_point = True
+        app.controller.handle_one_point_placement(event, app.model)
+        self.assertEqual(len(app.model.windows), 1)
+
+    def test_vertical_window_placement(self):
+        """Ensure handle_one_point_placement for a window on a horizontal wall
+        adds the window to the model.
+        """
+        app = App()
+        event = sdl2.SDL_Event()
+        event.type = sdl2.SDL_MOUSEBUTTONDOWN
+        
+        app.model.add_line(EntityType.EXTERIOR_WALL, (0, 0), (0, 5))
+
+        app.controller.mouse_x = 0
+        app.controller.mouse_y = 2
+        app.controller.placement_type = EntityType.WINDOW
+        app.controller.place_one_point = True
+        app.controller.handle_one_point_placement(event, app.model)
+        self.assertEqual(len(app.model.windows), 1)
+
+    def test_empty_window_placement(self):
+        """Ensure placing window when there are no exterior walls causes
+        the message stack to display the error message.
+        """
+        app = App()
+        event = sdl2.SDL_Event()
+        event.type = sdl2.SDL_MOUSEBUTTONDOWN
+
+        app.controller.placement_type = EntityType.WINDOW
+        app.controller.place_one_point = True
+        app.controller.handle_one_point_placement(event, app.model)
+        self.assertEqual(len(app.model.windows), 0)
+        self.assertEqual(app.controller.message_stack.text[0].text,
+                         'No exterior wall for window placement'\
+                          + ' at that location.')
+
+    def test_empty_window_placement(self):
+        """Ensure placing window when an exterior wall is too far causes
+        the message stack to display the error message.
+        """
+        app = App()
+        event = sdl2.SDL_Event()
+        event.type = sdl2.SDL_MOUSEBUTTONDOWN
+        
+        app.model.add_line(EntityType.EXTERIOR_WALL, (250, 250), (300, 300))
+
+        app.controller.placement_type = EntityType.WINDOW
+        app.controller.place_one_point = True
+        app.controller.handle_one_point_placement(event, app.model)
+        self.assertEqual(len(app.model.windows), 0)
+        self.assertEqual(app.controller.message_stack.text[0].text,
+                         'No exterior wall for window placement'\
+                          + ' at that location.')
 
     def test_base_adjusted_mouse(self):
         """Ensure get_adjusted_mouse returns the mouse location rounded
@@ -763,10 +831,14 @@ class ViewTests(unittest.TestCase):
         for i in range(5):
             ViewTests.app.model.add_line(EntityType.EXTERIOR_WALL)
 
+        for i in range(2):
+            ViewTests.app.model.add_window()
+
         self.assertEqual(ViewTests.app.view.update_layer(
-            ViewTests.app.model, ViewTests.app.controller), 5)
+            ViewTests.app.model, ViewTests.app.controller), 7)
 
         ViewTests.app.model.lines.clear()
+        ViewTests.app.model.windows.clear()
 
     def test_render_ui_text(self):
         """Ensure expected number of text displayers are rendered from the UI.
@@ -933,7 +1005,7 @@ class PollingTests(unittest.TestCase):
         app.controller.polling = PollingType.DRAWING
         app.controller.handle_input(app.model, (1920, 1080), [])
         self.assertTrue(app.controller.place_two_points)
-        self.assertEqual(app.controller.line_type, EntityType.REGULAR_LINE)
+        self.assertEqual(app.controller.placement_type, EntityType.REGULAR_LINE)
 
     def test_measuring(self):
         """Ensure the measuring poll event handler begins two point placement.
@@ -942,7 +1014,7 @@ class PollingTests(unittest.TestCase):
         app.controller.polling = PollingType.MEASURING
         app.controller.handle_input(app.model, (1920, 1080), [])
         self.assertTrue(app.controller.place_two_points)
-        self.assertEqual(app.controller.line_type, EntityType.NONE)
+        self.assertEqual(app.controller.placement_type, EntityType.NONE)
 
     def test_adding_text(self):
         """Ensure the adding text poll event handler begins two point placement.
@@ -994,7 +1066,8 @@ class PollingTests(unittest.TestCase):
         app.controller.polling = PollingType.DRAW_EXTERIOR_WALL
         app.controller.handle_input(app.model, (1920, 1080), [])
         self.assertTrue(app.controller.place_two_points)
-        self.assertEqual(app.controller.line_type, EntityType.EXTERIOR_WALL)
+        self.assertEqual(app.controller.placement_type,
+                         EntityType.EXTERIOR_WALL)
 
     def test_draw_interior_wall(self):
         """Ensure the draw interior wall poll event handler begins two point
@@ -1004,7 +1077,19 @@ class PollingTests(unittest.TestCase):
         app.controller.polling = PollingType.DRAW_INTERIOR_WALL
         app.controller.handle_input(app.model, (1920, 1080), [])
         self.assertTrue(app.controller.place_two_points)
-        self.assertEqual(app.controller.line_type, EntityType.INTERIOR_WALL)
+        self.assertEqual(app.controller.placement_type,
+                         EntityType.INTERIOR_WALL)
+
+    def test_draw_window(self):
+        """Ensure the draw window poll event handler begins one point
+        placement for a window.
+        """
+        app = App()
+        app.controller.polling = PollingType.DRAW_WINDOW
+        app.controller.handle_input(app.model, (1920, 1080), [])
+        self.assertTrue(app.controller.place_one_point)
+        self.assertEqual(app.controller.placement_type,
+                         EntityType.WINDOW)
 
 class ToolsTests(unittest.TestCase):
     """Tests for classes in the tools.py module."""

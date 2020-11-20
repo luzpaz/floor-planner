@@ -107,20 +107,24 @@ class Controller:
             if not self.place_two_points:
                 if keystate[sdl2.SDL_SCANCODE_KP_0]: # exterior wall
                     self.reset()
-                    self.line_type = EntityType.EXTERIOR_WALL
+                    self.placement_type = EntityType.EXTERIOR_WALL
                     self.line_thickness = Line.EXTERIOR_WALL
                     self.place_two_points = True
                 elif keystate[sdl2.SDL_SCANCODE_KP_1]: # interior wall
                     self.reset()
-                    self.line_type = EntityType.INTERIOR_WALL
+                    self.placement_type = EntityType.INTERIOR_WALL
                     self.line_thickness = Line.INTERIOR_WALL
                     self.place_two_points = True
                 elif keystate[sdl2.SDL_SCANCODE_LCTRL]\
                     and keystate[sdl2.SDL_SCANCODE_M]: # measurement
                     self.reset()
-                    self.line_type = EntityType.NONE
+                    self.placement_type = EntityType.NONE
                     self.line_thickness = Line.REGULAR_LINE
                     self.place_two_points = True
+
+            # Place point based entity
+            if self.place_one_point:
+                self.handle_one_point_placement(event, model)
 
             # Place line based entity
             if self.place_two_points:
@@ -340,6 +344,50 @@ class Controller:
             self.mouse_selection.h = abs(
                 self.mouse_down_starting_y - mouse_down_ending_y)
 
+    def handle_one_point_placement(self, event, model):
+        """Handles user input for placing an entity that only requires one
+        point, e.g. window or door.
+        :param event: SDL event for checking mouse clicks
+        :type event: SDL_Event
+        :param model: The app model
+        :type model: Model from 'model.py'
+        """
+
+        adjusted_mouse = self.get_adjusted_mouse(model)
+        adjusted_mouse_x = adjusted_mouse[0]
+        adjusted_mouse_y = adjusted_mouse[1]
+
+        result = model.get_exterior_wall_for_window(
+            (adjusted_mouse_x, adjusted_mouse_y))
+
+        # Display hint text
+        if self.placement_type == EntityType.WINDOW:
+            self.center_text.set_top_text(
+                'Select center location for window on an exterior wall.')
+
+        # No exterior wall for window and user pressed
+        if not result and event.type == sdl2.SDL_MOUSEBUTTONDOWN:
+            self.message_stack.insert(
+                ('No exterior wall for window placement at that location.',))
+            self.reset()
+            return
+
+        # No exterior wall but user did not press
+        # Continue to the next frame
+        if not result:
+            return
+
+        self.nearest_line = result[0]
+        self.nearest_vertex = result[1]
+        
+        if event.type == sdl2.SDL_MOUSEBUTTONDOWN:
+            if self.nearest_line.horizontal:
+                model.add_window(self.nearest_vertex, True)
+            elif self.nearest_line.vertical:
+                model.add_window(self.nearest_vertex, False)
+
+            self.reset()
+
     def handle_two_point_placement(self, event, keystate, model):
         """Handles user input for placing two points for a line and adds the
         line to the model. Displays the line length while the user is selecting
@@ -407,17 +455,17 @@ class Controller:
         if event.type == sdl2.SDL_MOUSEBUTTONDOWN:
             if self.horizontal_line:
                 model.add_line(
-                    self.line_type,
+                    self.placement_type,
                     (self.first_point_x, self.first_point_y),
                     (adjusted_mouse_x, self.first_point_y))
             elif self.vertical_line:
                 model.add_line(
-                    self.line_type,
+                    self.placement_type,
                     (self.first_point_x, self.first_point_y),
                     (self.first_point_x, adjusted_mouse_y))
             else:
                 model.add_line(
-                    self.line_type,
+                    self.placement_type,
                     (self.first_point_x, self.first_point_y),
                     (adjusted_mouse_x, adjusted_mouse_y))
 
@@ -555,6 +603,7 @@ class Controller:
         self.mouse_down = False
         self.mouse_selection = sdl2.SDL_Rect()
 
+        self.place_one_point = False
         self.place_two_points = False
         self.first_point_placed = False
         self.first_point_x = 0
@@ -566,7 +615,8 @@ class Controller:
         self.line_thickness = 0
         self.nearest_vertex = None
         self.nearest_vertex_axis = None
-        self.line_type = None
+        self.nearest_line = None
+        self.placement_type = None
 
         self.text = ''
 

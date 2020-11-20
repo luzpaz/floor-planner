@@ -135,6 +135,11 @@ class View:
             self.render_line(line, controller.current_layer)
             entities_rendered += 1
 
+        # Render windows
+        for window in model.windows:
+            self.render_window(window, controller.current_layer)
+            entities_rendered += 1
+
         # Render user text
         for text in model.user_text:
             self.render_absolute_text(text)
@@ -397,6 +402,44 @@ class View:
             self.renderer, int(line.start[0]), int(line.start[1]),
             int(line.end[0]), int(line.end[1]), int(line.thickness),
             line.get_color()[0], line.get_color()[1], line.get_color()[2], 255)
+        return True
+
+    def render_window(self, window, layer = 0):
+        """Renders the window provided with absolute location onto the layer.
+        Renders a solid white rectangle for the background and black borders.
+        :param window: The window to render
+        :type window: Window from 'entities.py'
+        :param layer: The layer index from the Textures class to render onto
+        :type layer: int
+        """
+        sdl2.SDL_SetRenderTarget(self.renderer, self.textures.get_layer(layer))
+        
+        # Render white background
+        sdl2.SDL_SetRenderDrawColor(self.renderer, 255, 255, 255, 255)
+        sdl2.SDL_RenderFillRect(self.renderer, sdl2.SDL_Rect(
+            window.x, window.y, window.width, window.height))
+
+        # Render black borders
+        sdl2.SDL_SetRenderDrawColor(self.renderer, 0, 0, 0, 255)
+
+        # Top border
+        sdl2.SDL_RenderDrawLine(self.renderer, window.x, window.y,
+                                window.x + window.width - 1, window.y)
+
+        # Bottom border
+        sdl2.SDL_RenderDrawLine(self.renderer, window.x, window.y
+                                + window.height - 1,
+                                window.x + window.width - 1,
+                                window.y + window.height - 1)
+
+        # Left border
+        sdl2.SDL_RenderDrawLine(self.renderer, window.x, window.y,
+                                window.x, window.y + window.height - 1)
+
+        # Right border
+        sdl2.SDL_RenderDrawLine(self.renderer, window.x + window.width - 1,
+                                window.y, window.x + window.width - 1,
+                                window.y + window.height - 1)
         return True
 
     def render_loading(self):

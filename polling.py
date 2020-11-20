@@ -25,7 +25,7 @@ class Drawing:
                screen_dimensions, commands):
         """Begins two-point placement for a regular line."""
         controller.reset()
-        controller.line_type = EntityType.REGULAR_LINE
+        controller.placement_type = EntityType.REGULAR_LINE
         controller.line_thickness = Line.REGULAR_LINE
         controller.place_two_points = True
         controller.polling = PollingType.SELECTING
@@ -43,7 +43,7 @@ class Measuring:
                screen_dimensions, commands):
         """Begins two-point placement for a measurement."""
         controller.reset()
-        controller.line_type = EntityType.NONE
+        controller.placement_type = EntityType.NONE
         controller.line_thickness = Line.REGULAR_LINE
         controller.place_two_points = True
         controller.polling = PollingType.SELECTING
@@ -155,7 +155,7 @@ class DrawExteriorWall:
                screen_dimensions, commands):
         """Begins two-point placement for a exterior wall."""
         controller.reset()
-        controller.line_type = EntityType.EXTERIOR_WALL
+        controller.placement_type = EntityType.EXTERIOR_WALL
         controller.line_thickness = Line.EXTERIOR_WALL
         controller.place_two_points = True
         controller.polling = PollingType.SELECTING
@@ -167,16 +167,21 @@ class DrawInteriorWall:
                screen_dimensions, commands):
         """Begins two-point placement for a interior wall."""
         controller.reset()
-        controller.line_type = EntityType.INTERIOR_WALL
+        controller.placement_type = EntityType.INTERIOR_WALL
         controller.line_thickness = Line.INTERIOR_WALL
         controller.place_two_points = True
         controller.polling = PollingType.SELECTING
         
 class DrawWindow:
+    """The polling event handler for drawing a window."""
+
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
-        controller.message_stack.insert(['Not implemented'])
+        """Begins one-point placement for a window."""
         controller.reset()
+        controller.placement_type = EntityType.WINDOW
+        controller.place_one_point = True
+        controller.polling = PollingType.SELECTING
         
 class DrawDoor:
     def handle(self, controller, model, keystate, event,

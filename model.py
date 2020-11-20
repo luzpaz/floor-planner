@@ -3,7 +3,7 @@ import sdl2
 import sys
 import threading
 
-from entities import Line, Rectangle, UserText
+from entities import Line, Window, UserText
 from entity_types import EntityType, ModelMutex
 from threading import Lock
 from tools import Tools
@@ -17,7 +17,7 @@ class Model:
         """
         self.lines = set()
         self.vertices = set()
-        self.rectangles = set()
+        self.windows = set()
 
         self.user_text = set()
 
@@ -30,7 +30,6 @@ class Model:
         self.mutexes = {}
         self.mutexes[ModelMutex.LINES] = Lock()
         self.mutexes[ModelMutex.VERTICES] = Lock()
-        self.mutexes[ModelMutex.RECTANGLES] = Lock()
 
     def add_line(self, type, start = (0, 0), end = (0, 0), color = (0, 0, 0)):
         """Adds a line and its vertices to the model.
@@ -65,6 +64,33 @@ class Model:
             self.update_background.notify_all()
 
         return line
+
+    def add_window(self, location = (0, 0), horizontal = True):
+        """Adds a window to the model at the center location.
+        :param location: Center location position coordinates for the window
+        :type location: tuple(int, int)
+        :param horizontal: Whether the window is horizontal or vertical
+        :type horizontal: bool
+        """
+
+        window = None
+
+        if horizontal:
+            window = Window(sdl2.SDL_Rect(
+                int(location[0] - Window.LENGTH / 2),
+                int(location[1] - Window.WIDTH / 2),
+                Window.LENGTH,
+                Window.WIDTH))
+        else:
+            window = Window(sdl2.SDL_Rect(
+                int(location[0] - Window.WIDTH / 2),
+                int(location[1] - Window.LENGTH / 2),
+                Window.WIDTH,
+                Window.LENGTH))
+
+        self.windows.add(window)
+        self.update_needed = True
+        return window
 
     def add_vertices_from_line(self, line):
         """Adds starting and ending vertices of the line to the model.
@@ -163,6 +189,45 @@ class Model:
                 nearest_vertex_distance = distance
 
         return nearest_vertex
+
+    def get_exterior_wall_for_window(self, location = (0, 0)):
+        """Returns the nearest horizontal or vertical exterior wall to the
+        location, for window placement.
+        :param location: Position coordinates to find nearest wall for
+        :type location: tuple(int, int)
+        """
+
+        closest_line = None
+        closest_point = None
+        closest_point_distance = sys.maxsize
+
+        for line in self.lines:
+            # Exterior walls only
+            if line.thickness != Line.EXTERIOR_WALL:
+                continue
+
+            # Horizontal or vertical walls only
+            if line.horizontal:
+                point = (location[0], line.start[1])
+            elif line.vertical:
+                point = (line.start[0], location[1])
+            else:
+                continue
+
+            # Find closest point
+            distance = Line.distance(point, location)
+
+            if distance < closest_point_distance:
+                closest_line = line
+                closest_point = point
+                closest_point_distance = distance
+
+        # No exterior horizontal/vertical walls found near the location
+        if closest_line == None or closest_point == None\
+            or closest_point_distance > Window.MAX_DISTANCE:
+            return None
+
+        return (closest_line, closest_point)
 
     def get_entity_on_location(self, location = (0, 0)):
         """Returns single entity that collides with the location
