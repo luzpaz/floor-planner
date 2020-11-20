@@ -62,8 +62,8 @@ class Controller:
         keystate = sdl2.SDL_GetKeyboardState(None)
 
         for event in sdl2.ext.get_events():
-            # User exited the app window
-            if event.type == sdl2.SDL_QUIT:
+            # User exited the app window or pressed ALT + F4
+            if self.user_quit(event, keystate):
                 return False
 
             try:
@@ -112,12 +112,6 @@ class Controller:
                         self.placement_type = EntityType.INTERIOR_WALL
                         self.line_thickness = Line.INTERIOR_WALL
                         self.place_two_points = True
-                    elif keystate[sdl2.SDL_SCANCODE_LCTRL]\
-                        and keystate[sdl2.SDL_SCANCODE_M]: # measurement
-                        self.reset()
-                        self.placement_type = EntityType.NONE
-                        self.line_thickness = Line.REGULAR_LINE
-                        self.place_two_points = True
 
                 # Place point based entity
                 if self.place_one_point:
@@ -136,27 +130,27 @@ class Controller:
                 # Cancel any polling
                 if keystate[sdl2.SDL_SCANCODE_ESCAPE]:
                     self.reset()
-                    
-                if self.polling != PollingType.SELECTING:
-                    self.handlers[self.polling].handle(
-                        self, model, keystate, event,
-                        screen_dimensions, commands)
-
-                # Hotkeys for polling:
 
                 # Delete selected entities
                 if keystate[sdl2.SDL_SCANCODE_DELETE]:
                     for entity in self.selected_entities:
                         model.remove_entity(entity)
                     self.selected_entities.clear()
+                    
+                # Polling event
+                if self.polling != PollingType.SELECTING:
+                    self.handlers[self.polling].handle(
+                        self, model, keystate, event,
+                        screen_dimensions, commands)
 
+                # Hotkeys for polling
                 if keystate[sdl2.SDL_SCANCODE_LCTRL]\
                     or keystate[sdl2.SDL_SCANCODE_RCTRL]:
                     self.handle_ctrl_hotkeys(keystate)
 
             # If any errors occur, reset the UI state
             except:
-                print('Exception occurred')
+                print('Exception occurred') # for debugging only
                 self.reset()
 
         # Scroll camera using keyboard input
@@ -182,6 +176,19 @@ class Controller:
         self.mouse_x = mouse_x_ptr.contents.value
         self.mouse_y = mouse_y_ptr.contents.value
 
+    def user_quit(self, event, keystate):
+        """Returns true if the user exited the application window or
+        pressed ALT + F4 on the keyboard.
+        """
+        if event.type == sdl2.SDL_QUIT:
+            return True
+
+        if keystate[sdl2.SDL_SCANCODE_LALT] or keystate[sdl2.SDL_SCANCODE_RALT]:
+            if keystate[sdl2.SDL_SCANCODE_F4]:
+                return True
+
+        return False
+
     def handle_ctrl_hotkeys(self, keystate):
         """Handles keyboard input if the user holds the CTRL key and pressed
         another key by setting the polling event accordingly.
@@ -189,17 +196,19 @@ class Controller:
         :type keystate: int[]
         """
 
-        # Export drawing to png file
+        # Use erasing tool
         if keystate[sdl2.SDL_SCANCODE_E]:
-            self.polling = PollingType.EXPORTING
-
-        # Display the drawing grid
-        if keystate[sdl2.SDL_SCANCODE_G]:
-            self.polling = PollingType.DISPLAY_GRID
+            self.polling = PollingType.ERASING
 
         # Drawing a regular line
         if keystate[sdl2.SDL_SCANCODE_D]:
             self.polling = PollingType.DRAWING
+
+        # Use moving tool...
+
+        # Use measuring tool
+        if keystate[sdl2.SDL_SCANCODE_M]:
+            self.polling = PollingType.MEASURING
 
         # Adding user text
         if keystate[sdl2.SDL_SCANCODE_T]:
@@ -211,6 +220,10 @@ class Controller:
             self.camera.y = 0
             self.camera.scale = 1.0
 
+        # Display the drawing grid
+        if keystate[sdl2.SDL_SCANCODE_G]:
+            self.polling = PollingType.DISPLAY_GRID
+
         # Undo the last action
         if keystate[sdl2.SDL_SCANCODE_Z]:
             self.polling = PollingType.UNDOING
@@ -218,6 +231,14 @@ class Controller:
         # Redo the last undo
         if keystate[sdl2.SDL_SCANCODE_Y]:
             self.polling = PollingType.REDOING
+
+        # Writing inventory to file
+        if keystate[sdl2.SDL_SCANCODE_I]:
+            self.polling = PollingType.INVENTORY
+
+        # Export drawing to png file
+        if keystate[sdl2.SDL_SCANCODE_E]:
+            self.polling = PollingType.EXPORTING
 
     def handle_text_input(self, event):
         """Updates the text the user is currently typing. Text can only
@@ -232,14 +253,24 @@ class Controller:
 
     def update_bottom_right_text(self):
         """Updates text displayed on the bottom right of the screen to
-        note the mouse's current x and y positions and the camera scale
+        note the mouse's current x and y positions and the camera scale.
+        If the user is pressing and dragging the mouse, it will also show
+        the area of the rectangle.
         """
         adjusted_mouse_x = (self.mouse_x + self.camera.x) / self.camera.scale
         adjusted_mouse_y = (self.mouse_y + self.camera.y) / self.camera.scale
 
-        self.center_text.set_right_text('X: {} Y: {} Zoom: {}'.format(
-            int(adjusted_mouse_x), int(adjusted_mouse_y),
-            round(self.camera.scale, 10)))
+        if self.mouse_selection.w == 0 or self.mouse_selection.h == 0:
+            self.center_text.set_right_text('X: {} Y: {} - Zoom: {}'.format(
+                int(adjusted_mouse_x), int(adjusted_mouse_y),
+                round(self.camera.scale, 10)))
+        else:
+            #area = self.mouse_selection.w * self.mouse_selection.h\
+            #    / self.camera.scale / 144.0
+            self.center_text.set_right_text(
+                'X: {} Y: {} - Zoom: {} - Area: {} ft^2'.format(
+                int(adjusted_mouse_x), int(adjusted_mouse_y),
+                round(self.camera.scale, 10), 'Not implemented'))
 
     def update_bottom_center_text(self, model):
         """Updates text displayed on the bottom middle of the screen to
@@ -1098,22 +1129,22 @@ class CenterButtonPanel(Panel):
         self.button_labels =\
             [
                 'Select',
-                'Eraser',
-                'Draw Line',
+                'Eraser Tool (CTRL + E)',
+                'Draw Line (CTRL + D)',
                 'Move',
-                'Measure',
-                'Add Text',
-                'Pan',
-                'Zoom',
-                'Display Grid',
-                'Layers',
-                'Settings',
-                'Undo',
-                'Redo',
-                'Save',
-                'Export to PNG',
-                'List Entities',
-                'Exit',
+                'Measure Distance (CTRL + M)',
+                'Add Text (CTRL + T)',
+                'Pan Camera',
+                'Zoom Camera',
+                'Display Drawing Grid (CTRL + G)',
+                'Open Layers',
+                'Application Settings',
+                'Undo (CTRL + Z)',
+                'Redo (CTRL + Y)',
+                'Save Drawing (CTRL + S)',
+                'Export to PNG (CTRL + E)',
+                'List All Entities to File (CTRL + I)',
+                'Exit Application (ALT + F4)',
             ]
 
 class LeftButtonPanel(Panel):
