@@ -1,5 +1,4 @@
-import math
-import sdl2
+import math, sdl2
 
 from tools import Tools
 

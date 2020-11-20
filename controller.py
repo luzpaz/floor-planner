@@ -1,7 +1,4 @@
-import math
-import polling
-import sdl2
-import sdl2.ext
+import math, polling, sdl2, sdl2.ext
 
 from ctypes import c_int, pointer
 from entity_types import EntityType

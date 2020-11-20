@@ -1,6 +1,4 @@
-import os
-import sdl2
-import sdl2.ext
+import os, sdl2, sdl2.ext
 
 from entities import Line
 from entity_types import EntityType

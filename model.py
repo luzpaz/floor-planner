@@ -1,7 +1,4 @@
-import math
-import sdl2
-import sys
-import threading
+import math, sdl2, sys, threading
 
 from entities import Line, Window, Door, UserText
 from entity_types import EntityType, ModelMutex

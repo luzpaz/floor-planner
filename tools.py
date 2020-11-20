@@ -1,5 +1,4 @@
-import sdl2
-import sdl2.sdlimage
+import sdl2, sdl2.sdlimage
 
 from ctypes import c_int, pointer
 

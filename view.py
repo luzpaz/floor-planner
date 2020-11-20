@@ -1,8 +1,4 @@
-import ctypes
-import sdl2
-import sdl2.sdlgfx
-import sdl2.sdlimage
-import sdl2.sdlttf
+import ctypes, sdl2, sdl2.sdlgfx, sdl2.sdlimage, sdl2.sdlttf
 
 from ctypes import c_int, pointer
 from entity_types import EntityType

@@ -1,9 +1,4 @@
-import ctypes
-import polling
-import sdl2
-import threading
-import unittest
-import os.path
+import ctypes, polling, sdl2, threading, unittest, os.path
 
 from app import App
 from controller import Controller, Camera, Text, CenterText, Button, Panel,\

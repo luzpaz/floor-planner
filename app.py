@@ -1,5 +1,4 @@
-import sdl2
-import threading
+import sdl2, threading
 
 from background_updates import BackgroundUpdater
 from model import Model
