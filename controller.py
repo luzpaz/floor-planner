@@ -265,12 +265,13 @@ class Controller:
                 int(adjusted_mouse_x), int(adjusted_mouse_y),
                 round(self.camera.scale, 10)))
         else:
-            #area = self.mouse_selection.w * self.mouse_selection.h\
-            #    / self.camera.scale / 144.0
+            width = self.mouse_selection.w / self.camera.scale
+            height = self.mouse_selection.h / self.camera.scale
+            area = width * height / 144.0
             self.center_text.set_right_text(
                 'X: {} Y: {} - Zoom: {} - Area: {} ft^2'.format(
                 int(adjusted_mouse_x), int(adjusted_mouse_y),
-                round(self.camera.scale, 10), 'Not implemented'))
+                round(self.camera.scale, 10), round(area)))
 
     def update_bottom_center_text(self, model):
         """Updates text displayed on the bottom middle of the screen to
