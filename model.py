@@ -3,7 +3,7 @@ import sdl2
 import sys
 import threading
 
-from entities import Line, Window, UserText
+from entities import Line, Window, Door, UserText
 from entity_types import EntityType, ModelMutex
 from threading import Lock
 from tools import Tools
@@ -18,6 +18,7 @@ class Model:
         self.lines = set()
         self.vertices = set()
         self.windows = set()
+        self.doors = set()
 
         self.user_text = set()
 
@@ -30,6 +31,8 @@ class Model:
         self.mutexes = {}
         self.mutexes[ModelMutex.LINES] = Lock()
         self.mutexes[ModelMutex.VERTICES] = Lock()
+        self.mutexes[ModelMutex.WINDOWS] = Lock()
+        self.mutexes[ModelMutex.DOORS] = Lock()
 
     def add_line(self, type, start = (0, 0), end = (0, 0), color = (0, 0, 0)):
         """Adds a line and its vertices to the model.
@@ -74,7 +77,6 @@ class Model:
         """
 
         window = None
-
         if horizontal:
             window = Window(sdl2.SDL_Rect(
                 int(location[0] - Window.LENGTH / 2),
@@ -91,6 +93,32 @@ class Model:
         self.windows.add(window)
         self.update_needed = True
         return window
+    
+    def add_door(self, location = (0, 0), horizontal = True, thickness = 0):
+        """Adds a door to the model at the center location.
+        :param location: Center location position coordinates for the door
+        :type location: tuple(int, int)
+        :param horizontal: Whether the door is horizontal or vertical
+        :type horizontal: bool
+        :param thickness: Thickness of the door
+        :type thickness: int
+        """
+
+        door = None
+        if horizontal:
+            door = Door(sdl2.SDL_Rect(
+                int(location[0] - Door.LENGTH / 2),
+                int(location[1] - thickness / 2),
+                Door.LENGTH, thickness))
+        else:
+            door = Window(sdl2.SDL_Rect(
+                int(location[0] - thickness / 2),
+                int(location[1] - Door.LENGTH / 2),
+                thickness, Door.LENGTH))
+
+        self.doors.add(door)
+        self.update_needed = True
+        return door
 
     def add_vertices_from_line(self, line):
         """Adds starting and ending vertices of the line to the model.
@@ -119,10 +147,14 @@ class Model:
 
         if isinstance(entity, Line):
             with self.mutexes[ModelMutex.LINES]:
-                start = entity.start
-                end = entity.end
                 self.lines.remove(entity)
                 self.update_verticies()
+        elif isinstance(entity, Window):
+            with self.mutexes[ModelMutex.WINDOWS]:
+                self.windows.remove(entity)
+        elif isinstance(entity, Door):
+            with self.mutexes[ModelMutex.DOORS]:
+                self.doors.remove(entity)
 
         self.update_needed = True
 
@@ -190,9 +222,9 @@ class Model:
 
         return nearest_vertex
 
-    def get_exterior_wall_for_window(self, location = (0, 0)):
-        """Returns the nearest horizontal or vertical exterior wall to the
-        location, for window placement.
+    def get_nearest_wall(self, location = (0, 0), exterior_only = False):
+        """Returns the nearest horizontal or vertical wall to the
+        location, for window or door placement.
         :param location: Position coordinates to find nearest wall for
         :type location: tuple(int, int)
         """
@@ -202,8 +234,8 @@ class Model:
         closest_point_distance = sys.maxsize
 
         for line in self.lines:
-            # Exterior walls only
-            if line.thickness != Line.EXTERIOR_WALL:
+            # Exterior walls only for windows
+            if exterior_only and line.thickness != Line.EXTERIOR_WALL:
                 continue
 
             # Horizontal or vertical walls only
@@ -222,7 +254,7 @@ class Model:
                 closest_point = point
                 closest_point_distance = distance
 
-        # No exterior horizontal/vertical walls found near the location
+        # No walls found near the location
         if closest_line == None or closest_point == None\
             or closest_point_distance > Window.MAX_DISTANCE:
             return None
@@ -235,9 +267,26 @@ class Model:
         :type location: tuple(int, int)
         """
 
+        for door in self.doors:
+            door.selected = False
+            if door.check_collision(
+                sdl2.SDL_Rect(int(location[0]), int(location[1]), 0, 0)):
+                door.selected = True
+                return door
+
+        for window in self.windows:
+            window.selected = False
+            if window.check_collision(
+                sdl2.SDL_Rect(int(location[0]), int(location[1]), 0, 0)):
+                window.selected = True
+                return window
+
         for line in self.lines:
+            line.selected = False
             if line.check_point_collision(location):
+                line.selected = True
                 return line
+
         return None
 
     def get_entities_in_rectangle(self, rectangle = sdl2.SDL_Rect()):
@@ -249,12 +298,25 @@ class Model:
         """
 
         entities = set()
+
+        for door in self.doors:
+            door.selected = False
+            if door.check_collision(rectangle):
+                entities.add(door)
+                door.selected = True
+
+        for window in self.windows:
+            window.selected = False
+            if window.check_collision(rectangle):
+                entities.add(window)
+                window.selected = True
+
         for line in self.lines:
             line.selected = False
             if line.check_rectangle_collision(rectangle):
                 entities.add(line)
                 line.selected = True
-        
+
         self.update_needed = True
         return entities
 

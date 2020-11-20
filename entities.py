@@ -176,6 +176,27 @@ class RectangularEntity:
         self.width = rectangle.w
         self.height = rectangle.h
 
+        self.selected = False
+
+    def check_collision(self, other = sdl2.SDL_Rect(0, 0, 0, 0)):
+        """Returns true if a rectangular collision occurs with this rectangle
+        and the other.
+        :param other: The other rectangle to check a collision against
+        :type other: SDL_Rect
+        """
+        collision = True
+
+        if self.y + self.height <= other.y:
+            collision = False
+        if self.y >= other.y + other.h:
+            collision = False
+        if self.x + self.width <= other.x:
+            collision = False
+        if self.x >= other.x + other.w:
+            collision = False
+
+        return collision
+
 class Window(RectangularEntity):
     """The class representing a window that can be placed on an exterior wall.
     """
@@ -194,6 +215,30 @@ class Window(RectangularEntity):
         """Initializes the window as a rectangular entity.
         """
         RectangularEntity.__init__(self, rectangle)
+
+    def __str__(self):
+        """Returns window type string and its length.
+        """
+        return 'Window' + ' ('\
+            + Tools.convert_to_unit_system(Window.LENGTH) + ')'
+
+class Door(RectangularEntity):
+    """The class representing a door that can be placed on a wall.
+    """
+    
+    # Default length (px)
+    LENGTH = 36
+
+    def __init__(self, rectangle = sdl2.SDL_Rect(0, 0, 0, 0)):
+        """Initializes the door as a rectangular entity.
+        """
+        RectangularEntity.__init__(self, rectangle)
+
+    def __str__(self):
+        """Returns door type string and its length.
+        """
+        return 'Door' + ' ('\
+            + Tools.convert_to_unit_system(Door.LENGTH) + ')'
 
 class UserText:
     """The class representing text that the user can place on the drawing.

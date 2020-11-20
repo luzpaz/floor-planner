@@ -140,6 +140,11 @@ class View:
             self.render_window(window, controller.current_layer)
             entities_rendered += 1
 
+        # Render doors
+        for door in model.doors:
+            self.render_door(door, controller.current_layer)
+            entities_rendered += 1
+
         # Render user text
         for text in model.user_text:
             self.render_absolute_text(text)
@@ -419,8 +424,11 @@ class View:
         sdl2.SDL_RenderFillRect(self.renderer, sdl2.SDL_Rect(
             window.x, window.y, window.width, window.height))
 
-        # Render black borders
-        sdl2.SDL_SetRenderDrawColor(self.renderer, 0, 0, 0, 255)
+        # Render black borders, render green borders if selected
+        if window.selected:
+            sdl2.SDL_SetRenderDrawColor(self.renderer, 34, 139, 34, 255)
+        else:
+            sdl2.SDL_SetRenderDrawColor(self.renderer, 0, 0, 0, 255)
 
         # Top border
         sdl2.SDL_RenderDrawLine(self.renderer, window.x, window.y,
@@ -440,6 +448,47 @@ class View:
         sdl2.SDL_RenderDrawLine(self.renderer, window.x + window.width - 1,
                                 window.y, window.x + window.width - 1,
                                 window.y + window.height - 1)
+        return True
+
+    def render_door(self, door, layer = 0):
+        """Renders the door provided with absolute location onto the layer.
+        Renders a solid white rectangle for the background and black borders.
+        :param door: The door to render
+        :type door: Window from 'entities.py'
+        :param layer: The layer index from the Textures class to render onto
+        :type layer: int
+        """
+        sdl2.SDL_SetRenderTarget(self.renderer, self.textures.get_layer(layer))
+        
+        # Render grey background
+        sdl2.SDL_SetRenderDrawColor(self.renderer, 128, 128, 128, 255)
+        sdl2.SDL_RenderFillRect(self.renderer, sdl2.SDL_Rect(
+            door.x, door.y, door.width, door.height))
+        
+        # Render black borders, render green borders if selected
+        if door.selected:
+            sdl2.SDL_SetRenderDrawColor(self.renderer, 34, 139, 34, 255)
+        else:
+            sdl2.SDL_SetRenderDrawColor(self.renderer, 0, 0, 0, 255)
+
+        # Top border
+        sdl2.SDL_RenderDrawLine(self.renderer, door.x, door.y,
+                                door.x + door.width - 1, door.y)
+
+        # Bottom border
+        sdl2.SDL_RenderDrawLine(self.renderer, door.x, door.y
+                                + door.height - 1,
+                                door.x + door.width - 1,
+                                door.y + door.height - 1)
+
+        # Left border
+        sdl2.SDL_RenderDrawLine(self.renderer, door.x, door.y,
+                                door.x, door.y + door.height - 1)
+
+        # Right border
+        sdl2.SDL_RenderDrawLine(self.renderer, door.x + door.width - 1,
+                                door.y, door.x + door.width - 1,
+                                door.y + door.height - 1)
         return True
 
     def render_loading(self):

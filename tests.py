@@ -9,7 +9,7 @@ from app import App
 from controller import Controller, Camera, Text, CenterText, Button, Panel,\
     MessageStack, FPSDisplayer
 from ctypes import c_int, pointer
-from entities import Line
+from entities import Line, RectangularEntity
 from entity_types import EntityType
 from model import Model, UserText
 from polling import PollingType
@@ -113,6 +113,41 @@ class LineTests(unittest.TestCase):
         """
         self.assertEqual(Line.intersection((0, 0), (5, 0), (2, -1), (2, 4)),
                          (2, 0))
+
+class RectangularTests(unittest.TestCase):
+    """Tests for the RectangularEntity class (entities.py)."""
+    rectangle = RectangularEntity(sdl2.SDL_Rect(0, 0, 5, 5))
+
+    def test_no_collision(self):
+        """Ensure check_collision returns false if the two rectangles
+        are not colliding.
+        """
+        self.assertFalse(RectangularTests.rectangle.check_collision(
+            sdl2.SDL_Rect(-10, -10, 5, 5)))
+
+        # Touching on the edge but no overlap
+        self.assertFalse(RectangularTests.rectangle.check_collision(
+            sdl2.SDL_Rect(-5, -5, 5, 5)))
+
+    def test_base_collision(self):
+        """Ensure check_collision returns true if the two rectangles
+        are colliding on one side.
+        """
+        self.assertTrue(RectangularTests.rectangle.check_collision(
+            sdl2.SDL_Rect(2, 0, 5, 5)))
+        self.assertTrue(RectangularTests.rectangle.check_collision(
+            sdl2.SDL_Rect(-2, 0, 5, 5)))
+        self.assertTrue(RectangularTests.rectangle.check_collision(
+            sdl2.SDL_Rect(0, 3, 5, 5)))
+        self.assertTrue(RectangularTests.rectangle.check_collision(
+            sdl2.SDL_Rect(0, -3, 5, 5)))
+
+    def test_overlap_collision(self):
+        """Ensure check_collision returns true if the two rectangles
+        completely overlap.
+        """
+        self.assertTrue(RectangularTests.rectangle.check_collision(
+            sdl2.SDL_Rect(0, 0, 5, 5)))
 
 class ControllerTests(unittest.TestCase):
     """Tests for the Controller class (controller.py)."""
@@ -410,9 +445,9 @@ class ControllerTests(unittest.TestCase):
         app.controller.handle_one_point_placement(event, app.model)
         self.assertEqual(len(app.model.windows), 1)
 
-    def test_vertical_window_placement(self):
-        """Ensure handle_one_point_placement for a window on a horizontal wall
-        adds the window to the model.
+    def test_vertical_door_placement(self):
+        """Ensure handle_one_point_placement for a door on a horizontal wall
+        adds the door to the model.
         """
         app = App()
         event = sdl2.SDL_Event()
@@ -422,10 +457,10 @@ class ControllerTests(unittest.TestCase):
 
         app.controller.mouse_x = 0
         app.controller.mouse_y = 2
-        app.controller.placement_type = EntityType.WINDOW
+        app.controller.placement_type = EntityType.DOOR
         app.controller.place_one_point = True
         app.controller.handle_one_point_placement(event, app.model)
-        self.assertEqual(len(app.model.windows), 1)
+        self.assertEqual(len(app.model.doors), 1)
 
     def test_empty_window_placement(self):
         """Ensure placing window when there are no exterior walls causes
@@ -831,14 +866,18 @@ class ViewTests(unittest.TestCase):
         for i in range(5):
             ViewTests.app.model.add_line(EntityType.EXTERIOR_WALL)
 
-        for i in range(2):
+        for i in range(3):
             ViewTests.app.model.add_window()
 
+        for i in range(2):
+            ViewTests.app.model.add_door()
+
         self.assertEqual(ViewTests.app.view.update_layer(
-            ViewTests.app.model, ViewTests.app.controller), 7)
+            ViewTests.app.model, ViewTests.app.controller), 10)
 
         ViewTests.app.model.lines.clear()
         ViewTests.app.model.windows.clear()
+        ViewTests.app.model.doors.clear()
 
     def test_render_ui_text(self):
         """Ensure expected number of text displayers are rendered from the UI.
@@ -1090,6 +1129,17 @@ class PollingTests(unittest.TestCase):
         self.assertTrue(app.controller.place_one_point)
         self.assertEqual(app.controller.placement_type,
                          EntityType.WINDOW)
+
+    def test_draw_door(self):
+        """Ensure the draw door poll event handler begins one point
+        placement for a door.
+        """
+        app = App()
+        app.controller.polling = PollingType.DRAW_DOOR
+        app.controller.handle_input(app.model, (1920, 1080), [])
+        self.assertTrue(app.controller.place_one_point)
+        self.assertEqual(app.controller.placement_type,
+                         EntityType.DOOR)
 
 class ToolsTests(unittest.TestCase):
     """Tests for classes in the tools.py module."""

@@ -7,6 +7,7 @@ EntityType = Enum(
     INTERIOR_WALL\
     REGULAR_LINE\
     WINDOW\
+    DOOR\
     BUTTON_PANEL\
     SELECTED_BUTTON\
     BUTTON_BACKGROUND\
@@ -37,4 +38,5 @@ ModelMutex = Enum(
     'ModelMutex',
     'LINES\
     VERTICES\
-    RECTANGLES')
+    WINDOWS\
+    DOORS')

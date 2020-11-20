@@ -184,10 +184,15 @@ class DrawWindow:
         controller.polling = PollingType.SELECTING
         
 class DrawDoor:
+    """The polling event handler for drawing a door."""
+
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
-        controller.message_stack.insert(['Not implemented'])
+        """Begins one-point placement for a door."""
         controller.reset()
+        controller.placement_type = EntityType.DOOR
+        controller.place_one_point = True
+        controller.polling = PollingType.SELECTING
         
 class PollingType:
     """Enum for indexing handlers list in the controller."""

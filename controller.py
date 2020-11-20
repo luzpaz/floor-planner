@@ -69,120 +69,121 @@ class Controller:
             if event.type == sdl2.SDL_QUIT:
                 return False
 
-            #try:
-            # Retrive mouse location
-            self.get_mouse_location()
+            try:
+                # Retrive mouse location
+                self.get_mouse_location()
                 
-            # Handle text input
-            self.reset_text()
-            self.handle_text_input(event)
+                # Handle text input
+                self.reset_text()
+                self.handle_text_input(event)
 
-            # Update text diplayers
-            self.update_bottom_right_text()
-            self.update_bottom_center_text(model)
+                # Update text diplayers
+                self.update_bottom_right_text()
+                self.update_bottom_center_text(model)
 
-            # Zoom camera in/out
-            if event.type == sdl2.SDL_MOUSEWHEEL:
-                self.handle_camera_zoom(event)
+                # Zoom camera in/out
+                if event.type == sdl2.SDL_MOUSEWHEEL:
+                    self.handle_camera_zoom(event)
 
-            # Resize the screen
-            if event.type == sdl2.SDL_WINDOWEVENT:
-                model.update_needed = True
+                # Resize the screen
+                if event.type == sdl2.SDL_WINDOWEVENT:
+                    model.update_needed = True
 
-            # Select a single entity
-            if event.type == sdl2.SDL_MOUSEBUTTONDOWN:
-                self.handle_single_entity_selection(model)
+                # Select a single entity
+                if event.type == sdl2.SDL_MOUSEBUTTONDOWN:
+                    self.handle_single_entity_selection(model)
                 
-            # Select multiple entities
-            self.handle_mouse_drag(event)
-            if self.mouse_selection.w != 0 and self.mouse_selection.h != 0:
-                self.handle_multiple_entity_selection(model)
+                # Select multiple entities
+                self.handle_mouse_drag(event)
+                if self.mouse_selection.w != 0 and self.mouse_selection.h != 0:
+                    self.handle_multiple_entity_selection(model)
 
-            # Panning camera
-            if keystate[sdl2.SDL_SCANCODE_LSHIFT]\
-                or keystate[sdl2.SDL_SCANCODE_RSHIFT]:
-                self.handle_camera_pan(event)
+                # Panning camera
+                if keystate[sdl2.SDL_SCANCODE_LSHIFT]\
+                    or keystate[sdl2.SDL_SCANCODE_RSHIFT]:
+                    self.handle_camera_pan(event)
 
-            # Place entity hotkeys
-            if not self.place_two_points:
-                if keystate[sdl2.SDL_SCANCODE_KP_0]: # exterior wall
-                    self.reset()
-                    self.placement_type = EntityType.EXTERIOR_WALL
-                    self.line_thickness = Line.EXTERIOR_WALL
-                    self.place_two_points = True
-                elif keystate[sdl2.SDL_SCANCODE_KP_1]: # interior wall
-                    self.reset()
-                    self.placement_type = EntityType.INTERIOR_WALL
-                    self.line_thickness = Line.INTERIOR_WALL
-                    self.place_two_points = True
-                elif keystate[sdl2.SDL_SCANCODE_LCTRL]\
-                    and keystate[sdl2.SDL_SCANCODE_M]: # measurement
-                    self.reset()
-                    self.placement_type = EntityType.NONE
-                    self.line_thickness = Line.REGULAR_LINE
-                    self.place_two_points = True
+                # Place entity hotkeys
+                if not self.place_two_points:
+                    if keystate[sdl2.SDL_SCANCODE_KP_0]: # exterior wall
+                        self.reset()
+                        self.placement_type = EntityType.EXTERIOR_WALL
+                        self.line_thickness = Line.EXTERIOR_WALL
+                        self.place_two_points = True
+                    elif keystate[sdl2.SDL_SCANCODE_KP_1]: # interior wall
+                        self.reset()
+                        self.placement_type = EntityType.INTERIOR_WALL
+                        self.line_thickness = Line.INTERIOR_WALL
+                        self.place_two_points = True
+                    elif keystate[sdl2.SDL_SCANCODE_LCTRL]\
+                        and keystate[sdl2.SDL_SCANCODE_M]: # measurement
+                        self.reset()
+                        self.placement_type = EntityType.NONE
+                        self.line_thickness = Line.REGULAR_LINE
+                        self.place_two_points = True
 
-            # Place point based entity
-            if self.place_one_point:
-                self.handle_one_point_placement(event, model)
+                # Place point based entity
+                if self.place_one_point:
+                    self.handle_one_point_placement(event, model)
 
-            # Place line based entity
-            if self.place_two_points:
-                self.handle_two_point_placement(event, keystate, model)
+                # Place line based entity
+                if self.place_two_points:
+                    self.handle_two_point_placement(event, keystate, model)
 
-            self.handle_panel_input(event, screen_dimensions)
+                self.handle_panel_input(event, screen_dimensions)
                      
-            # User pressed the exit button
-            if self.polling == PollingType.EXITING:
-                return False
+                # User pressed the exit button
+                if self.polling == PollingType.EXITING:
+                    return False
 
-            # Cancel any polling
-            if keystate[sdl2.SDL_SCANCODE_ESCAPE]:
-                self.reset()
+                # Cancel any polling
+                if keystate[sdl2.SDL_SCANCODE_ESCAPE]:
+                    self.reset()
                     
-            if self.polling != PollingType.SELECTING:
-                self.handlers[self.polling].handle(
-                    self, model, keystate, event,
-                    screen_dimensions, commands)
+                if self.polling != PollingType.SELECTING:
+                    self.handlers[self.polling].handle(
+                        self, model, keystate, event,
+                        screen_dimensions, commands)
 
-            # Hotkeys for polling:
+                # Hotkeys for polling:
 
-            # Delete selected entities
-            if keystate[sdl2.SDL_SCANCODE_DELETE]:
-                for entity in self.selected_entities:
-                    model.remove_entity(entity)
-                self.selected_entities.clear()
+                # Delete selected entities
+                if keystate[sdl2.SDL_SCANCODE_DELETE]:
+                    for entity in self.selected_entities:
+                        model.remove_entity(entity)
+                    self.selected_entities.clear()
 
-            # Export drawing to png file
-            if keystate[sdl2.SDL_SCANCODE_LCTRL]\
-                and keystate[sdl2.SDL_SCANCODE_E]:
-                self.polling = PollingType.EXPORTING
+                # Export drawing to png file
+                if keystate[sdl2.SDL_SCANCODE_LCTRL]\
+                    and keystate[sdl2.SDL_SCANCODE_E]:
+                    self.polling = PollingType.EXPORTING
 
-            # Display the drawing grid
-            if keystate[sdl2.SDL_SCANCODE_LCTRL]\
-                and keystate[sdl2.SDL_SCANCODE_G]:
-                self.polling = PollingType.DISPLAY_GRID
+                # Display the drawing grid
+                if keystate[sdl2.SDL_SCANCODE_LCTRL]\
+                    and keystate[sdl2.SDL_SCANCODE_G]:
+                    self.polling = PollingType.DISPLAY_GRID
 
-            # Drawing a regular line
-            if keystate[sdl2.SDL_SCANCODE_LCTRL]\
-                and keystate[sdl2.SDL_SCANCODE_D]:
-                self.polling = PollingType.DRAWING
+                # Drawing a regular line
+                if keystate[sdl2.SDL_SCANCODE_LCTRL]\
+                    and keystate[sdl2.SDL_SCANCODE_D]:
+                    self.polling = PollingType.DRAWING
 
-            # Adding user text
-            if keystate[sdl2.SDL_SCANCODE_LCTRL]\
-                and keystate[sdl2.SDL_SCANCODE_T]:
-                self.polling = PollingType.ADDING_TEXT
+                # Adding user text
+                if keystate[sdl2.SDL_SCANCODE_LCTRL]\
+                    and keystate[sdl2.SDL_SCANCODE_T]:
+                    self.polling = PollingType.ADDING_TEXT
 
-            # Reset the camera position and scale
-            if keystate[sdl2.SDL_SCANCODE_LCTRL]\
-                and keystate[sdl2.SDL_SCANCODE_R]:
-                self.camera.x = 0
-                self.camera.y = 0
-                self.camera.scale = 1.0
+                # Reset the camera position and scale
+                if keystate[sdl2.SDL_SCANCODE_LCTRL]\
+                    and keystate[sdl2.SDL_SCANCODE_R]:
+                    self.camera.x = 0
+                    self.camera.y = 0
+                    self.camera.scale = 1.0
 
-            # If any errors occur, reset the UI state
-            #except:
-                #self.reset()
+                # If any errors occur, reset the UI state
+            except:
+                print('Exception occurred')
+                self.reset()
 
         # Scroll camera using keyboard input
         # Do not scroll the camera if the user is typing text or if they
@@ -357,23 +358,25 @@ class Controller:
         adjusted_mouse_x = adjusted_mouse[0]
         adjusted_mouse_y = adjusted_mouse[1]
 
-        result = model.get_exterior_wall_for_window(
-            (adjusted_mouse_x, adjusted_mouse_y))
+        # Exterior walls only for windows
+        exterior_only = self.placement_type == EntityType.WINDOW
+
+        result = model.get_nearest_wall(
+            (adjusted_mouse_x, adjusted_mouse_y), exterior_only)
 
         # Display hint text
         if self.placement_type == EntityType.WINDOW:
             self.center_text.set_top_text(
                 'Select center location for window on an exterior wall.')
 
-        # No exterior wall for window and user pressed
+        # No wall and user pressed
         if not result and event.type == sdl2.SDL_MOUSEBUTTONDOWN:
             self.message_stack.insert(
                 ('No exterior wall for window placement at that location.',))
             self.reset()
             return
 
-        # No exterior wall but user did not press
-        # Continue to the next frame
+        # No wall but user did not press. Continue to the next frame
         if not result:
             return
 
@@ -382,9 +385,17 @@ class Controller:
         
         if event.type == sdl2.SDL_MOUSEBUTTONDOWN:
             if self.nearest_line.horizontal:
-                model.add_window(self.nearest_vertex, True)
+                if self.placement_type == EntityType.DOOR:
+                    model.add_door(self.nearest_vertex, True,
+                                   self.nearest_line.thickness)
+                else:
+                    model.add_window(self.nearest_vertex, True)
             elif self.nearest_line.vertical:
-                model.add_window(self.nearest_vertex, False)
+                if self.placement_type == EntityType.DOOR:
+                    model.add_door(self.nearest_vertex, False,
+                                   self.nearest_line.thickness)
+                else:
+                    model.add_window(self.nearest_vertex, False)
 
             self.reset()
 
