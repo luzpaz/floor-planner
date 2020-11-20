@@ -150,44 +150,11 @@ class Controller:
                         model.remove_entity(entity)
                     self.selected_entities.clear()
 
-                # Export drawing to png file
                 if keystate[sdl2.SDL_SCANCODE_LCTRL]\
-                    and keystate[sdl2.SDL_SCANCODE_E]:
-                    self.polling = PollingType.EXPORTING
+                    or keystate[sdl2.SDL_SCANCODE_RCTRL]:
+                    self.handle_ctrl_hotkeys(keystate)
 
-                # Display the drawing grid
-                if keystate[sdl2.SDL_SCANCODE_LCTRL]\
-                    and keystate[sdl2.SDL_SCANCODE_G]:
-                    self.polling = PollingType.DISPLAY_GRID
-
-                # Drawing a regular line
-                if keystate[sdl2.SDL_SCANCODE_LCTRL]\
-                    and keystate[sdl2.SDL_SCANCODE_D]:
-                    self.polling = PollingType.DRAWING
-
-                # Adding user text
-                if keystate[sdl2.SDL_SCANCODE_LCTRL]\
-                    and keystate[sdl2.SDL_SCANCODE_T]:
-                    self.polling = PollingType.ADDING_TEXT
-
-                # Reset the camera position and scale
-                if keystate[sdl2.SDL_SCANCODE_LCTRL]\
-                    and keystate[sdl2.SDL_SCANCODE_R]:
-                    self.camera.x = 0
-                    self.camera.y = 0
-                    self.camera.scale = 1.0
-
-                # Undo the last action
-                if keystate[sdl2.SDL_SCANCODE_LCTRL]\
-                    and keystate[sdl2.SDL_SCANCODE_Z]:
-                    self.polling = PollingType.UNDOING
-
-                # Redo the last undo
-                if keystate[sdl2.SDL_SCANCODE_LCTRL]\
-                    and keystate[sdl2.SDL_SCANCODE_Y]:
-                    self.polling = PollingType.REDOING
-
-                # If any errors occur, reset the UI state
+            # If any errors occur, reset the UI state
             except:
                 print('Exception occurred')
                 self.reset()
@@ -214,6 +181,43 @@ class Controller:
 
         self.mouse_x = mouse_x_ptr.contents.value
         self.mouse_y = mouse_y_ptr.contents.value
+
+    def handle_ctrl_hotkeys(self, keystate):
+        """Handles keyboard input if the user holds the CTRL key and pressed
+        another key by setting the polling event accordingly.
+        :param keystate: SDL keystate for checking if using is pressing SHIFT
+        :type keystate: int[]
+        """
+
+        # Export drawing to png file
+        if keystate[sdl2.SDL_SCANCODE_E]:
+            self.polling = PollingType.EXPORTING
+
+        # Display the drawing grid
+        if keystate[sdl2.SDL_SCANCODE_G]:
+            self.polling = PollingType.DISPLAY_GRID
+
+        # Drawing a regular line
+        if keystate[sdl2.SDL_SCANCODE_D]:
+            self.polling = PollingType.DRAWING
+
+        # Adding user text
+        if keystate[sdl2.SDL_SCANCODE_T]:
+            self.polling = PollingType.ADDING_TEXT
+
+        # Reset the camera position and scale
+        if keystate[sdl2.SDL_SCANCODE_R]:
+            self.camera.x = 0
+            self.camera.y = 0
+            self.camera.scale = 1.0
+
+        # Undo the last action
+        if keystate[sdl2.SDL_SCANCODE_Z]:
+            self.polling = PollingType.UNDOING
+
+        # Redo the last undo
+        if keystate[sdl2.SDL_SCANCODE_Y]:
+            self.polling = PollingType.REDOING
 
     def handle_text_input(self, event):
         """Updates the text the user is currently typing. Text can only
