@@ -148,6 +148,17 @@ class Controller:
                     or keystate[sdl2.SDL_SCANCODE_RCTRL]:
                     self.handle_ctrl_hotkeys(keystate)
 
+                # + or - keys for camera zoom
+                if keystate[sdl2.SDL_SCANCODE_KP_PLUS]:
+                    # Create fake event to reuse camera zoom code
+                    mock_event = sdl2.SDL_Event()
+                    mock_event.wheel.y = 1
+                    self.handle_camera_zoom(mock_event)
+                if keystate[sdl2.SDL_SCANCODE_KP_MINUS]:
+                    mock_event = sdl2.SDL_Event()
+                    mock_event.wheel.y = -1
+                    self.handle_camera_zoom(mock_event)
+
             # If any errors occur, reset the UI state
             except:
                 print('Exception occurred') # for debugging only
@@ -323,10 +334,8 @@ class Controller:
             self.panning_camera = True
             self.pan_start_x = self.mouse_x
             self.pan_start_y = self.mouse_y
-            self.display_grid = False
         elif self.panning_camera and event.type == sdl2.SDL_MOUSEBUTTONUP:
             self.panning_camera = False
-            self.display_grid = True
 
         if not self.panning_camera:
             return

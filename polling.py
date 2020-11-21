@@ -74,10 +74,18 @@ class Panning:
         controller.handle_camera_pan(event)
         
 class Zooming:
+    """The polling event handler for zooming the camera.
+    Currently does not add any additional functionality that the user cannot
+    do without the poll event, but displays the hint message in case the user
+    does not know the hotkeys necessary for zooming the camera.
+    Future functionality: zoom on an area by mouse drag selection."""
+
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
-        controller.message_stack.insert(['Not implemented'])
-        controller.reset()
+        """Displays the hint text for camera zooming.
+        """
+        controller.center_text.set_top_text(
+            'Scroll mouse wheel or use +/- on the numpad to zoom the camera.')
 
 class DisplayGrid:
     """The polling event handler for displaying the drawing grid."""

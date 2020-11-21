@@ -178,7 +178,7 @@ class ControllerTests(unittest.TestCase):
 
         controller.update_bottom_right_text()
         self.assertEqual(controller.center_text.text[
-            CenterText.BOTTOM_RIGHT_TEXT].text, 'X: 500 Y: 0 Zoom: 1.0')
+            CenterText.BOTTOM_RIGHT_TEXT].text, 'X: 500 Y: 0 - Zoom: 1.0')
 
     def test_update_bottom_text(self):
         """Ensure the line the user has their mouse hovered over has its
@@ -1221,6 +1221,17 @@ class PollingTests(unittest.TestCase):
         app.controller.polling = PollingType.REDOING
         app.controller.handle_input(app.model, (1920, 1080), [])
         self.assertEqual(len(app.model.lines), 0)
+
+    def test_hint_message_for_zoom(self):
+        """Ensure that the zoom poll event handler displays the hint message.
+        """
+        app = App()
+        
+        app.controller.polling = PollingType.ZOOMING
+        app.controller.handle_input(app.model, (1920, 1080), [])
+        self.assertEqual(app.controller.center_text.text[
+            CenterText.TOP_CENTER_TEXT].text, 'Scroll mouse wheel'\
+               + ' or use +/- on the numpad to zoom the camera.')
 
 class ToolsTests(unittest.TestCase):
     """Tests for classes in the tools.py module."""
