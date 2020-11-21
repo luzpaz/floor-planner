@@ -245,10 +245,10 @@ class Controller:
 
         # Writing inventory to file
         if keystate[sdl2.SDL_SCANCODE_I]:
-            self.polling = PollingType.INVENTORY
+            self.polling = PollingType.WRITING_INVENTORY
 
         # Export drawing to png file
-        if keystate[sdl2.SDL_SCANCODE_E]:
+        if keystate[sdl2.SDL_SCANCODE_X]:
             self.polling = PollingType.EXPORTING
 
     def handle_text_input(self, event):

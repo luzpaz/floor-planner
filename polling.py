@@ -1,4 +1,4 @@
-import os, sdl2, sdl2.ext
+import glob, pickle, os, sdl2, sdl2.ext
 
 from entities import Line
 from entity_types import EntityType
@@ -169,9 +169,38 @@ class Redoing:
         self.last_redo = sdl2.SDL_GetTicks()
         
 class Saving:
+    """The polling event handler for saving the model entities to file."""
+
+    # Minimum time required between saves (ms)
+    INTERVAL = 1000
+
+    def __init__(self):
+        self.last_save = sdl2.SDL_GetTicks()
+
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
-        controller.message_stack.insert(['Not implemented'])
+        """Saves the model entities to a file."""
+        
+        # Only save every interval so that user holding Ctrl+S does
+        # not rapidly save many times
+        if Saving.INTERVAL > sdl2.SDL_GetTicks() - self.last_save:
+            return
+
+        # Search directory for number of .pkl files to determine filename
+        num_pkl_files = 0
+        for file in glob.glob('*.pkl'):
+            num_pkl_files += 1
+        filename = 'save{}.pkl'.format(num_pkl_files + 1)
+
+        with open(filename, 'wb') as file:
+            pickle.dump(model.lines, file, pickle.HIGHEST_PROTOCOL)
+            pickle.dump(model.windows, file, pickle.HIGHEST_PROTOCOL)
+            pickle.dump(model.doors, file, pickle.HIGHEST_PROTOCOL)
+            pickle.dump(model.user_text, file, pickle.HIGHEST_PROTOCOL)
+
+        controller.message_stack.insert(['Saved drawing: '\
+            + str(os.getcwd()) + '\\' + filename])
+        self.last_save = sdl2.SDL_GetTicks()
         controller.reset()
         
 class WritingInventory:
@@ -180,13 +209,11 @@ class WritingInventory:
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
         """Exports inventory to a txt file."""
-        controller.loading = True
         controller.message_stack.insert(['Created list of entities: '\
             + str(os.getcwd()) + '\list.txt'])
         with open('list.txt', 'w') as file:
             file.write(model.get_inventory())
         controller.reset()
-        controller.loading = False
         
 class Exporting:
     """The polling event handler for exporting the drawing to png."""

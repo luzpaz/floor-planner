@@ -1,4 +1,4 @@
-import ctypes, polling, sdl2, threading, unittest, os.path
+import ctypes, glob, polling, sdl2, threading, unittest, os.path
 
 from app import App
 from controller import Controller, Camera, Text, CenterText, Button, Panel,\
@@ -592,6 +592,60 @@ class ControllerTests(unittest.TestCase):
             message_stack.update()
         self.assertEqual(len(message_stack.text), 0)
 
+    def test_ctrl_hotkeys(self):
+        """Ensure user pressing CTRL and a hotkey sets the expected poll event.
+        """
+        controller = Controller()
+        keystate = sdl2.SDL_GetKeyboardState(None)
+
+        controller.handle_ctrl_hotkeys(keystate)
+        self.assertEqual(controller.polling, PollingType.SELECTING)
+        
+        keystate = sdl2.SDL_GetKeyboardState(None)
+        keystate[sdl2.SDL_SCANCODE_E] = 1
+        controller.handle_ctrl_hotkeys(keystate)
+        self.assertEqual(controller.polling, PollingType.ERASING)
+        
+        keystate = sdl2.SDL_GetKeyboardState(None)
+        keystate[sdl2.SDL_SCANCODE_D] = 1
+        controller.handle_ctrl_hotkeys(keystate)
+        self.assertEqual(controller.polling, PollingType.DRAWING)
+        
+        keystate = sdl2.SDL_GetKeyboardState(None)
+        keystate[sdl2.SDL_SCANCODE_M] = 1
+        controller.handle_ctrl_hotkeys(keystate)
+        self.assertEqual(controller.polling, PollingType.MEASURING)
+        
+        keystate = sdl2.SDL_GetKeyboardState(None)
+        keystate[sdl2.SDL_SCANCODE_T] = 1
+        controller.handle_ctrl_hotkeys(keystate)
+        self.assertEqual(controller.polling, PollingType.ADDING_TEXT)
+        
+        keystate = sdl2.SDL_GetKeyboardState(None)
+        keystate[sdl2.SDL_SCANCODE_G] = 1
+        controller.handle_ctrl_hotkeys(keystate)
+        self.assertEqual(controller.polling, PollingType.DISPLAY_GRID)
+        
+        keystate = sdl2.SDL_GetKeyboardState(None)
+        keystate[sdl2.SDL_SCANCODE_Z] = 1
+        controller.handle_ctrl_hotkeys(keystate)
+        self.assertEqual(controller.polling, PollingType.UNDOING)
+        
+        keystate = sdl2.SDL_GetKeyboardState(None)
+        keystate[sdl2.SDL_SCANCODE_Y] = 1
+        controller.handle_ctrl_hotkeys(keystate)
+        self.assertEqual(controller.polling, PollingType.REDOING)
+        
+        keystate = sdl2.SDL_GetKeyboardState(None)
+        keystate[sdl2.SDL_SCANCODE_I] = 1
+        controller.handle_ctrl_hotkeys(keystate)
+        self.assertEqual(controller.polling, PollingType.WRITING_INVENTORY)
+        
+        keystate = sdl2.SDL_GetKeyboardState(None)
+        keystate[sdl2.SDL_SCANCODE_X] = 1
+        controller.handle_ctrl_hotkeys(keystate)
+        self.assertEqual(controller.polling, PollingType.EXPORTING)
+
 class ModelTests(unittest.TestCase):
     """Tests for the Model class (model.py)."""
 
@@ -852,6 +906,23 @@ class AppTests(unittest.TestCase):
         self.assertIsInstance(app.model, Model)
         self.assertIsInstance(app.controller, Controller)
         self.assertIsInstance(app.view, View)
+
+    def test_loading(self):
+        """Ensure app can load entities into the model from a save file.
+        """
+        app = App('test.pkl')
+        self.assertEqual(len(app.model.lines), 4)
+        self.assertEqual(len(app.model.windows), 2)
+        self.assertEqual(len(app.model.doors), 1)
+
+    def test_loading_failure(self):
+        """Ensure app trying to load into a file that does not exist
+        adds no entities to the model.
+        """
+        app = App('.pkl')
+        self.assertEqual(len(app.model.lines), 0)
+        self.assertEqual(len(app.model.windows), 0)
+        self.assertEqual(len(app.model.doors), 0)
 
     def test_app_loop(self):
         """TO DO: Ensure the app loop runs and exits.
@@ -1240,6 +1311,23 @@ class PollingTests(unittest.TestCase):
         self.assertEqual(app.controller.center_text.text[
             CenterText.TOP_CENTER_TEXT].text, 'Scroll mouse wheel'\
                + ' or use +/- on the numpad to zoom the camera.')
+
+    def test_saving(self):
+        """Ensures that the saving poll event handler creates a save filename
+        with the expected name: save{}.pkl where {} is the number of .pkl files
+        existing in the directory + 1
+        """
+        app = App()
+        
+        app.controller.handlers[PollingType.SAVING].last_save = -5000
+        app.controller.polling = PollingType.SAVING
+        app.controller.handle_input(app.model, (1920, 1080), [])
+
+        num_pkl_files = 0
+        for file in glob.glob('*.pkl'):
+            num_pkl_files += 1
+        filename = 'save{}.pkl'.format(num_pkl_files)
+        self.assertTrue(os.path.isfile(filename))
 
 class ToolsTests(unittest.TestCase):
     """Tests for classes in the tools.py module."""

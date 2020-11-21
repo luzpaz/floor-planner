@@ -3,14 +3,18 @@ import sdl2, threading
 from background_updates import BackgroundUpdater
 from model import Model
 from controller import Controller
+from tools import Loader
 from view import View
 
 class App:
     """The class responsible for housing the MVC components and executing
     the application loop."""
 
-    def __init__(self):
-        """Initialize the application MVC components."""
+    def __init__(self, load = ''):
+        """Initialize the application MVC components.
+        :param load: Saved filename to load from
+        :type load: str
+        """
         self.model = Model()
         self.view = View()
         self.controller = Controller()
@@ -20,6 +24,9 @@ class App:
 
         # Commands received from the controller
         self.commands = []
+
+        # Load from saved file if provided
+        if load: self.load_from_file(load)
 
     def run(self):
         """Begins execution of application loop, which handles user input and
@@ -61,6 +68,20 @@ class App:
 
         self.commands.clear()
         self.controller.loading = False
+
+    def load_from_file(self, filename = ''):
+        """Tries to load model entities from the filename.
+        :param filename: Saved filename to load from
+        :type filename: str
+        """
+        try:
+            loader = Loader(self.model, filename)
+            self.controller.message_stack.insert(('Loaded from save file: '
+                                                  + filename,))
+        except:
+            self.controller.message_stack.insert(('Error loading save file: '
+                                                  + filename,))
+            self.model = Model() # reset model
 
 if __name__ == '__main__':
     app = App()

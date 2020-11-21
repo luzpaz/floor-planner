@@ -1,4 +1,4 @@
-import sdl2, sdl2.sdlimage
+import pickle, sdl2, sdl2.sdlimage
 
 from ctypes import c_int, pointer
 
@@ -73,3 +73,20 @@ class Exporter:
 
         sdl2.SDL_SetRenderTarget(renderer, None)
         last_export = sdl2.SDL_GetTicks()
+
+class Loader:
+    """The class responsible for loading model entities from a save file."""
+
+    def __init__(self, model, filename = 'save.pkl'):
+        """Loads the model entities.
+        :param model: The app model
+        :type model: Model from 'model.py'
+        :param filename: Save filename to load from
+        :type filename: str"""
+        with open(filename, 'rb') as file:
+            model.lines = pickle.load(file)
+            model.windows = pickle.load(file)
+            model.doors = pickle.load(file)
+            model.user_text = pickle.load(file)
+            model.update_verticies()
+            model.update_needed = True
