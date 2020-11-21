@@ -106,7 +106,7 @@ class Undoing:
     """The polling event handler for undoing the last action."""
 
     # Minimum time required between undos (ms)
-    INTERVAL = 250
+    INTERVAL = 100
 
     def __init__(self):
         self.last_undo = sdl2.SDL_GetTicks()
@@ -135,7 +135,7 @@ class Redoing:
     """The polling event handler for redoing the last undo."""
     
     # Minimum time required between redos (ms)
-    INTERVAL = 250
+    INTERVAL = 100
 
     def __init__(self):
         self.last_redo = sdl2.SDL_GetTicks()
@@ -278,15 +278,11 @@ class AddAction:
     def undo(self, controller, model):
         """Defines what is needed to undo this action:
         Removes the added entity from the model."""
-        controller.message_stack.insert(
-            ('Removed ' + str(self.entity.__repr__()),))
-        model.remove_entity(self.entity)
+        model.remove_entity(self.entity, False)
 
     def redo(self, controller, model):
         """Defines what is needed to redo this action:
         Adds the removed entity into the model."""
-        controller.message_stack.insert(
-            ('Added ' + str(self.entity.__repr__()),))
         model.add_entity(self.entity)
 
     def __repr__(self):
@@ -306,16 +302,12 @@ class DeleteAction:
     def undo(self, controller, model):
         """Defines what is needed to undo this action:
         Adds the deleted entity into the model."""
-        controller.message_stack.insert(
-            ('Added ' + str(self.entity.__repr__()),))
         model.add_entity(self.entity)
 
     def redo(self, controller, model):
         """Defines what is needed to redo this action:
         Removes the added entity from the model."""
-        controller.message_stack.insert(
-            ('Removed ' + str(self.entity.__repr__()),))
-        model.remove_entity(self.entity)
+        model.remove_entity(self.entity, False)
 
     def __repr__(self):
         """Returns info needed for debugging."""

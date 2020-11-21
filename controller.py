@@ -260,7 +260,8 @@ class Controller:
         adjusted_mouse_x = (self.mouse_x + self.camera.x) / self.camera.scale
         adjusted_mouse_y = (self.mouse_y + self.camera.y) / self.camera.scale
 
-        if self.mouse_selection.w == 0 or self.mouse_selection.h == 0:
+        if self.mouse_selection.w == 0 or self.mouse_selection.h == 0\
+            or self.panning_camera:
             self.center_text.set_right_text('X: {} Y: {} - Zoom: {}'.format(
                 int(adjusted_mouse_x), int(adjusted_mouse_y),
                 round(self.camera.scale, 10)))
@@ -315,13 +316,17 @@ class Controller:
         by holding the SHIFT key and pressing and moving the mouse.
         :param event: SDL event for checking mouse clicks
         :type event: SDL_Event
+        :param model: The app model
+        :type model: Model from 'model.py'
         """
         if not self.panning_camera and event.type == sdl2.SDL_MOUSEBUTTONDOWN:
             self.panning_camera = True
             self.pan_start_x = self.mouse_x
             self.pan_start_y = self.mouse_y
+            self.display_grid = False
         elif self.panning_camera and event.type == sdl2.SDL_MOUSEBUTTONUP:
             self.panning_camera = False
+            self.display_grid = True
 
         if not self.panning_camera:
             return

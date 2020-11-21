@@ -169,14 +169,15 @@ class Model:
                 self.doors.add(entity)
 
         self.update_needed = True
-
         with self.update_background:
             self.update_background.notify_all()
 
-    def remove_entity(self, entity):
+    def remove_entity(self, entity, action = True):
         """Removes entity from the model.
         :param entity: The entity to remove
         :type entity: Any entity type stored by the model
+        :param action: Whether the user did this removal explicitly.
+        :type action: boolean
         """
 
         if isinstance(entity, Line):
@@ -191,11 +192,11 @@ class Model:
                 self.doors.remove(entity)
 
         self.update_needed = True
-
         with self.update_background:
             self.update_background.notify_all()
 
-        self.actions.append(DeleteAction(entity))
+        if action:
+            self.actions.append(DeleteAction(entity))
 
     def update_verticies(self):
         """Clears current vertices and re-adds them for each line.
