@@ -39,6 +39,10 @@ class Line:
         # Whether the line is a vertical line
         self.vertical = start[0] == end[0]
 
+        # Whether the line is positive on the x/y axes
+        self.positive_x = end[0] > start[0]
+        self.positive_y = end[1] > start[1]
+
         # Whether the line is currently selected by the user
         self.selected = False
 

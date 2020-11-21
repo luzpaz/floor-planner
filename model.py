@@ -1,7 +1,7 @@
 import math, sdl2, sys, threading
 
 from collections import deque
-from entities import Line, Window, Door, UserText
+from entities import Line, Window, Door, UserText, RectangularEntity
 from entity_types import EntityType, ModelMutex
 from polling import AddAction, DeleteAction
 from threading import Lock
@@ -20,6 +20,8 @@ class Model:
         self.doors = set()
 
         self.user_text = set()
+
+        self.square_vertices = set()
 
         self.actions = deque()
         self.undos = deque()
@@ -51,6 +53,7 @@ class Model:
             with self.mutexes[ModelMutex.LINES]:
                 line = Line(start, end, Line.EXTERIOR_WALL, color)
                 self.lines.add(line)
+                self.close_gaps_between_walls(line)
                 self.update_verticies()
         elif type == EntityType.INTERIOR_WALL:
             with self.mutexes[ModelMutex.LINES]:
@@ -206,6 +209,11 @@ class Model:
 
             for line in self.lines:
                 self.add_vertices_from_line(line)
+
+            self.square_vertices = set()
+
+            for line in self.lines:
+                self.close_gaps_between_walls(line)
 
     def get_vertex_within_range(self, origin = (0, 0), range = 12):
         """Returns nearest vertex from the origin that is within the range
@@ -395,3 +403,23 @@ class Model:
                 + Tools.convert_to_unit_system(wall) + '\n'
 
         return inventory
+
+    def close_gaps_between_walls(self, line):
+        """Adds a square vertex to close gaps between two connecting exterior
+        walls for rendering.
+        """
+
+        for other in self.lines:
+            if line is other:
+                continue
+
+            if line.start == other.start or line.start == other.end:
+                self.square_vertices.add(RectangularEntity(sdl2.SDL_Rect(
+                    int(line.start[0] - Line.EXTERIOR_WALL / 2),
+                    int(line.start[1] - Line.EXTERIOR_WALL / 2),
+                    Line.EXTERIOR_WALL, Line.EXTERIOR_WALL)))
+            if line.end == other.end or line.end == other.start:
+                self.square_vertices.add(RectangularEntity(sdl2.SDL_Rect(
+                    int(line.end[0] - Line.EXTERIOR_WALL / 2),
+                    int(line.end[1] - Line.EXTERIOR_WALL / 2),
+                    Line.EXTERIOR_WALL, Line.EXTERIOR_WALL)))

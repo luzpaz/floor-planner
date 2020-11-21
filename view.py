@@ -131,6 +131,11 @@ class View:
             self.render_line(line, controller.current_layer)
             entities_rendered += 1
 
+        # Render square vertices to close the gap between connecting lines
+        for vertex in model.square_vertices:
+            self.render_square_vertex(vertex)
+            entities_rendered += 1
+
         # Render windows
         for window in model.windows:
             self.render_window(window, controller.current_layer)
@@ -450,7 +455,7 @@ class View:
         """Renders the door provided with absolute location onto the layer.
         Renders a solid white rectangle for the background and black borders.
         :param door: The door to render
-        :type door: Window from 'entities.py'
+        :type door: Door from 'entities.py'
         :param layer: The layer index from the Textures class to render onto
         :type layer: int
         """
@@ -486,6 +491,19 @@ class View:
                                 door.y, door.x + door.width - 1,
                                 door.y + door.height - 1)
         return True
+
+    def render_square_vertex(self, vertex, layer = 0):
+        """Renders the square vertex provided with absolute location onto the
+        layer. Renders a solid black rectangle.
+        :param vertex: The square vertex to render
+        :type vertex: RectangularEntity from 'entities.py'
+        :param layer: The layer index from the Textures class to render onto
+        :type layer: int
+        """
+        sdl2.SDL_SetRenderTarget(self.renderer, self.textures.get_layer(layer))
+        sdl2.SDL_SetRenderDrawColor(self.renderer, 0, 0, 0, 255)
+        sdl2.SDL_RenderFillRect(self.renderer, sdl2.SDL_Rect(
+            vertex.x, vertex.y, vertex.width, vertex.height))
 
     def render_loading(self):
         """Renders the loading screen as a task is blocking the renderer."""
