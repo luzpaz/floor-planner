@@ -412,6 +412,11 @@ class Model:
         """
 
         for other in self.lines:
+            # Exterior walls only
+            if line.thickness != Line.EXTERIOR_WALL:
+                continue
+
+            # Do not compare against the same line
             if line is other:
                 continue
 
