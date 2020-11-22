@@ -360,11 +360,11 @@ class View:
         # Render snapping to nearest vertex if applicable
         nearest_vertex = controller.get_nearest_vertex()
         if nearest_vertex:
-            sdl2.sdlgfx.circleRGBA(
+            sdl2.sdlgfx.filledCircleRGBA(
                 self.renderer,
                 int(nearest_vertex[0] * self.camera_scale - self.camera_x),
                 int(nearest_vertex[1] * self.camera_scale - self.camera_y),
-                int(10.0 * self.camera_scale), 0, 0, 0, 255)
+                int(3.0 * self.camera_scale), 255, 0, 0, 255)
 
         # Render snapping to nearest vertex axis if applicable
         nearest_vertex_axis = controller.get_nearest_axis()

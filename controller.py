@@ -89,13 +89,18 @@ class Controller:
                 if event.type == sdl2.SDL_WINDOWEVENT:
                     model.update_needed = True
 
+                # Find nearest vertex
+                self.find_nearest_vertex(model)
+
                 # Select a single entity
-                if event.type == sdl2.SDL_MOUSEBUTTONDOWN:
+                if event.type == sdl2.SDL_MOUSEBUTTONDOWN\
+                    and not self.using_selection:
                     self.handle_single_entity_selection(model)
                 
                 # Select multiple entities
                 self.handle_mouse_drag(event)
-                if self.mouse_selection.w != 0 and self.mouse_selection.h != 0:
+                if self.mouse_selection.w != 0 and self.mouse_selection.h != 0\
+                    and not self.using_selection:
                     self.handle_multiple_entity_selection(model)
 
                 # Panning camera
@@ -190,6 +195,12 @@ class Controller:
         self.mouse_x = mouse_x_ptr.contents.value
         self.mouse_y = mouse_y_ptr.contents.value
 
+    def find_nearest_vertex(self, model):
+        """Finds nearest vertex wihtin range to the mouse position."""
+        self.nearest_vertex = model.get_vertex_within_range((
+            self.mouse_x - int(self.camera.x),
+            self.mouse_y - int(self.camera.y)))
+        
     def user_quit(self, event, keystate):
         """Returns true if the user exited the application window or
         pressed ALT + F4 on the keyboard.
@@ -308,15 +319,17 @@ class Controller:
         :param model: The app model
         :type model: Model from 'model.py'
         """
-        mouse_x_on_camera = self.mouse_x + self.camera.x
-        mouse_y_on_camera = self.mouse_y + self.camera.y
+        mouse = self.get_adjusted_mouse(model)
+        x = mouse[0]
+        y = mouse[1]
 
         # Call this function to reset selected field for all entities
         model.get_entities_in_rectangle()
 
         self.selected_entities.clear()
-        self.selected_entities.add(model.get_entity_on_location(
-            (mouse_x_on_camera, mouse_y_on_camera)))
+        result = model.get_entity_on_location((x, y))
+        if result:
+            self.selected_entities.add(result)
 
     def handle_multiple_entity_selection(self, model):
         """Selects entities that collide with the user's mouse selection
@@ -588,10 +601,7 @@ class Controller:
         """
 
         # Snap to nearest vertex if nearby
-        self.nearest_vertex = model.get_vertex_within_range((
-            self.mouse_x - int(self.camera.x),
-            self.mouse_y - int(self.camera.y)))
-
+        self.find_nearest_vertex(model)
         if self.nearest_vertex:
             return (self.nearest_vertex[0], self.nearest_vertex[1])
 
@@ -659,9 +669,7 @@ class Controller:
     def get_nearest_vertex(self):
         """Returns nearest vertex to snap to, if it exists.
         """
-        if self.place_two_points:
-            return self.nearest_vertex
-        return None
+        return self.nearest_vertex
 
     def get_nearest_axis(self):
         """Returns nearest axis to snap to, if it exists.
@@ -703,6 +711,7 @@ class Controller:
         self.text = ''
 
         self.selected_entities = set()
+        self.using_selection = False
 
         for panel in self.panels:
             panel.reset()
