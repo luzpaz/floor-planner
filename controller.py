@@ -30,6 +30,9 @@ class Controller:
         self.panels.append(CenterButtonPanel())
         self.panels.append(LeftButtonPanel())
 
+        self.layers_panel = RightButtonPanel()
+        self.panels.append(self.layers_panel)
+
         # Polling event handlers
         self.handlers = [None] * PollingType.NUM_TYPES
         self.init_handlers()
@@ -244,6 +247,10 @@ class Controller:
             self.polling = PollingType.REDOING
 
         # Writing inventory to file
+        if keystate[sdl2.SDL_SCANCODE_S]:
+            self.polling = PollingType.SAVING
+
+        # Writing inventory to file
         if keystate[sdl2.SDL_SCANCODE_I]:
             self.polling = PollingType.WRITING_INVENTORY
 
@@ -443,16 +450,20 @@ class Controller:
         if event.type == sdl2.SDL_MOUSEBUTTONDOWN:
             if self.nearest_line.horizontal:
                 if self.placement_type == EntityType.DOOR:
-                    model.add_door(self.nearest_vertex, True,
+                    door = model.add_door(self.nearest_vertex, True,
                                    self.nearest_line.thickness)
+                    door.layer = self.current_layer
                 else:
-                    model.add_window(self.nearest_vertex, True)
+                    window = model.add_window(self.nearest_vertex, True)
+                    window.layer = self.current_layer
             elif self.nearest_line.vertical:
                 if self.placement_type == EntityType.DOOR:
-                    model.add_door(self.nearest_vertex, False,
+                    door = model.add_door(self.nearest_vertex, False,
                                    self.nearest_line.thickness)
+                    door.layer = self.current_layer
                 else:
-                    model.add_window(self.nearest_vertex, False)
+                    window = model.add_window(self.nearest_vertex, False)
+                    window.layer = self.current_layer
 
             self.reset()
 
@@ -522,20 +533,23 @@ class Controller:
         # User placed the second point
         if event.type == sdl2.SDL_MOUSEBUTTONDOWN:
             if self.horizontal_line:
-                model.add_line(
+                line = model.add_line(
                     self.placement_type,
                     (self.first_point_x, self.first_point_y),
                     (adjusted_mouse_x, self.first_point_y))
+                line.layer = self.current_layer
             elif self.vertical_line:
-                model.add_line(
+                line = model.add_line(
                     self.placement_type,
                     (self.first_point_x, self.first_point_y),
                     (self.first_point_x, adjusted_mouse_y))
+                line.layer = self.current_layer
             else:
-                model.add_line(
+                line = model.add_line(
                     self.placement_type,
                     (self.first_point_x, self.first_point_y),
                     (adjusted_mouse_x, adjusted_mouse_y))
+                line.layer = self.current_layer
 
             self.reset()
 
@@ -728,6 +742,12 @@ class Controller:
             = polling.DrawWindow()
         self.handlers[PollingType.DRAW_DOOR]\
             = polling.DrawDoor()
+
+        # Right button panel
+        self.handlers[PollingType.LAYER_0] = polling.SetLayer(0)
+        self.handlers[PollingType.LAYER_1] = polling.SetLayer(1)
+        self.handlers[PollingType.LAYER_2] = polling.SetLayer(2)
+        self.handlers[PollingType.LAYER_3] = polling.SetLayer(3)
 
 class Camera:
     # Regular camera scrolling speed (in/s)
@@ -980,6 +1000,10 @@ class Panel:
         # The button the user currently has their mouse over
         self.button_over = None
 
+        # Whether this panel is visible to the user
+        self.visible = True
+
+        # Set of buttons the panel houses
         self.buttons = set()
 
     def mouse_over(self, mouse_x, mouse_y, screen_dimensions):
@@ -989,6 +1013,9 @@ class Panel:
         :param mouse_y: Mouse y-position
         :type mouse_x, mouse_y: int
         """
+        if not self.visible:
+            return False
+
         for button in self.buttons:
             if button.mouse_over(mouse_x, mouse_y, screen_dimensions):
                 self.button_over = button.id
@@ -1235,3 +1262,64 @@ class LeftButtonPanel(Panel):
         Panel.handle_mouse_click(self, mouse_x, mouse_y,
                                  center_text, polling_event)
         polling_event[0] += CenterButtonPanel.NUM_BUTTONS
+
+class RightButtonPanel(Panel):
+    """The user interface panel appearing at the right side of the screen.
+    """
+
+    NUM_BUTTONS = 4
+
+    BUTTON_RELATIVE_SIZE = 0.03
+    BUTTONS_TOTAL_HEIGHT = 0.14
+    BUTTONS_X_BUFFER = 0.005
+    BUTTONS_Y_BUFFER = 0.01
+
+    RELATIVE_X = 0.961
+    RELATIVE_WIDTH = 0.04
+    RELATIVE_HEIGHT = BUTTONS_TOTAL_HEIGHT + 1.5 * BUTTONS_Y_BUFFER
+    RELATIVE_Y = (1.0 - RELATIVE_HEIGHT) / 2
+
+    BUTTONS_Y_BUFFER = RELATIVE_Y + BUTTONS_Y_BUFFER
+
+    def get_relative_y(self):
+        """Returns the relative y-position of the button based on the
+        number of buttons already added."""
+        return len(self.buttons) / RightButtonPanel.NUM_BUTTONS\
+            * RightButtonPanel.BUTTONS_TOTAL_HEIGHT\
+            + RightButtonPanel.BUTTONS_Y_BUFFER
+
+    def __init__(self):
+        """Initializes the buttons."""
+        Panel.__init__(self, EntityType.BUTTON_PANEL,
+                        RightButtonPanel.RELATIVE_X,
+                        RightButtonPanel.RELATIVE_Y,
+                        RightButtonPanel.RELATIVE_WIDTH,
+                        RightButtonPanel.RELATIVE_HEIGHT)
+
+        for button in range(RightButtonPanel.NUM_BUTTONS):
+            self.buttons.add(Button(len(self.buttons),
+                EntityType.LAYER,
+                RightButtonPanel.RELATIVE_X + RightButtonPanel.BUTTONS_X_BUFFER,
+                self.get_relative_y(),
+                RightButtonPanel.BUTTON_RELATIVE_SIZE,
+                RightButtonPanel.BUTTON_RELATIVE_SIZE))
+
+        self.button_labels =\
+            [
+                'Layer 1',
+                'Layer 2',
+                'Layer 3',
+                'Layer 4',
+            ]
+
+        # Not visible by default
+        self.visible = False
+
+    def handle_mouse_click(self, mouse_x, mouse_y, center_text, polling_event):
+        """Same as Panel.handle_mouse_click but adjusts the polling event
+        to account for the number of buttons in the central button panel.
+        """
+        Panel.handle_mouse_click(self, mouse_x, mouse_y,
+                                 center_text, polling_event)
+        polling_event[0] += CenterButtonPanel.NUM_BUTTONS\
+            + LeftButtonPanel.NUM_BUTTONS

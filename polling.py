@@ -60,8 +60,9 @@ class AddingText:
 
         if keystate[sdl2.SDL_SCANCODE_RETURN]:
             mouse = controller.get_adjusted_mouse(model)
-            model.add_user_text(controller.text, (mouse[0], mouse[1]))
+            text = model.add_user_text(controller.text, (mouse[0], mouse[1]))
             controller.reset()
+            text.layer = controller.current_layer
      
 class Panning:
     """The polling event handler for panning the camera."""
@@ -99,9 +100,14 @@ class DisplayGrid:
         controller.reset()
 
 class Layers:
+    """The polling event handler for toggling the visibility of the layers
+    panel on the right side of the screen."""
+
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
-        controller.message_stack.insert(['Not implemented'])
+        """Toggles whether to display the layers panel.
+        """
+        controller.layers_panel.visible = not controller.layers_panel.visible
         controller.reset()
 
 class Settings:
@@ -175,6 +181,15 @@ class Saving:
     INTERVAL = 1000
 
     def __init__(self):
+        """Sets the filename for the current app session based on the number of
+        .pkl files there are in the app directory."""
+
+        # Search directory for number of .pkl files to determine filename
+        num_pkl_files = 0
+        for file in glob.glob('*.pkl'):
+            num_pkl_files += 1
+        self.filename = 'save{}.pkl'.format(num_pkl_files + 1)
+
         self.last_save = sdl2.SDL_GetTicks()
 
     def handle(self, controller, model, keystate, event,
@@ -186,20 +201,14 @@ class Saving:
         if Saving.INTERVAL > sdl2.SDL_GetTicks() - self.last_save:
             return
 
-        # Search directory for number of .pkl files to determine filename
-        num_pkl_files = 0
-        for file in glob.glob('*.pkl'):
-            num_pkl_files += 1
-        filename = 'save{}.pkl'.format(num_pkl_files + 1)
-
-        with open(filename, 'wb') as file:
+        with open(self.filename, 'wb') as file:
             pickle.dump(model.lines, file, pickle.HIGHEST_PROTOCOL)
             pickle.dump(model.windows, file, pickle.HIGHEST_PROTOCOL)
             pickle.dump(model.doors, file, pickle.HIGHEST_PROTOCOL)
             pickle.dump(model.user_text, file, pickle.HIGHEST_PROTOCOL)
 
         controller.message_stack.insert(['Saved drawing: '\
-            + str(os.getcwd()) + '\\' + filename])
+            + str(os.getcwd()) + '\\' + self.filename])
         self.last_save = sdl2.SDL_GetTicks()
         controller.reset()
         
@@ -272,7 +281,21 @@ class DrawDoor:
         controller.placement_type = EntityType.DOOR
         controller.place_one_point = True
         controller.polling = PollingType.SELECTING
-        
+
+class SetLayer:
+    """The polling event handler for setting the layer."""
+
+    def __init__(self, layer = 0):
+        """Sets the layer for this handler to set to."""
+        self.layer = layer
+
+    def handle(self, controller, model, keystate, event,
+               screen_dimensions, commands):
+        """Sets the current layer of the controller."""
+        controller.current_layer = self.layer
+        controller.reset()
+        model.update_needed = True
+
 class PollingType:
     """Enum for indexing handlers list in the controller."""
     SELECTING = 0
@@ -298,7 +321,13 @@ class PollingType:
     DRAW_WINDOW = 19
     DRAW_DOOR = 20
 
-    NUM_TYPES = DRAW_DOOR + 1
+    # TO DO: make layers dynamic
+    LAYER_0 = 21
+    LAYER_1 = 22
+    LAYER_2 = 23
+    LAYER_3 = 24
+
+    NUM_TYPES = LAYER_3 + 1
 
 class AddAction:
     """The action container for when a user adds an entity."""
@@ -319,6 +348,10 @@ class AddAction:
         """Defines what is needed to redo this action:
         Adds the removed entity into the model."""
         model.add_entity(self.entity)
+
+    def __str__(self):
+        """Returns description."""
+        return 'Added ' + str(self.entity)
 
     def __repr__(self):
         """Returns info needed for debugging."""
@@ -343,6 +376,10 @@ class DeleteAction:
         """Defines what is needed to redo this action:
         Removes the added entity from the model."""
         model.remove_entity(self.entity, False)
+
+    def __str__(self):
+        """Returns description."""
+        return 'Deleted ' + str(self.entity)
 
     def __repr__(self):
         """Returns info needed for debugging."""

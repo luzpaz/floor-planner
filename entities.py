@@ -2,7 +2,19 @@ import math, sdl2
 
 from tools import Tools
 
-class Line:
+class Entity:
+    """The base class for objects displayed onto the screen.
+    The user can select these objects and assign them to layers.
+    Child classes define how the object's position is determined."""
+
+    def __init__(self, layer = 0):
+        # Whether the entity is selected by the user
+        self.selected = False
+
+        # Layer the object is assigned to
+        self.layer = layer
+
+class Line(Entity):
     """The class representing a line segment created by the user.
     Contains the starting and ending coordinates, and the thickness and color.
     """
@@ -27,6 +39,8 @@ class Line:
         :param color: line display color in r, g, b values
         :type color: tuple(int, int, int)
         """
+        Entity.__init__(self)
+
         self.start = start
         self.end = end
         self.thickness = thickness
@@ -42,9 +56,6 @@ class Line:
         # Whether the line is positive on the x/y axes
         self.positive_x = end[0] > start[0]
         self.positive_y = end[1] > start[1]
-
-        # Whether the line is currently selected by the user
-        self.selected = False
 
     def check_point_collision(self, location = (0, 0)):
         """Returns whether the location coordinates collide with this line.
@@ -165,7 +176,7 @@ class Line:
         """
         return Line(self.start, self.end, self.thickness, self.color)
 
-class RectangularEntity:
+class RectangularEntity(Entity):
     """Base class for an entity that can be rendered as a rectangle.
     """
 
@@ -173,12 +184,12 @@ class RectangularEntity:
         """Initializes the top left x and y coordinates and the width and height
         of the rectangle.
         """
+        Entity.__init__(self)
+
         self.x = rectangle.x
         self.y = rectangle.y
         self.width = rectangle.w
         self.height = rectangle.h
-
-        self.selected = False
 
     def check_collision(self, other = sdl2.SDL_Rect(0, 0, 0, 0)):
         """Returns true if a rectangular collision occurs with this rectangle

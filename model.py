@@ -152,8 +152,10 @@ class Model:
         :param position: Absolute position of the text
         :type position: tuple(int, int)
         """
-        self.user_text.add(UserText(text, position))
+        text = UserText(text, position)
+        self.user_text.add(text)
         self.update_needed = True
+        return text
 
     def add_entity(self, entity):
         """Adds the already created entity into the model.
@@ -414,12 +416,16 @@ class Model:
                 continue
 
             if line.start == other.start or line.start == other.end:
-                self.square_vertices.add(RectangularEntity(sdl2.SDL_Rect(
+                vertex = RectangularEntity(sdl2.SDL_Rect(
                     int(line.start[0] - Line.EXTERIOR_WALL / 2),
                     int(line.start[1] - Line.EXTERIOR_WALL / 2),
-                    Line.EXTERIOR_WALL, Line.EXTERIOR_WALL)))
+                    Line.EXTERIOR_WALL, Line.EXTERIOR_WALL))
+                vertex.layer = line.layer
+                self.square_vertices.add(vertex)
             if line.end == other.end or line.end == other.start:
-                self.square_vertices.add(RectangularEntity(sdl2.SDL_Rect(
+                vertex = RectangularEntity(sdl2.SDL_Rect(
                     int(line.end[0] - Line.EXTERIOR_WALL / 2),
                     int(line.end[1] - Line.EXTERIOR_WALL / 2),
-                    Line.EXTERIOR_WALL, Line.EXTERIOR_WALL)))
+                    Line.EXTERIOR_WALL, Line.EXTERIOR_WALL))
+                vertex.layer = line.layer
+                self.square_vertices.add(vertex)

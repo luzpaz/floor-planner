@@ -128,26 +128,36 @@ class View:
 
         # Render lines
         for line in model.lines:
+            if line.layer != controller.current_layer:
+                continue
             self.render_line(line, controller.current_layer)
             entities_rendered += 1
 
         # Render square vertices to close the gap between connecting lines
         for vertex in model.square_vertices:
+            if vertex.layer != controller.current_layer:
+                continue
             self.render_square_vertex(vertex)
             entities_rendered += 1
 
         # Render windows
         for window in model.windows:
+            if window.layer != controller.current_layer:
+                continue
             self.render_window(window, controller.current_layer)
             entities_rendered += 1
 
         # Render doors
         for door in model.doors:
+            if door.layer != controller.current_layer:
+                continue
             self.render_door(door, controller.current_layer)
             entities_rendered += 1
 
         # Render user text
         for text in model.user_text:
+            if text.layer != controller.current_layer:
+                continue
             self.render_absolute_text(text)
             entities_rendered += 1
 
@@ -280,6 +290,9 @@ class View:
         :type controller: Controller from 'controller.py'
         """
         for panel in controller.panels:
+            if not panel.visible:
+                continue
+
             self.render_panel(panel)
 
             for button in panel.buttons:
@@ -541,6 +554,9 @@ class Textures:
     """Class that contains and manages the application's textures and layers.
     """
 
+    # Number of layers the user can choose from
+    NUM_LAYERS = 4
+
     def get(self, texture):
         """Returns the SDL texture designated by the texture enum.
         :param texture: The texture enum from 'entity_types.py'
@@ -626,6 +642,9 @@ class Textures:
         self.textures[EntityType.DOOR_BUTTON] = self.create(
             renderer, b'textures/door_button.png')
 
+        self.textures[EntityType.LAYER] = self.create(
+            renderer, b'textures/layer.png')
+
         self.textures[EntityType.LOADING] = self.create(
             renderer, b'textures/loading.png')
 
@@ -636,15 +655,16 @@ class Textures:
         layer_height = int(info.max_texture_height * 0.25)
 
         # Create layers
-        self.layers[0] = sdl2.SDL_CreateTexture(renderer,
-                                       sdl2.SDL_PIXELFORMAT_RGBA8888,
-                                       sdl2.SDL_TEXTUREACCESS_TARGET,
-                                       layer_width, layer_height)
-        sdl2.SDL_SetRenderTarget(renderer, self.layers[0])
-        sdl2.SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255)
-        sdl2.SDL_RenderClear(renderer)
+        for layer in range(Textures.NUM_LAYERS):
+            self.layers[layer] = sdl2.SDL_CreateTexture(renderer,
+                                           sdl2.SDL_PIXELFORMAT_RGBA8888,
+                                           sdl2.SDL_TEXTUREACCESS_TARGET,
+                                           layer_width, layer_height)
+            sdl2.SDL_SetRenderTarget(renderer, self.layers[0])
+            sdl2.SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255)
+            sdl2.SDL_RenderClear(renderer)
+            
         sdl2.SDL_SetRenderTarget(renderer, None)
-
         return (layer_width, layer_height)
 
     def unload(self):

@@ -637,6 +637,11 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(controller.polling, PollingType.REDOING)
         
         keystate = sdl2.SDL_GetKeyboardState(None)
+        keystate[sdl2.SDL_SCANCODE_S] = 1
+        controller.handle_ctrl_hotkeys(keystate)
+        self.assertEqual(controller.polling, PollingType.SAVING)
+        
+        keystate = sdl2.SDL_GetKeyboardState(None)
         keystate[sdl2.SDL_SCANCODE_I] = 1
         controller.handle_ctrl_hotkeys(keystate)
         self.assertEqual(controller.polling, PollingType.WRITING_INVENTORY)
@@ -1029,6 +1034,25 @@ class ViewTests(unittest.TestCase):
         self.assertTrue(ViewTests.app.view.render_absolute_text(
             UserText('text')))
 
+    def test_switching_between_layers(self):
+        """Ensure update layer renders only the number of entities there are
+        in each layer when switching between layers.
+        """
+        app = App()
+
+        for i in range(4):
+            line = app.model.add_line(EntityType.EXTERIOR_WALL)
+            line.layer = 0
+
+        for i in range(2):
+            line = app.model.add_line(EntityType.EXTERIOR_WALL)
+            line.layer = 1
+
+        self.assertTrue(app.view.update_layer(app.model, app.controller), 4)
+
+        app.controller.current_layer = 1
+        self.assertTrue(app.view.update_layer(app.model, app.controller), 2)
+        
     def test_destructor(self):
         """Ensures destructor clears textures and sets SDL components to None.
         """
@@ -1313,7 +1337,7 @@ class PollingTests(unittest.TestCase):
                + ' or use +/- on the numpad to zoom the camera.')
 
     def test_saving(self):
-        """Ensures that the saving poll event handler creates a save filename
+        """Ensure that the saving poll event handler creates a save filename
         with the expected name: save{}.pkl where {} is the number of .pkl files
         existing in the directory + 1
         """
@@ -1328,6 +1352,27 @@ class PollingTests(unittest.TestCase):
             num_pkl_files += 1
         filename = 'save{}.pkl'.format(num_pkl_files)
         self.assertTrue(os.path.isfile(filename))
+
+    def test_setting_layer(self):
+        """Ensure that the set layer poll event handler sets the layer of the
+        controller to the corresponding layer.
+        """
+        app = App()
+
+        app.controller.polling = PollingType.LAYER_2
+        app.controller.handle_input(app.model, (1920, 1080), [])
+        self.assertEqual(app.controller.current_layer, 2)
+
+    def test_toggling_layers_panel(self):
+        """Ensure the layers poll event handler toggles between not displaying
+        and displaying the layers panel.
+        """
+        app = App()
+
+        app.controller.layers_panel.visible = False
+        app.controller.polling = PollingType.LAYERS
+        app.controller.handle_input(app.model, (1920, 1080), [])
+        self.assertTrue(app.controller.layers_panel.visible)
 
 class ToolsTests(unittest.TestCase):
     """Tests for classes in the tools.py module."""
