@@ -37,6 +37,7 @@ class Model:
         self.mutexes[ModelMutex.VERTICES] = Lock()
         self.mutexes[ModelMutex.WINDOWS] = Lock()
         self.mutexes[ModelMutex.DOORS] = Lock()
+        self.mutexes[ModelMutex.TEXT] = Lock()
 
     def add_line(self, type, start = (0, 0), end = (0, 0), color = (0, 0, 0)):
         """Adds a line and its vertices to the model.
@@ -155,6 +156,7 @@ class Model:
         text = UserText(text, position)
         self.user_text.add(text)
         self.update_needed = True
+        self.actions.append(AddAction(text))
         return text
 
     def add_entity(self, entity):
@@ -195,6 +197,9 @@ class Model:
         elif isinstance(entity, Door):
             with self.mutexes[ModelMutex.DOORS]:
                 self.doors.remove(entity)
+        elif isinstance(entity, UserText):
+            with self.mutexes[ModelMutex.TEXT]:
+                self.user_text.remove(entity)
 
         self.update_needed = True
         with self.update_background:
@@ -217,7 +222,7 @@ class Model:
             for line in self.lines:
                 self.close_gaps_between_walls(line)
 
-    def get_vertex_within_range(self, origin = (0, 0), range = 12):
+    def get_vertex_within_range(self, origin = (0, 0), range = 6):
         """Returns nearest vertex from the origin that is within the range
         :param origin: Position to search for closest vertex
         :type origin: tuple(int, int)

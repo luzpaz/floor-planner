@@ -40,4 +40,5 @@ ModelMutex = Enum(
     'LINES\
     VERTICES\
     WINDOWS\
-    DOORS')
+    DOORS\
+    TEXT')
