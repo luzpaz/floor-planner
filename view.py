@@ -324,7 +324,7 @@ class View:
 
         if button.selected:
             sdl2.SDL_RenderCopy(
-            self.renderer, self.textures.get(EntityType.BUTTON_BACKGROUND),
+            self.renderer, self.textures.get(EntityType.SELECTED_BUTTON),
             None, location)
         else:
             sdl2.SDL_RenderCopy(
