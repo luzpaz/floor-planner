@@ -1,4 +1,4 @@
-import sdl2, threading
+import os, sdl2, threading
 
 from background_updates import BackgroundUpdater
 from model import Model
@@ -82,7 +82,3 @@ class App:
             self.controller.message_stack.insert(('Error loading save file: '
                                                   + filename,))
             self.model = Model() # reset model
-
-if __name__ == '__main__':
-    app = App()
-    app.run()
