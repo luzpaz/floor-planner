@@ -644,7 +644,7 @@ class ControllerTests(unittest.TestCase):
         keystate = sdl2.SDL_GetKeyboardState(None)
         keystate[sdl2.SDL_SCANCODE_I] = 1
         controller.handle_ctrl_hotkeys(keystate)
-        self.assertEqual(controller.polling, PollingType.WRITING_INVENTORY)
+        self.assertEqual(controller.polling, PollingType.INVENTORY)
         
         keystate = sdl2.SDL_GetKeyboardState(None)
         keystate[sdl2.SDL_SCANCODE_X] = 1
@@ -1208,7 +1208,7 @@ class PollingTests(unittest.TestCase):
         """Ensure the writing inventory poll event handler creates a txt file.
         """
         app = App()
-        app.controller.polling = PollingType.WRITING_INVENTORY
+        app.controller.polling = PollingType.INVENTORY
         app.controller.handle_input(app.model, (1920, 1080), [])
         self.assertTrue(os.path.isfile('list.txt'))
 
@@ -1352,6 +1352,20 @@ class PollingTests(unittest.TestCase):
             num_pkl_files += 1
         filename = 'save{}.pkl'.format(num_pkl_files)
         self.assertTrue(os.path.isfile(filename))
+
+    def test_loading(self):
+        """Ensure that the loading poll event handler loads the test.pkl
+        model entities.
+        """
+        app = App()
+        
+        app.controller.polling = PollingType.LOADING
+        app.controller.load_filename = 'test.pkl'
+        app.controller.handle_input(app.model, (1920, 1080), [])
+        
+        self.assertEqual(len(app.model.lines), 4)
+        self.assertEqual(len(app.model.windows), 2)
+        self.assertEqual(len(app.model.doors), 1)
 
     def test_setting_layer(self):
         """Ensure that the set layer poll event handler sets the layer of the

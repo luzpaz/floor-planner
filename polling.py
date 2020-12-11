@@ -2,7 +2,7 @@ import glob, pickle, os, sdl2, sdl2.ext
 
 from entities import Line
 from entity_types import EntityType
-from tools import ExportCommand
+from tools import ExportCommand, Loader
 
 class Erasing:
     """The polling event handler for erasing entities."""
@@ -211,6 +211,34 @@ class Saving:
             + str(os.getcwd()) + '\\' + self.filename])
         self.last_save = sdl2.SDL_GetTicks()
         controller.reset()
+
+class Loading:
+    """The polling event handler for loading the model entities from file."""
+
+    def handle(self, controller, model, keystate, event,
+               screen_dimensions, commands):
+        """Loads the model entities from the file."""
+        
+        if not controller.load_filename:
+            return
+
+        adjusted_filename = controller.load_filename
+
+        # Adjust filename if it comes as bytes (from SDL drag/drop)
+        if adjusted_filename[0:2] == "b'":
+            str_filename = str(controller.load_filename)
+            adjusted_filename = str_filename[2:-1]
+
+        try:
+            loader = Loader(model, adjusted_filename)
+            controller.message_stack.insert(('Loaded from save file: '
+                                             + adjusted_filename,))
+        except:
+            controller.message_stack.insert(('Error loading save file: '
+                                             + adjusted_filename,))
+            model = Model() # reset model
+
+        controller.reset()
         
 class WritingInventory:
     """The polling event handler for exporting the inventory to a txt tile."""
@@ -312,20 +340,21 @@ class PollingType:
     UNDOING = 11
     REDOING = 12
     SAVING = 13
-    EXPORTING = 14
-    WRITING_INVENTORY = 15
-    EXITING = 16
+    LOADING = 14
+    EXPORTING = 15
+    INVENTORY = 16
+    EXITING = 17
 
-    DRAW_EXTERIOR_WALL = 17
-    DRAW_INTERIOR_WALL = 18
-    DRAW_WINDOW = 19
-    DRAW_DOOR = 20
+    DRAW_EXTERIOR_WALL = 18
+    DRAW_INTERIOR_WALL = 19
+    DRAW_WINDOW = 20
+    DRAW_DOOR = 21
 
     # TO DO: make layers dynamic
-    LAYER_0 = 21
-    LAYER_1 = 22
-    LAYER_2 = 23
-    LAYER_3 = 24
+    LAYER_0 = 22
+    LAYER_1 = 23
+    LAYER_2 = 24
+    LAYER_3 = 25
 
     NUM_TYPES = LAYER_3 + 1
 

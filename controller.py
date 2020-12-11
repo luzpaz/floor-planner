@@ -48,6 +48,9 @@ class Controller:
         # Whether to display the drawing grid
         self.display_grid = False
 
+        # Allow dragging and dropping files
+        sdl2.SDL_EventState(sdl2.SDL_DROPFILE, sdl2.SDL_ENABLE)
+
         self.reset()
 
     def handle_input(self, model, screen_dimensions, commands = []):
@@ -145,6 +148,11 @@ class Controller:
                         model.remove_entity(entity)
                     self.selected_entities.clear()
                     
+                # Dragging and dropping files
+                if event.type == sdl2.SDL_DROPFILE:
+                    self.load_filename = event.drop.file
+                    self.polling = PollingType.LOADING
+
                 # Polling event
                 if self.polling != PollingType.SELECTING:
                     self.handlers[self.polling].handle(
@@ -263,7 +271,7 @@ class Controller:
 
         # Writing inventory to file
         if keystate[sdl2.SDL_SCANCODE_I]:
-            self.polling = PollingType.WRITING_INVENTORY
+            self.polling = PollingType.INVENTORY
 
         # Export drawing to png file
         if keystate[sdl2.SDL_SCANCODE_X]:
@@ -710,6 +718,8 @@ class Controller:
 
         self.text = ''
 
+        self.load_filename = ''
+
         self.selected_entities = set()
         self.using_selection = False
 
@@ -739,7 +749,8 @@ class Controller:
         self.handlers[PollingType.UNDOING] = polling.Undoing()
         self.handlers[PollingType.REDOING] = polling.Redoing()
         self.handlers[PollingType.SAVING] = polling.Saving()
-        self.handlers[PollingType.WRITING_INVENTORY] = polling.WritingInventory()
+        self.handlers[PollingType.LOADING] = polling.Loading()
+        self.handlers[PollingType.INVENTORY] = polling.WritingInventory()
         self.handlers[PollingType.EXPORTING] = polling.Exporting()
 
         # Left button panel
@@ -834,6 +845,10 @@ class TimeStampedMessage(Text):
         Text.__init__(self, relative_x, relative_y, font, color)
         self.text = text
         self.time = sdl2.SDL_GetTicks()
+
+    def __repr__(self):
+        """Returns the text string for debugging."""
+        return self.text
 
 class TextDisplayer:
     """Base class for a user interface object that displays text."""
@@ -1166,7 +1181,7 @@ class CenterButtonPanel(Panel):
             CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE))
-        self.buttons.add(Button(len(self.buttons), EntityType.WRITING_INVENTORY_BUTTON,
+        self.buttons.add(Button(len(self.buttons), EntityType.INVENTORY_BUTTON,
             self.get_relative_x(),
             CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE,

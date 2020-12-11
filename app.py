@@ -1,4 +1,4 @@
-import os, sdl2, threading
+import os, sdl2, sys, threading
 
 from background_updates import BackgroundUpdater
 from model import Model
@@ -74,6 +74,7 @@ class App:
         :param filename: Saved filename to load from
         :type filename: str
         """
+
         try:
             loader = Loader(self.model, filename)
             self.controller.message_stack.insert(('Loaded from save file: '
@@ -82,3 +83,14 @@ class App:
             self.controller.message_stack.insert(('Error loading save file: '
                                                   + filename,))
             self.model = Model() # reset model
+
+            
+if __name__ == '__main__':
+    load = ''
+
+    # Load save file if supplied as command line argument
+    if len(sys.argv) > 1:
+        load = sys.argv[1]
+
+    app = App(load)
+    app.run()
