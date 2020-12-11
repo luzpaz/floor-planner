@@ -528,23 +528,6 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(app.controller.get_adjusted_mouse(app.model), (18, 12))
         self.assertEqual(app.controller.nearest_vertex_axis, (0, 10))
 
-    def test_mouse_selection(self):
-        """Ensure get_mouse_selection returns the mouse selection adjusted
-        to the user camera's position.
-        """
-        controller = Controller()
-
-        self.assertEqual(controller.get_mouse_selection(),
-                         sdl2.SDL_Rect(0, 0, 0, 0))
-
-        controller.mouse_selection = sdl2.SDL_Rect(500, 500, 50, 50)
-
-        controller.camera.x = 500
-        controller.camera.y = 500
-
-        expected = sdl2.SDL_Rect(0, 0, 50, 50)
-        self.assertEqual(controller.get_mouse_selection(), expected)
-
     def test_get_two_point_placement(self):
         """Ensure get_two_point_placement returns the expected line starting
         and ending vertices for diagonal, vertical, and horizontal lines."""

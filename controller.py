@@ -769,6 +769,11 @@ class Controller:
         self.nearest_line = None
         self.placement_type = None
 
+        self.mouse_down_starting_x = 0
+        self.mouse_down_starting_y = 0
+        self.displayed_selection_starting_x = 0
+        self.displayed_selection_starting_y = 0
+
         self.text = ''
 
         self.load_filename = ''
