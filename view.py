@@ -276,6 +276,12 @@ class View:
             text_x -= int(width / 2)
             text_y -= int(height / 2)
 
+        # Underline text if selected
+        if text.selected:
+            sdl2.SDL_SetRenderDrawColor(self.renderer, 0, 0, 0, 255)
+            sdl2.SDL_RenderDrawLine(self.renderer, text_x, text_y + height,
+                                    text_x + width, text_y + height)
+
         sdl2.SDL_RenderCopyEx(self.renderer, texture, None,
                               sdl2.SDL_Rect(text_x, text_y, width, height),
                               0.0, None, sdl2.SDL_FLIP_NONE)

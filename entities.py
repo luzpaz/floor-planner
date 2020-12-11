@@ -261,7 +261,7 @@ class Door(RectangularEntity):
         """Returns info needed for debugging."""
         return 'Door'
 
-class UserText:
+class UserText(RectangularEntity):
     """The class representing text that the user can place on the drawing.
     """
 
@@ -270,3 +270,7 @@ class UserText:
         """
         self.text = text
         self.position = position
+        self.selected = False
+
+        RectangularEntity.__init__(self, sdl2.SDL_Rect(
+            self.position[0], self.position[1], len(self.text), len(self.text)))

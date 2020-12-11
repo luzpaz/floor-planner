@@ -369,6 +369,12 @@ class Model:
                 entities.add(line)
                 line.selected = True
 
+        for text in self.user_text:
+            text.selected = False
+            if text.check_collision(rectangle):
+                entities.add(text)
+                text.selected = True
+
         self.update_needed = True
         return entities
 
