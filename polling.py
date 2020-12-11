@@ -222,12 +222,11 @@ class Loading:
         if not controller.load_filename:
             return
 
-        adjusted_filename = controller.load_filename
+        adjusted_filename = str(controller.load_filename)
 
         # Adjust filename if it comes as bytes (from SDL drag/drop)
         if adjusted_filename[0:2] == "b'":
-            str_filename = str(controller.load_filename)
-            adjusted_filename = str_filename[2:-1]
+            adjusted_filename = adjusted_filename[2:-1]
 
         try:
             loader = Loader(model, adjusted_filename)

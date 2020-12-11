@@ -100,11 +100,12 @@ class Controller:
                     and not self.using_selection:
                     self.handle_single_entity_selection(model)
                 
+                # TO DO: fix errors with mouse drag selection
                 # Select multiple entities
-                self.handle_mouse_drag(event)
-                if self.mouse_selection.w != 0 and self.mouse_selection.h != 0\
-                    and not self.using_selection:
-                    self.handle_multiple_entity_selection(model)
+                #self.handle_mouse_drag(event)
+                #if self.mouse_selection.w != 0 and self.mouse_selection.h != 0\
+                #    and not self.using_selection:
+                #    self.handle_multiple_entity_selection(model)
 
                 # Panning camera
                 if keystate[sdl2.SDL_SCANCODE_LSHIFT]\
@@ -204,11 +205,11 @@ class Controller:
         self.mouse_y = mouse_y_ptr.contents.value
 
     def find_nearest_vertex(self, model):
-        """Finds nearest vertex wihtin range to the mouse position."""
+        """Finds nearest vertex within range to the mouse position."""
         self.nearest_vertex = model.get_vertex_within_range((
-            self.mouse_x - int(self.camera.x),
-            self.mouse_y - int(self.camera.y)))
-        
+            self.get_mouse_adjusted_to_camera_x(),
+            self.get_mouse_adjusted_to_camera_y()))
+
     def user_quit(self, event, keystate):
         """Returns true if the user exited the application window or
         pressed ALT + F4 on the keyboard.
@@ -406,14 +407,14 @@ class Controller:
         if not self.mouse_down and event.type == sdl2.SDL_MOUSEBUTTONDOWN\
             and event.button.button == sdl2.SDL_BUTTON_LEFT:
             self.mouse_down = True
-            self.mouse_down_starting_x = self.mouse_x + int(self.camera.x)
-            self.mouse_down_starting_y = self.mouse_y + int(self.camera.y)
+            self.mouse_down_starting_x = self.get_mouse_adjusted_to_camera_x()
+            self.mouse_down_starting_y = self.get_mouse_adjusted_to_camera_y()
         if self.mouse_down and event.type == sdl2.SDL_MOUSEBUTTONUP:
             self.mouse_down = False
             self.mouse_selection = sdl2.SDL_Rect()
         if self.mouse_down and event.type == sdl2.SDL_MOUSEMOTION:
-            mouse_down_ending_x = self.mouse_x + int(self.camera.x)
-            mouse_down_ending_y = self.mouse_y + int(self.camera.y)
+            mouse_down_ending_x = self.mouse_x - int(self.camera.x)
+            mouse_down_ending_y = self.mouse_y - int(self.camera.y)
 
             if self.mouse_down_starting_x < mouse_down_ending_x:
                 self.mouse_selection.x = self.mouse_down_starting_x
@@ -640,8 +641,8 @@ class Controller:
         """Returns the user's current mouse selection (press and drag input)
         """
         return sdl2.SDL_Rect(
-            self.mouse_selection.x - int(self.camera.x),
-            self.mouse_selection.y - int(self.camera.y),
+            self.mouse_selection.x,
+            self.mouse_selection.y,
             self.mouse_selection.w,
             self.mouse_selection.h)
 
@@ -685,6 +686,18 @@ class Controller:
         if self.place_two_points:
             return self.nearest_vertex_axis
         return None
+
+    def get_mouse_adjusted_to_camera_x(self):
+        """Returns the mouse x-position adjusted to the camera offset and scale.
+        """
+        return int(self.mouse_x / self.camera.scale
+                + self.camera.x / self.camera.scale)
+
+    def get_mouse_adjusted_to_camera_y(self):
+        """Returns the mouse y-position adjusted to the camera offset and scale.
+        """
+        return int(self.mouse_y / self.camera.scale
+                + self.camera.y / self.camera.scale)
 
     def reset(self):
         """Resets the controller's state.
