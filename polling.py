@@ -220,6 +220,8 @@ class Loading:
         """Loads the model entities from the file."""
         
         if not controller.load_filename:
+            controller.center_text.set_top_text(
+                'Drap and drop .pkl file to the screen to load it.')
             return
 
         adjusted_filename = str(controller.load_filename)

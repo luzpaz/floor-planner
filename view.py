@@ -626,6 +626,8 @@ class Textures:
             renderer, b'textures/redo_button.png')
         self.textures[EntityType.SAVE_BUTTON] = self.create(
             renderer, b'textures/save_button.png')
+        self.textures[EntityType.LOAD_BUTTON] = self.create(
+            renderer, b'textures/load_button.png')
         self.textures[EntityType.INVENTORY_BUTTON] = self.create(
             renderer, b'textures/inventory_button.png')
         self.textures[EntityType.EXPORT_BUTTON] = self.create(

@@ -100,12 +100,11 @@ class Controller:
                     and not self.using_selection:
                     self.handle_single_entity_selection(model)
                 
-                # TO DO: fix errors with mouse drag selection
                 # Select multiple entities
-                #self.handle_mouse_drag(event)
-                #if self.mouse_selection.w != 0 and self.mouse_selection.h != 0\
-                #    and not self.using_selection:
-                #    self.handle_multiple_entity_selection(model)
+                self.handle_mouse_drag(event)
+                if self.mouse_selection.w != 0 and self.mouse_selection.h != 0\
+                    and not self.using_selection:
+                    self.handle_multiple_entity_selection(model)
 
                 # Panning camera
                 if keystate[sdl2.SDL_SCANCODE_LSHIFT]\
@@ -150,9 +149,9 @@ class Controller:
                     self.selected_entities.clear()
                     
                 # Dragging and dropping files
-                if event.type == sdl2.SDL_DROPFILE:
+                if self.polling == PollingType.LOADING\
+                    and event.type == sdl2.SDL_DROPFILE:
                     self.load_filename = event.drop.file
-                    self.polling = PollingType.LOADING
 
                 # Polling event
                 if self.polling != PollingType.SELECTING:
@@ -404,18 +403,45 @@ class Controller:
         :param event: SDL event for checking mouse clicks
         :type event: SDL_Event
         """
+
+        # User started pressing and dragging mouse
         if not self.mouse_down and event.type == sdl2.SDL_MOUSEBUTTONDOWN\
             and event.button.button == sdl2.SDL_BUTTON_LEFT:
             self.mouse_down = True
-            self.mouse_down_starting_x = self.get_mouse_adjusted_to_camera_x()
-            self.mouse_down_starting_y = self.get_mouse_adjusted_to_camera_y()
+
+            # Mouse selection to select entities
+            self.mouse_down_starting_x = int((self.mouse_x + self.camera.x)\
+                / self.camera.scale)
+            self.mouse_down_starting_y = int((self.mouse_y + self.camera.y)\
+                / self.camera.scale)
+
+            # Mouse selection to display
+            self.displayed_selection_starting_x = self.mouse_x
+            self.displayed_selection_starting_y = self.mouse_y
+
+        # User finished pressing and dragging mouse
         if self.mouse_down and event.type == sdl2.SDL_MOUSEBUTTONUP:
             self.mouse_down = False
-            self.mouse_selection = sdl2.SDL_Rect()
-        if self.mouse_down and event.type == sdl2.SDL_MOUSEMOTION:
-            mouse_down_ending_x = self.mouse_x - int(self.camera.x)
-            mouse_down_ending_y = self.mouse_y - int(self.camera.y)
 
+            # Reset rectangles
+            self.mouse_selection.x = 0
+            self.mouse_selection.y = 0
+            self.mouse_selection.w = 0
+            self.mouse_selection.h = 0
+            
+            self.displayed_selection.x = 0
+            self.displayed_selection.y = 0
+            self.displayed_selection.w = 0
+            self.displayed_selection.h = 0
+
+        # User is pressing and dragging mouse
+        if self.mouse_down and event.type == sdl2.SDL_MOUSEMOTION:
+            mouse_down_ending_x = int((self.mouse_x + self.camera.x)\
+                / self.camera.scale)
+            mouse_down_ending_y = int((self.mouse_y + self.camera.y)\
+                / self.camera.scale)
+
+            # Create rectangle for entity selection
             if self.mouse_down_starting_x < mouse_down_ending_x:
                 self.mouse_selection.x = self.mouse_down_starting_x
             else:
@@ -430,6 +456,21 @@ class Controller:
                 self.mouse_down_starting_x - mouse_down_ending_x)
             self.mouse_selection.h = abs(
                 self.mouse_down_starting_y - mouse_down_ending_y)
+
+            # Create rectangle to display
+            if self.displayed_selection_starting_x < self.mouse_x:
+                self.displayed_selection.x = self.displayed_selection_starting_x
+            else:
+                self.displayed_selection.x = self.mouse_x
+            if self.displayed_selection_starting_y < self.mouse_y:
+                self.displayed_selection.y = self.displayed_selection_starting_y
+            else:
+                self.displayed_selection.y = self.mouse_y
+
+            self.displayed_selection.w = abs(
+                self.displayed_selection_starting_x - self.mouse_x)
+            self.displayed_selection.h = abs(
+                self.displayed_selection_starting_y - self.mouse_y)
 
     def handle_one_point_placement(self, event, model):
         """Handles user input for placing an entity that only requires one
@@ -637,15 +678,6 @@ class Controller:
             * round((self.mouse_y + self.camera.y) / self.snap_interval
             / self.camera.scale))
 
-    def get_mouse_selection(self):
-        """Returns the user's current mouse selection (press and drag input)
-        """
-        return sdl2.SDL_Rect(
-            self.mouse_selection.x,
-            self.mouse_selection.y,
-            self.mouse_selection.w,
-            self.mouse_selection.h)
-
     def get_two_point_placement(self, model):
         """Returns the first point the user placed and the projected second
         point, to be displayed as the user selects the second point.
@@ -699,6 +731,13 @@ class Controller:
         return int(self.mouse_y / self.camera.scale
                 + self.camera.y / self.camera.scale)
 
+    def get_mouse_selection(self):
+        """Returns the mouse selection to display if the user is not
+        panning the camera."""
+        if not self.panning_camera:
+            return self.displayed_selection
+        return None
+
     def reset(self):
         """Resets the controller's state.
         """
@@ -713,6 +752,7 @@ class Controller:
 
         self.mouse_down = False
         self.mouse_selection = sdl2.SDL_Rect()
+        self.displayed_selection = sdl2.SDL_Rect()
 
         self.place_one_point = False
         self.place_two_points = False
@@ -1118,7 +1158,7 @@ class CenterButtonPanel(Panel):
                         CenterButtonPanel.RELATIVE_WIDTH,
                         CenterButtonPanel.RELATIVE_HEIGHT)
 
-        # TO DO: find a way to put these in a loop:
+        # TO DO: put these in a loop:
         self.buttons.add(Button(len(self.buttons), EntityType.SELECT_BUTTON,
             self.get_relative_x(),
             CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
@@ -1189,6 +1229,11 @@ class CenterButtonPanel(Panel):
             CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE))
+        self.buttons.add(Button(len(self.buttons), EntityType.LOAD_BUTTON,
+            self.get_relative_x(),
+            CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE,
+            CenterButtonPanel.BUTTON_RELATIVE_SIZE))
         self.buttons.add(Button(len(self.buttons), EntityType.EXPORT_BUTTON,
             self.get_relative_x(),
             CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
@@ -1221,6 +1266,7 @@ class CenterButtonPanel(Panel):
                 'Undo (CTRL + Z)',
                 'Redo (CTRL + Y)',
                 'Save Drawing (CTRL + S)',
+                'Load Drawing',
                 'Export to PNG (CTRL + E)',
                 'List All Entities to File (CTRL + I)',
                 'Exit Application (ALT + F4)',
