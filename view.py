@@ -242,10 +242,12 @@ class View:
         sdl2.SDL_DestroyTexture(texture)
         return True
 
-    def render_absolute_text(self, text):
+    def render_absolute_text(self, text, centered = True):
         """Renders text at its absolute location in black with small font.
         :param text: The text to render
         :type text: UserText from 'entities.py'
+        :param centered: Whether to center the text within its location
+        :type centered: boolean
         """
         if not text or not text.text:
             return None
@@ -269,6 +271,10 @@ class View:
 
         text_x = text.position[0]
         text_y = text.position[1]
+
+        if centered:
+            text_x -= int(width / 2)
+            text_y -= int(height / 2)
 
         sdl2.SDL_RenderCopyEx(self.renderer, texture, None,
                               sdl2.SDL_Rect(text_x, text_y, width, height),
