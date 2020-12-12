@@ -91,13 +91,3 @@ class BackgroundUpdater:
         with condition:
             condition.wait()
             # Future background updates can be added here
-            
-if __name__ == '__main__':
-    load = ''
-
-    # Load save file if supplied as command line argument
-    if len(sys.argv) > 1:
-        load = sys.argv[1]
-
-    app = App(load)
-    app.run()
