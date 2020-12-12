@@ -31,6 +31,9 @@ class Model:
 
         self.update_background = threading.Condition()
 
+        # Abstract factories
+        self.line_factory = AbstractLineFactory()
+
         # Mutexes for accessing the sets
         self.mutexes = {}
         self.mutexes[ModelMutex.LINES] = Lock()
@@ -47,26 +50,13 @@ class Model:
         :param color: The r, g, b values for the line's rendering color
         :type color: tuple(int, int, int)
         """
-        line = None
+        line = line_factory.create(type, start, end, color)
 
-        # TO DO: use abstract factory
-        if type == EntityType.EXTERIOR_WALL:
-            with self.mutexes[ModelMutex.LINES]:
-                line = Line(start, end, Line.EXTERIOR_WALL, color)
-                self.lines.add(line)
-                self.close_gaps_between_walls(line)
-                self.update_verticies()
-        elif type == EntityType.INTERIOR_WALL:
-            with self.mutexes[ModelMutex.LINES]:
-                line = Line(start, end, Line.INTERIOR_WALL, color)
-                self.lines.add(line)
-                self.update_verticies()
-        elif type == EntityType.REGULAR_LINE:
-            with self.mutexes[ModelMutex.LINES]:
-                line = Line(start, end, Line.REGULAR_LINE, color)
-                self.lines.add(line)
-                self.update_verticies()
+        if not line:
+            return None
 
+        self.lines.add(line)
+        self.update_verticies()
         self.update_needed = True
 
         with self.update_background:
@@ -164,7 +154,9 @@ class Model:
         :param entity: The entity to add
         :type entity: Any entity type stored by the model
         """
-
+        
+        # This is the easiest method of doing this, given the limited scope
+        # of the application
         if isinstance(entity, Line):
             with self.mutexes[ModelMutex.LINES]:
                 self.lines.add(entity)
@@ -189,6 +181,8 @@ class Model:
         if not entity:
             return
 
+        # This is the easiest method of doing this, given the limited scope
+        # of the application
         if isinstance(entity, Line):
             with self.mutexes[ModelMutex.LINES]:
                 self.lines.remove(entity)
@@ -447,3 +441,58 @@ class Model:
                     Line.EXTERIOR_WALL, Line.EXTERIOR_WALL))
                 vertex.layer = line.layer
                 self.square_vertices.add(vertex)
+
+class ExteriorWallFactory:
+    """Factory for exterior wall."""
+    def create(start = (0, 0), end = (0, 0), color = (0, 0, 0)):
+        """Creates and returns an exterior wall line.
+        :param start: The starting vertex of the line
+        :param end: The ending vertex of the line
+        :type start, end: tuple(int, int)
+        :param color: The r, g, b values for the line's rendering color
+        :type color: tuple(int, int, int)"""
+        return Line(start, end, Line.EXTERIOR_WALL, color)
+
+class InteriorWallFactory:
+    """Factory for interior wall."""
+    def create(start = (0, 0), end = (0, 0), color = (0, 0, 0)):
+        """Creates and returns an interior wall line.
+        :param start: The starting vertex of the line
+        :param end: The ending vertex of the line
+        :type start, end: tuple(int, int)
+        :param color: The r, g, b values for the line's rendering color
+        :type color: tuple(int, int, int)"""
+        return Line(start, end, Line.INTERIOR_WALL, color)
+
+class RegularLineFactory:
+    """Factory for regular line."""
+    def create(start = (0, 0), end = (0, 0), color = (0, 0, 0)):
+        """Creates and returns an regular line.
+        :param start: The starting vertex of the line
+        :param end: The ending vertex of the line
+        :type start, end: tuple(int, int)
+        :param color: The r, g, b values for the line's rendering color
+        :type color: tuple(int, int, int)"""
+        return Line(start, end, Line.REGULAR_LINE, color)
+
+class AbstractLineFactory:
+    """Abstract factory for creating lines."""
+
+    def __init__(self):
+        """Initializes the line factories."""
+        self.factories = {}
+        self.factories[EntityType.EXTERIOR_WALL] = ExteriorWallFactory()
+        self.factories[EntityType.INTERIOR_WALL] = InteriorWallFactory()
+        self.factories[EntityType.REGULAR_LINE] = RegularLineFactory()
+
+    def create(self, type, start = (0, 0), end = (0, 0), color = (0, 0, 0)):
+        """Creates and returns the line of type.
+        :param start: The starting vertex of the line
+        :param end: The ending vertex of the line
+        :type start, end: tuple(int, int)
+        :param color: The r, g, b values for the line's rendering color
+        :type color: tuple(int, int, int)"""
+
+        if type in self.factories:
+            return type.create(start, end, color)
+        return None
