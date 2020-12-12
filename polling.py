@@ -387,6 +387,7 @@ class RasterizeGraphics:
                screen_dimensions, commands):
         """Sets the graphics rendering to rasterized."""
         controller.rasterize_graphics = True
+        controller.polling = PollingType.SETTINGS
 
 class VectorizeGraphics:
     """The polling event handler for changing to vectorized graphics rendering.
@@ -395,7 +396,8 @@ class VectorizeGraphics:
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
         """Sets the graphics rendering to vectorized."""
-        controller.rasterize_graphics = False
+        controller.message_stack.insert(('Feature coming soon',))
+        controller.polling = PollingType.SETTINGS
 
 class PollingType:
     """Enum for indexing handlers list in the controller."""

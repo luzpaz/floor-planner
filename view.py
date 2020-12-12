@@ -68,7 +68,6 @@ class View:
             self.camera_y = controller.camera.y
             self.camera_scale = controller.camera.scale
 
-            # Only update the layers if new entities were added or removed
             if model.update_needed:
                 # Update screen size
                 width = pointer(c_int(0))
@@ -80,11 +79,10 @@ class View:
                 # Resize fonts
                 self.initialize_fonts()
 
-                self.update_layer(model, controller)
-                model.update_needed = False
-
-            # Render layers currently set as visible by the user
-            self.render_layer(controller.current_layer)
+            if controller.rasterize_graphics:
+                self.rasterized_render(model, controller)
+            else:
+                self.vectorized_render(model, controller)
 
             # Render UI panels
             self.render_ui_panels(controller)
@@ -105,6 +103,38 @@ class View:
         except:
             return
 
+    def rasterized_render(self, model, controller):
+        """Renders entities onto a layer only when added/removed, and
+        renders that layer to the screen, instead of rendering each entity
+        individually. More performant, but low graphics quality when zoomed in.
+        """
+        
+        # Only update the layers if new entities were added or removed
+        if model.update_needed:
+            self.update_layer(model, controller)
+            model.update_needed = False
+
+        # Render layers currently set as visible by the user
+        self.render_layer(controller.current_layer)
+
+    def vectorized_render(self, model, controller):
+        """Renders all entities individually every frame for maximum graphics
+        quality, but requires higher performance with higher number of entities.
+        """
+
+        # Not currently implemented
+        return
+
+        # Render empty white rectangle for canvas
+        sdl2.SDL_SetRenderDrawColor(self.renderer, 255, 255, 255, 255)
+        sdl2.SDL_RenderFillRect(self.renderer,
+            sdl2.SDL_Rect(int(-self.camera_x),
+                          int(-self.camera_y),
+                          int(self.layer_width * self.camera_scale),
+                          int(self.layer_height * self.camera_scale)))
+
+        return self.render_entities(model, controller, True)
+
     def update_layer(self, model, controller):
         """Renders entities from model onto their corresponding layer.
         This optimizes rendering as rendering the layer once renders all
@@ -114,6 +144,17 @@ class View:
                                  controller.current_layer))
         sdl2.SDL_SetRenderDrawColor(self.renderer, 255, 255, 255, 255)
         sdl2.SDL_RenderClear(self.renderer)
+
+        return self.render_entities(model, controller, False)
+
+    def render_entities(self, model, controller, adjusted):
+        """Renders the entities from the model onto the current renderer target,
+        which is either the current layer (rasterized graphics) or the
+        application window (vectorized graphics).
+        :param adjusted: Whether to adjust the entities to the camera
+        False for rasterized, True for vectorized
+        :type adjusted: boolean
+        """
 
         entities_rendered = 0
 
@@ -136,35 +177,50 @@ class View:
         for line in model.lines:
             if line.layer != controller.current_layer:
                 continue
-            self.render_line(line, controller.current_layer)
+            if not adjusted:
+                self.render_line(line, controller.current_layer)
+            else:
+                self.render_adjusted_line(line)
             entities_rendered += 1
 
         # Render square vertices to close the gap between connecting lines
         for vertex in model.square_vertices:
             if vertex.layer != controller.current_layer:
                 continue
-            self.render_square_vertex(vertex)
+            if not adjusted:
+                self.render_square_vertex(vertex)
+            else:
+                self.render_adjusted_square_vertex(vertex)
             entities_rendered += 1
 
         # Render windows
         for window in model.windows:
             if window.layer != controller.current_layer:
                 continue
-            self.render_window(window, controller.current_layer)
+            if not adjusted:
+                self.render_window(window, controller.current_layer)
+            else:
+                self.render_adjusted_window(window)
             entities_rendered += 1
 
         # Render doors
         for door in model.doors:
             if door.layer != controller.current_layer:
                 continue
-            self.render_door(door, controller.current_layer)
+            if not adjusted:
+                self.render_door(door, controller.current_layer)
+            else:
+                self.render_adjusted_door(door)
             entities_rendered += 1
 
         # Render user text
         for text in model.user_text:
             if text.layer != controller.current_layer:
                 continue
-            self.render_absolute_text(text)
+            if not adjusted:
+                self.render_absolute_text(text)
+            else:
+                self.render_adjusted_text(text)
             entities_rendered += 1
 
         sdl2.SDL_SetRenderTarget(self.renderer, None)
@@ -317,6 +373,10 @@ class View:
                 self.render_button(button)
 
     def render_settings_panel(self, controller):
+        """Renders the settings panel to the screen with its buttons and text.
+        :param controller: The application controller
+        :type controller: Controller from 'controller.py'
+        """
         self.render_panel(controller.settings_panel)
 
         for settings_button in controller.settings_panel.buttons:
@@ -569,6 +629,37 @@ class View:
         sdl2.SDL_RenderCopy(
             self.renderer, self.textures.get(EntityType.LOADING), None,
             sdl2.SDL_Rect(0, 0, self.screen_width, self.screen_height))
+
+    def render_adjusted_line(self, line):
+        """Renders the line provided adjusted to the camera.
+        :param line: The line to render
+        :type line: Line from 'entities.py'
+        """
+        thickness = int(line.thickness * self.camera_scale)
+        if thickness < 1: thickness = 1
+
+        sdl2.sdlgfx.thickLineRGBA(
+            self.renderer,
+            int(line.start[0] * self.camera_scale - self.camera_x),
+            int(line.start[1] * self.camera_scale - self.camera_y),
+            int(line.end[0] * self.camera_scale - self.camera_x),
+            int(line.end[1] * self.camera_scale - self.camera_y),
+            thickness, line.get_color()[0],
+            line.get_color()[1], line.get_color()[2], 255)
+        return True
+
+    def render_adjusted_square_vertex(self, vertex):
+        """Renders the square vertex provided adjusted to the camera.
+        Renders a solid black rectangle.
+        :param vertex: The square vertex to render
+        :type vertex: RectangularEntity from 'entities.py'
+        """
+        sdl2.SDL_SetRenderDrawColor(self.renderer, 0, 0, 0, 255)
+        sdl2.SDL_RenderFillRect(self.renderer, sdl2.SDL_Rect(
+            int(vertex.x * self.camera_scale - self.camera_x),
+            int(vertex.y * self.camera_scale - self.camera_y),
+            int(vertex.width * self.camera_scale),
+            int(vertex.height * self.camera_scale)))
 
     def set_dpi_awareness(self):
         """Sets the applications DPI awareness to per-monitor-aware,

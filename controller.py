@@ -1504,7 +1504,12 @@ class SettingsPanel(Panel):
         for settings in self.buttons:
             for button in settings.buttons:
                 if button.id == self.button_over:
-                    button.selected = True
+                    # Currently, do not allow the user
+                    # to select vectorized graphics
+                    if button.id != 1:
+                        button.selected = True
+                    else:
+                        settings.buttons[0].selected = True
                 else:
                     button.selected = False
 
