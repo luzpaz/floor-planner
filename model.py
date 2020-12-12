@@ -186,6 +186,8 @@ class Model:
         :param action: Whether the user did this removal explicitly.
         :type action: boolean
         """
+        if not entity:
+            return
 
         if isinstance(entity, Line):
             with self.mutexes[ModelMutex.LINES]:

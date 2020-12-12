@@ -18,9 +18,12 @@ class View:
         sdl2.SDL_Init(sdl2.SDL_INIT_VIDEO)
         sdl2.sdlttf.TTF_Init()
 
-        # Temporarily hard code starting screen dimensions
-        self.screen_width = 1920
-        self.screen_height = 1080
+        # Set initial window size to the user's current display resolution
+        display_mode = sdl2.SDL_DisplayMode()
+        sdl2.SDL_GetCurrentDisplayMode(0, display_mode)
+
+        self.screen_width = int(display_mode.w)
+        self.screen_height = int(display_mode.h)
 
         # Initialize SDL window and renderer
         self.window = sdl2.SDL_CreateWindow(
@@ -48,10 +51,7 @@ class View:
         self.layer_width = layer_dimensions[0]
         self.layer_height = layer_dimensions[1]
 
-        # Initialize fonts
-        self.small_text = sdl2.sdlttf.TTF_OpenFont(b'cour.ttf', 18)
-        self.medium_text = sdl2.sdlttf.TTF_OpenFont(b'cour.ttf', 20)
-        self.large_text = sdl2.sdlttf.TTF_OpenFont(b'cour.ttf', 24)
+        self.initialize_fonts(False)
 
     def update(self, model, controller):
         """Updates the application window with entities from the model
@@ -76,6 +76,9 @@ class View:
                 sdl2.SDL_GetWindowSize(self.window, width, height)
                 self.screen_width = width.contents.value
                 self.screen_height = height.contents.value
+
+                # Resize fonts
+                self.initialize_fonts()
 
                 self.update_layer(model, controller)
                 model.update_needed = False
@@ -565,6 +568,25 @@ class View:
     def get_screen_dimensions(self):
         """Returns the screen dimensions as a tuple."""
         return (self.screen_width, self.screen_height)
+
+    def initialize_fonts(self, free_current = True):
+        """Initializes the fonts based on the current screen dimensions.
+        :param free_current: Whether to free the memory allocated for the
+        current fonts. Necessary if re-initializing the fonts after changing
+        the screen size during runtime.
+        :type free_current: boolean.
+        """
+        if free_current:
+            sdl2.sdlttf.TTF_CloseFont(self.small_text)
+            sdl2.sdlttf.TTF_CloseFont(self.medium_text)
+            sdl2.sdlttf.TTF_CloseFont(self.large_text)
+
+        self.small_text = sdl2.sdlttf.TTF_OpenFont(
+            b'cour.ttf', int(self.screen_height * 0.017))
+        self.medium_text = sdl2.sdlttf.TTF_OpenFont(
+            b'cour.ttf', int(self.screen_height * 0.019))
+        self.large_text = sdl2.sdlttf.TTF_OpenFont(
+            b'cour.ttf', int(self.screen_height * 0.021))
 
     def exit(self):
         """Exits SDL subsystems, unloads textures, and frees memory allocated

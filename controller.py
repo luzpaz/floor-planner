@@ -23,7 +23,9 @@ class Controller:
         self.fps_displayer = FPSDisplayer()
         self.text_displayers.append(self.center_text)
         self.text_displayers.append(self.message_stack)
-        self.text_displayers.append(self.fps_displayer)
+
+        # FPS displayer only for debugging
+        # self.text_displayers.append(self.fps_displayer)
 
         # User interface panels
         self.panels = []
@@ -193,7 +195,9 @@ class Controller:
 
         # Remove expired user interface messages and adjust positioning
         self.message_stack.update()
-        self.fps_displayer.update()
+        
+        # FPS displayer only for debugging
+        # self.fps_displayer.update()
 
         return True
 

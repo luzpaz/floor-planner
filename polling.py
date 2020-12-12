@@ -1,5 +1,6 @@
 import glob, pickle, os, sdl2, sdl2.ext
 
+from copy import deepcopy
 from entities import Line
 from entity_types import EntityType
 from tools import ExportCommand, Loader
@@ -61,10 +62,17 @@ class Moving:
             # User selected on new location for entity
             if event.type == sdl2.SDL_MOUSEBUTTONDOWN\
                 and controller.item_to_move:
+
+                move_action = MoveAction(controller.item_to_move)
+
                 adjusted_mouse = controller.get_adjusted_mouse(model)
                 controller.item_to_move.move(
                     adjusted_mouse[0], adjusted_mouse[1],
                     controller.use_start_vertex)
+                
+                move_action.current = controller.item_to_move
+                model.actions.append(move_action)
+
                 model.update_needed = True
                 model.update_verticies()
                 controller.reset()
@@ -451,7 +459,34 @@ class DeleteAction:
         return self.entity.__repr__()
 
 class MoveAction:
-    pass
+    """The action container for when a user moves an entity."""
+
+    def __init__(self, previous_state = None):
+        """Copies the previous state of the entity the user moved.
+        :param previous_state: The entity the user *will* move
+        :type entity: Any entity class from 'entities.py'"""
+        self.previous = deepcopy(previous_state)
+        self.current = None
+
+    def undo(self, controller, model):
+        """Defines what is needed to undo this action:
+        Replaces the current entity with its previous state."""
+        model.remove_entity(self.current, False)
+        model.add_entity(self.previous)
+
+    def redo(self, controller, model):
+        """Defines what is needed to redo this action:
+        Replaces the previous entity with its moved state."""
+        model.remove_entity(self.previous, False)
+        model.add_entity(self.current)
+
+    def __str__(self):
+        """Returns description."""
+        return 'Moved ' + str(self.current)
+
+    def __repr__(self):
+        """Returns info needed for debugging."""
+        return self.current.__repr__()
 
 class ActionType:
     ADD = 0

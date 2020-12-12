@@ -278,6 +278,12 @@ class RectangularEntity(Entity):
                 return (int(self.x + self.width / 2),
                         int(self.y + self.height))
 
+    def __deepcopy__(self, memodict = {}):
+        """Copy constructor for rectangle.
+        """
+        return RectangularEntity(sdl2.SDL_Rect(
+            self.x, self.y, self.width, self.height))
+
 class Window(RectangularEntity):
     """The class representing a window that can be placed on an exterior wall.
     """
