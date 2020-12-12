@@ -13,6 +13,11 @@ class Erasing:
         """Allows the user to erase entities simply by clicking them.
         User does not have to select entities then press the DELETE key.
         """
+
+        # Display hint
+        controller.center_text.set_top_text(
+            'Select entities to erase.')
+
         for entity in controller.selected_entities:
             model.remove_entity(entity)
         controller.selected_entities.clear()
@@ -154,10 +159,16 @@ class Layers:
         controller.reset()
 
 class Settings:
+    """The polling event handler for toggling the visibility of the settings
+    panel in the center of the screen."""
+
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
-        controller.message_stack.insert(['Not implemented'])
-        controller.reset()
+        """Toggles whether to display the settings panel.
+        """
+        controller.center_text.set_top_text(
+            'Press ESC to close settings.')
+        controller.settings_panel.visible = True
 
 class Undoing:
     """The polling event handler for undoing the last action."""
@@ -368,6 +379,24 @@ class SetLayer:
         controller.reset()
         model.update_needed = True
 
+class RasterizeGraphics:
+    """The polling event handler for changing to rasterized graphics rendering.
+    """
+
+    def handle(self, controller, model, keystate, event,
+               screen_dimensions, commands):
+        """Sets the graphics rendering to rasterized."""
+        controller.rasterize_graphics = True
+
+class VectorizeGraphics:
+    """The polling event handler for changing to vectorized graphics rendering.
+    """
+
+    def handle(self, controller, model, keystate, event,
+               screen_dimensions, commands):
+        """Sets the graphics rendering to vectorized."""
+        controller.rasterize_graphics = False
+
 class PollingType:
     """Enum for indexing handlers list in the controller."""
     SELECTING = 0
@@ -400,7 +429,10 @@ class PollingType:
     LAYER_2 = 24
     LAYER_3 = 25
 
-    NUM_TYPES = LAYER_3 + 1
+    RASTERIZE = 26
+    VECTORIZE = 27
+
+    NUM_TYPES = VECTORIZE + 1
 
 class AddAction:
     """The action container for when a user adds an entity."""

@@ -1420,6 +1420,33 @@ class PollingTests(unittest.TestCase):
         app.controller.handle_input(app.model, (1920, 1080), [])
         self.assertTrue(app.controller.layers_panel.visible)
 
+    def test_settings(self):
+        """Ensure the settings poll event handler toggles between not displaying
+        and displaying the settings panel.
+        """
+        app = App()
+        
+        app.controller.polling = PollingType.SETTINGS
+        app.controller.handle_input(app.model, (1920, 1080), [])
+        self.assertTrue(app.controller.settings_panel.visible)
+
+    def test_toggling_between_graphics_settings(self):
+        """Ensure the rasterize and vectorize graphics poll event handlers
+        toggle between not rasterized and vectorized graphics.
+        """
+        app = App()
+
+        app.controller.polling = PollingType.RASTERIZE
+        app.controller.handle_input(app.model, (1920, 1080), [])
+        self.assertTrue(app.controller.rasterize_graphics)
+        
+        app = App()
+
+        app.controller.polling = PollingType.VECTORIZE
+        app.controller.handle_input(app.model, (1920, 1080), [])
+        self.assertFalse(app.controller.rasterize_graphics)
+
+
 class ToolsTests(unittest.TestCase):
     """Tests for classes in the tools.py module."""
 

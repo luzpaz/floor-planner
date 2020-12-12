@@ -34,6 +34,8 @@ EntityType = Enum(
     WINDOW_BUTTON\
     DOOR_BUTTON\
     LAYER\
+    RASTERIZE\
+    VECTORIZE\
     LOADING')
 
 ModelMutex = Enum(

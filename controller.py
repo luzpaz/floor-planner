@@ -31,6 +31,8 @@ class Controller:
         self.panels = []
         self.panels.append(CenterButtonPanel())
         self.panels.append(LeftButtonPanel())
+        self.settings_panel = SettingsPanel()
+        self.panels.append(self.settings_panel)
 
         self.layers_panel = RightButtonPanel()
         self.panels.append(self.layers_panel)
@@ -49,6 +51,9 @@ class Controller:
 
         # Whether to display the drawing grid
         self.display_grid = False
+
+        # Whether to rasterize or vectorize graphics
+        self.rasterize_graphics = True
 
         # Allow dragging and dropping files
         sdl2.SDL_EventState(sdl2.SDL_DROPFILE, sdl2.SDL_ENABLE)
@@ -183,7 +188,6 @@ class Controller:
 
             # If any errors occur, reset the UI state
             except:
-                print('Exception occurred') # for debugging only
                 self.reset()
 
         # Scroll camera using keyboard input
@@ -801,6 +805,8 @@ class Controller:
         self.use_start_vertex = True
         self.current_moving_vertex = None
 
+        self.settings_panel.visible = False
+
         for panel in self.panels:
             panel.reset()
 
@@ -846,6 +852,10 @@ class Controller:
         self.handlers[PollingType.LAYER_1] = polling.SetLayer(1)
         self.handlers[PollingType.LAYER_2] = polling.SetLayer(2)
         self.handlers[PollingType.LAYER_3] = polling.SetLayer(3)
+
+        # Settings panel
+        self.handlers[PollingType.RASTERIZE] = polling.RasterizeGraphics()
+        self.handlers[PollingType.VECTORIZE] = polling.VectorizeGraphics()
 
 class Camera:
     # Regular camera scrolling speed (in/s)
@@ -1107,6 +1117,10 @@ class Panel:
 
         # Set of buttons the panel houses
         self.buttons = set()
+
+        # Whether the panel has a special rendering function
+        # If so, the renderer will skip it when iterating the normal panels
+        self.special_rendering = False
 
     def mouse_over(self, mouse_x, mouse_y, screen_dimensions):
         """Returns true if mouse positions collide with any of the buttons
@@ -1425,9 +1439,131 @@ class RightButtonPanel(Panel):
 
     def handle_mouse_click(self, mouse_x, mouse_y, center_text, polling_event):
         """Same as Panel.handle_mouse_click but adjusts the polling event
-        to account for the number of buttons in the central button panel.
+        to account for the number of buttons in the previous panel.
         """
         Panel.handle_mouse_click(self, mouse_x, mouse_y,
                                  center_text, polling_event)
         polling_event[0] += CenterButtonPanel.NUM_BUTTONS\
             + LeftButtonPanel.NUM_BUTTONS
+
+class SettingsPanel(Panel):
+    """The settings panel appearing on the center of the screen when
+    the user toggles it by pressing the settings button."""
+
+    RELATIVE_WIDTH = 0.20
+    RELATIVE_HEIGHT = 0.20
+    RELATIVE_X = (1.0 - RELATIVE_WIDTH) / 2.0
+    RELATIVE_Y = (1.0 - RELATIVE_HEIGHT) / 2.0
+
+    def __init__(self):
+        """Initializes the settings buttons in the panel."""
+
+        Panel.__init__(self, EntityType.BUTTON_PANEL,
+                       SettingsPanel.RELATIVE_X,
+                       SettingsPanel.RELATIVE_Y,
+                       SettingsPanel.RELATIVE_WIDTH,
+                       SettingsPanel.RELATIVE_HEIGHT)
+
+        self.buttons = set()
+        self.buttons.add(GraphicsButton())
+
+        self.visible = False
+
+        self.special_rendering = True
+
+        self.button_labels =\
+            [
+                'Rasterize graphics - default setting',
+                'Vectorize graphics - requires higher performance CPU/GPU',
+            ]
+
+    def mouse_over(self, mouse_x, mouse_y, screen_dimensions):
+        """Returns true if mouse positions collide with any of the buttons
+        in the panel.
+        :param mouse_x: Mouse x-position
+        :param mouse_y: Mouse y-position
+        :type mouse_x, mouse_y: int
+        """
+        if not self.visible:
+            return False
+
+        for settings in self.buttons:
+            for button in settings.buttons:
+                if button.mouse_over(mouse_x, mouse_y, screen_dimensions):
+                    self.button_over = button.id
+                    return True
+                self.button_over = None
+        return False
+
+    def handle_mouse_click(self, mouse_x, mouse_y, center_text, polling_event):
+        """Sets the selected button and adds a polling event.
+        :param mouse_x: Mouse x-position
+        :param mouse_y: Mouse y-position
+        :type mouse_x, mouse_y: int
+        """
+        for settings in self.buttons:
+            for button in settings.buttons:
+                if button.id == self.button_over:
+                    button.selected = True
+                else:
+                    button.selected = False
+
+        polling_event.append(self.button_over + CenterButtonPanel.NUM_BUTTONS\
+            + LeftButtonPanel.NUM_BUTTONS + RightButtonPanel.NUM_BUTTONS)
+
+class SettingsButton:
+    """A mini-panel on the settings that has a top and bottom text and
+    at least two buttons."""
+
+    TEXT_BUFFER = SettingsPanel.RELATIVE_HEIGHT * 0.15
+
+    def __init__(self, button_relative_y = 0, top_text = '', bottom_text = '',
+                 num_buttons = 0):
+
+        self.top_text = Text(
+            SettingsPanel.RELATIVE_X + SettingsPanel.RELATIVE_WIDTH / 2,
+            button_relative_y - SettingsButton.TEXT_BUFFER, FontSize.LARGE,
+            (127, 127, 127))
+        self.top_text.text = top_text
+
+        self.bottom_text = Text(
+            SettingsPanel.RELATIVE_X + SettingsPanel.RELATIVE_WIDTH / 2,
+            button_relative_y, FontSize.SMALL, (127, 127, 127))
+        self.bottom_text.text = bottom_text
+
+        self.num_buttons = num_buttons
+
+        self.buttons = []
+        self.selected_button = None
+
+class GraphicsButton(SettingsButton):
+    """The settings button for changing between using vectorized or
+    rasterized graphics."""
+
+    BUTTON_SIZE = 0.05
+    RELATIVE_Y = SettingsPanel.RELATIVE_Y\
+        + (SettingsPanel.RELATIVE_HEIGHT * 0.50)
+    TEXT_RELATIVE_Y = RELATIVE_Y - (SettingsPanel.RELATIVE_HEIGHT * 0.15)
+
+    BUTTON_BUFFER = 0.05
+
+    def __init__(self):
+        SettingsButton.__init__(self, GraphicsButton.TEXT_RELATIVE_Y,
+                                'Vectorize Graphics:',
+                                'OFF / ON', 2)
+
+        self.buttons.append(Button(0, EntityType.RASTERIZE,
+                                   SettingsPanel.RELATIVE_X
+                                   + GraphicsButton.BUTTON_BUFFER,
+                                   GraphicsButton.RELATIVE_Y,
+                                   GraphicsButton.BUTTON_SIZE,
+                                   GraphicsButton.BUTTON_SIZE))
+        self.buttons.append(Button(1, EntityType.VECTORIZE,
+                                   SettingsPanel.RELATIVE_X
+                                   + 2.0 * GraphicsButton.BUTTON_BUFFER,
+                                   GraphicsButton.RELATIVE_Y,
+                                   GraphicsButton.BUTTON_SIZE,
+                                   GraphicsButton.BUTTON_SIZE))
+
+        self.selected_button = self.buttons[0]
+        self.buttons[0].selected = True

@@ -88,6 +88,8 @@ class View:
 
             # Render UI panels
             self.render_ui_panels(controller)
+            if controller.settings_panel.visible:
+                self.render_settings_panel(controller)
 
             # Render text from the UI and other indicators
             self.render_ui_text(controller)
@@ -306,12 +308,22 @@ class View:
         :type controller: Controller from 'controller.py'
         """
         for panel in controller.panels:
-            if not panel.visible:
+            if not panel.visible or panel.special_rendering:
                 continue
 
             self.render_panel(panel)
 
             for button in panel.buttons:
+                self.render_button(button)
+
+    def render_settings_panel(self, controller):
+        self.render_panel(controller.settings_panel)
+
+        for settings_button in controller.settings_panel.buttons:
+            self.render_relative_text(settings_button.top_text)
+            self.render_relative_text(settings_button.bottom_text)
+
+            for button in settings_button.buttons:
                 self.render_button(button)
 
     def render_panel(self, panel):
@@ -699,6 +711,11 @@ class Textures:
 
         self.textures[EntityType.LAYER] = self.create(
             renderer, b'textures/layer.png')
+
+        self.textures[EntityType.RASTERIZE] = self.create(
+            renderer, b'textures/rasterize.png')
+        self.textures[EntityType.VECTORIZE] = self.create(
+            renderer, b'textures/vectorize.png')
 
         self.textures[EntityType.LOADING] = self.create(
             renderer, b'textures/loading.png')
