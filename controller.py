@@ -99,12 +99,16 @@ class Controller:
                 if event.type == sdl2.SDL_MOUSEBUTTONDOWN\
                     and not self.using_selection:
                     self.handle_single_entity_selection(model)
+                    self.last_selection = sdl2.SDL_GetTicks()
+                    self.update_item_to_move()
                 
                 # Select multiple entities
                 self.handle_mouse_drag(event)
                 if self.mouse_selection.w != 0 and self.mouse_selection.h != 0\
                     and not self.using_selection:
                     self.handle_multiple_entity_selection(model)
+                    self.last_selection = sdl2.SDL_GetTicks()
+                    self.update_item_to_move()
 
                 # Panning camera
                 if keystate[sdl2.SDL_SCANCODE_LSHIFT]\
@@ -642,6 +646,13 @@ class Controller:
                 self.polling = polling_event[0]
                 return
 
+    def update_item_to_move(self):
+        """Selects an entity from the selected to be the entity to move."""
+        entity = None
+        for entity in self.selected_entities:
+            break
+        self.item_to_move = entity
+
     def get_adjusted_mouse(self, model):
         """Returns the mouse's current position, adjusted to the snap interval
         or any nearby vertex or axis to snap to
@@ -780,6 +791,11 @@ class Controller:
 
         self.selected_entities = set()
         self.using_selection = False
+        self.item_to_move = None
+        self.last_selection = sdl2.SDL_GetTicks()
+
+        self.use_start_vertex = True
+        self.current_moving_vertex = None
 
         for panel in self.panels:
             panel.reset()
@@ -1136,7 +1152,7 @@ class CenterButtonPanel(Panel):
     """The main user interface panel appearing at the top center of the screen.
     """
 
-    NUM_BUTTONS = 17
+    NUM_BUTTONS = 18
 
     RELATIVE_X = 0.0
     RELATIVE_Y = 0.0

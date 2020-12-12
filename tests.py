@@ -109,6 +109,24 @@ class LineTests(unittest.TestCase):
         self.assertEqual(Line.intersection((0, 0), (5, 0), (2, -1), (2, 4)),
                          (2, 0))
 
+    def test_move_start_vertex(self):
+        """Ensure moving a line with the start vertex as the reference
+        adjusts the start and end vertices accurately.
+        """
+        line = Line((0, 0), (10, 0))
+        line.move(10, 0, True)
+        self.assertEqual(line.start, (10, 0))
+        self.assertEqual(line.end, (20, 0))
+
+    def test_move_end_vertex_same_location(self):
+        """Ensure moving a line with the end vertex to the same position does
+        not affect the start and end veritices of the line.
+        """
+        line = Line((0, 0), (10, 0))
+        line.move(10, 0, False)
+        self.assertEqual(line.start, (0, 0))
+        self.assertEqual(line.end, (10, 0))
+
 class RectangularTests(unittest.TestCase):
     """Tests for the RectangularEntity class (entities.py)."""
     rectangle = RectangularEntity(sdl2.SDL_Rect(0, 0, 5, 5))
@@ -143,6 +161,20 @@ class RectangularTests(unittest.TestCase):
         """
         self.assertTrue(RectangularTests.rectangle.check_collision(
             sdl2.SDL_Rect(0, 0, 5, 5)))
+
+    def test_move(self):
+        """Ensure moving the rectangle from either vertex adjusts the 
+        rectangle's x and y positions accurately.
+        """
+        rectangle = RectangularEntity(sdl2.SDL_Rect(0, 0, 10, 10))
+        
+        rectangle.move(10, 10, True)
+        self.assertEqual(rectangle.x, 10)
+        self.assertEqual(rectangle.y, 10)
+
+        rectangle.move(0, 0, False)
+        self.assertEqual(rectangle.x, -10)
+        self.assertEqual(rectangle.y, -10)
 
 class ControllerTests(unittest.TestCase):
     """Tests for the Controller class (controller.py)."""
@@ -574,6 +606,21 @@ class ControllerTests(unittest.TestCase):
         for i in range(3):
             message_stack.update()
         self.assertEqual(len(message_stack.text), 0)
+
+    def test_update_item_to_move(self):
+        """Ensure that update_item_to_move selects a single entity from
+        the selected entities when selected entities is not empty.
+        """
+        controller = Controller()
+        
+        # Empty selected entities
+        controller.update_item_to_move()
+        self.assertIsNone(controller.item_to_move)
+
+        line = Line()
+        controller.selected_entities.add(line)
+        controller.update_item_to_move()
+        self.assertEqual(controller.item_to_move, line)
 
     def test_ctrl_hotkeys(self):
         """Ensure user pressing CTRL and a hotkey sets the expected poll event.

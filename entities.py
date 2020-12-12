@@ -142,6 +142,39 @@ class Line(Entity):
         return ((b2 * c1 - b1 * c2) / determinant,\
             (a1 * c2 - a2 * c1) / determinant)
 
+    def move(self, x, y, start_vertex = True):
+        """Moves the line to the new location with respect to either the
+        start or end vertex.
+        :param x, y: new x and y positions to move to
+        :type x, y: int
+        :param start_vertex: Whether to use the start vertex (or the end vertex)
+        :type start_vertex: boolean
+        """
+        if start_vertex:
+            x_distance = x - self.start[0]
+            y_distance = y - self.start[1]
+
+            self.start = (x, y)
+
+            self.end = (self.end[0] + x_distance,
+                        self.end[1] + y_distance)
+        else:
+            x_distance = x - self.end[0]
+            y_distance = y - self.end[1]
+
+            self.end = (x, y)
+
+            self.start = (self.start[0] + x_distance,
+                        self.start[1] + y_distance)
+
+    def get_moving_vertex(self, start_vertex = True):
+        """Returns the vertex being moved: either the starting or ending vertex.
+        """
+        if start_vertex:
+            return self.start
+        else:
+            return self.end
+
     def get_color(self):
         """Returns line's color if it is not selected. Otherwise, returns
         color denoting selection.
@@ -190,6 +223,7 @@ class RectangularEntity(Entity):
         self.y = rectangle.y
         self.width = rectangle.w
         self.height = rectangle.h
+        self.horizontal = self.width > self.height
 
     def check_collision(self, other = sdl2.SDL_Rect(0, 0, 0, 0)):
         """Returns true if a rectangular collision occurs with this rectangle
@@ -209,6 +243,40 @@ class RectangularEntity(Entity):
             collision = False
 
         return collision
+
+    def move(self, x, y, left_top_vertex = True):
+        """Moves the rectangle to the new location with respect to either the
+        left/top or right/bottom vertex.
+        :param x, y: new x and y positions to move to
+        :type x, y: int
+        :param left_top_vertex: Whether to use the left/top vertex
+        : or the right/bottom vertex
+        :type left_top_vertex: boolean
+        """
+        if left_top_vertex:
+            # Left/top vertex
+            self.x = x
+            self.y = y
+        else:
+            # Right/bottom vertex
+            self.x = x - self.width
+            self.y = y - self.height
+
+    def get_moving_vertex(self, start_vertex = True):
+        """Returns the vertex being moved: either the starting or ending vertex.
+        """
+        if start_vertex:
+            if self.horizontal:
+                return (self.x, int(self.y + self.height / 2))
+            else:
+                return (int(self.x + self.width / 2), self.y)
+        else:
+            if self.horizontal:
+                return (int(self.x + self.width),
+                        int(self.y + self.height / 2))
+            else:
+                return (int(self.x + self.width / 2),
+                        int(self.y + self.height))
 
 class Window(RectangularEntity):
     """The class representing a window that can be placed on an exterior wall.

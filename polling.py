@@ -29,10 +29,45 @@ class Drawing:
         controller.polling = PollingType.SELECTING
 
 class Moving:
+    """The polling event handler for moving an entity."""
+
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
-        controller.message_stack.insert(['Not implemented'])
-        controller.reset()
+        """Moves the selected entity to the new location specified by the user,
+        with reference to the vertex of the entity toggled by the user.
+        """
+
+        # Display hint
+        controller.center_text.set_top_text(
+            'Select an entity and click on a new vertex location.'\
+                + ' Toggle between vertices with TAB.')
+
+        # Toggle between vertices of the selected entity
+        if keystate[sdl2.SDL_SCANCODE_TAB]:
+            controller.use_start_vertex = not controller.use_start_vertex
+
+        # Allow time between mouse clicks so that the user does not accidently
+        # instantly move an entity after selecting it
+        if len(controller.selected_entities) > 0\
+            and sdl2.SDL_GetTicks() - controller.last_selection > 250:
+            controller.using_selection = True
+
+            # Get entity's moving vertex to display
+            if controller.item_to_move:
+                controller.current_moving_vertex =\
+                    controller.item_to_move.get_moving_vertex(
+                        controller.use_start_vertex)
+
+            # User selected on new location for entity
+            if event.type == sdl2.SDL_MOUSEBUTTONDOWN\
+                and controller.item_to_move:
+                adjusted_mouse = controller.get_adjusted_mouse(model)
+                controller.item_to_move.move(
+                    adjusted_mouse[0], adjusted_mouse[1],
+                    controller.use_start_vertex)
+                model.update_needed = True
+                model.update_verticies()
+                controller.reset()
         
 class Measuring:
     """The polling event handler for measuring a line."""

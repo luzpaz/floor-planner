@@ -89,6 +89,7 @@ class View:
             # Render text from the UI and other indicators
             self.render_ui_text(controller)
             self.render_two_point_placement(controller, model)
+            self.render_moving_vertex(controller)
             self.render_mouse_selection(controller)
 
             if controller.loading:
@@ -390,6 +391,24 @@ class View:
                 int(nearest_vertex_axis[1] * self.camera_scale - self.camera_y))
         return True
 
+    def render_moving_vertex(self, controller):
+        """Renders the current moving vertex (the vertex used as the reference
+        for the entity that the user is moving).
+        :param controller: The application controller
+        :type controller: Controller from 'controller.py'
+        """
+        if not controller.current_moving_vertex:
+            return False
+
+        sdl2.sdlgfx.filledCircleRGBA(
+                self.renderer,
+                int(controller.current_moving_vertex[0]
+                    * self.camera_scale - self.camera_x),
+                int(controller.current_moving_vertex[1]
+                    * self.camera_scale - self.camera_y),
+                int(3.0 * self.camera_scale), 255, 0, 0, 255)
+        return True
+
     def render_line_placement(self, line):
         """Renders the line provided in reference to the camera's current
         location and scale.
@@ -601,7 +620,7 @@ class Textures:
         self.textures = {}
         self.layers = {}
 
-        # Create textures...
+        # Create textures from png files in textures directory
         self.textures[EntityType.BUTTON_PANEL] = self.create(
             renderer, b'textures/button_panel.png')
         
