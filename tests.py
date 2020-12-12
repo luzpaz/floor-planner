@@ -1019,7 +1019,7 @@ class ViewTests(unittest.TestCase):
         """
         ViewTests.app.model.add_user_text('text')
         self.assertEqual(ViewTests.app.view.render_ui_text(
-            ViewTests.app.controller), 4)
+            ViewTests.app.controller), 3)
 
     def test_empty_render_text(self):
         """Ensure render text returns None if the text is None or if the text
@@ -1045,6 +1045,8 @@ class ViewTests(unittest.TestCase):
     def test_center_text(self):
         """Ensures center_text returns the expected values for base cases.
         """
+        ViewTests.app.view.screen_width = 1920
+        ViewTests.app.view.screen_height = 1080
         self.assertEqual(ViewTests.app.view.center_text(250), 835)
         self.assertEqual(ViewTests.app.view.center_text(0), 960)
 

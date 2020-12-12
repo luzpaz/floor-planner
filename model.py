@@ -50,7 +50,7 @@ class Model:
         :param color: The r, g, b values for the line's rendering color
         :type color: tuple(int, int, int)
         """
-        line = line_factory.create(type, start, end, color)
+        line = self.line_factory.create(type, start, end, color)
 
         if not line:
             return None
@@ -444,7 +444,7 @@ class Model:
 
 class ExteriorWallFactory:
     """Factory for exterior wall."""
-    def create(start = (0, 0), end = (0, 0), color = (0, 0, 0)):
+    def create(self, start = (0, 0), end = (0, 0), color = (0, 0, 0)):
         """Creates and returns an exterior wall line.
         :param start: The starting vertex of the line
         :param end: The ending vertex of the line
@@ -455,7 +455,7 @@ class ExteriorWallFactory:
 
 class InteriorWallFactory:
     """Factory for interior wall."""
-    def create(start = (0, 0), end = (0, 0), color = (0, 0, 0)):
+    def create(self, start = (0, 0), end = (0, 0), color = (0, 0, 0)):
         """Creates and returns an interior wall line.
         :param start: The starting vertex of the line
         :param end: The ending vertex of the line
@@ -466,7 +466,7 @@ class InteriorWallFactory:
 
 class RegularLineFactory:
     """Factory for regular line."""
-    def create(start = (0, 0), end = (0, 0), color = (0, 0, 0)):
+    def create(self, start = (0, 0), end = (0, 0), color = (0, 0, 0)):
         """Creates and returns an regular line.
         :param start: The starting vertex of the line
         :param end: The ending vertex of the line
@@ -494,5 +494,5 @@ class AbstractLineFactory:
         :type color: tuple(int, int, int)"""
 
         if type in self.factories:
-            return type.create(start, end, color)
+            return self.factories[type].create(start, end, color)
         return None
