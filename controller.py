@@ -315,8 +315,8 @@ class Controller:
                 int(adjusted_mouse_x), int(adjusted_mouse_y),
                 round(self.camera.scale, 10)))
         else:
-            width = self.mouse_selection.w / self.camera.scale
-            height = self.mouse_selection.h / self.camera.scale
+            width = self.mouse_selection.w
+            height = self.mouse_selection.h
             area = width * height / 144.0
             self.center_text.set_right_text(
                 'X: {} Y: {} - Zoom: {} - Area: {} ft^2'.format(
