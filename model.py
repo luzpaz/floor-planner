@@ -40,6 +40,7 @@ class Model:
         self.mutexes[ModelMutex.WINDOWS] = Lock()
         self.mutexes[ModelMutex.DOORS] = Lock()
         self.mutexes[ModelMutex.TEXT] = Lock()
+        self.mutexes[ModelMutex.SQUARE_VERTICES] = Lock()
 
     def add_line(self, type, start = (0, 0), end = (0, 0), color = (0, 0, 0)):
         """Adds a line and its vertices to the model.
@@ -54,7 +55,9 @@ class Model:
         if not line:
             return None
 
-        self.lines.add(line)
+        with self.mutexes[ModelMutex.LINES]:
+            self.lines.add(line)
+
         self.update_verticies()
         self.update_needed = True
 
@@ -87,8 +90,10 @@ class Model:
                 int(location[1] - Window.LENGTH / 2),
                 Window.WIDTH,
                 Window.LENGTH))
+            
+        with self.mutexes[ModelMutex.WINDOWS]:
+            self.windows.add(window)
 
-        self.windows.add(window)
         self.update_needed = True
 
         if window:
@@ -117,8 +122,10 @@ class Model:
                 int(location[0] - thickness / 2),
                 int(location[1] - Door.LENGTH / 2),
                 thickness, Door.LENGTH))
+            
+        with self.mutexes[ModelMutex.DOORS]:
+            self.doors.add(door)
 
-        self.doors.add(door)
         self.update_needed = True
 
         if door:
@@ -131,7 +138,6 @@ class Model:
         :param line: The line to add vertices for
         :type line: Line from 'entities.py'
         """
-
         self.vertices.add((line.start[0], line.start[1]))
         self.vertices.add((line.end[0], line.end[1]))
 
@@ -143,7 +149,10 @@ class Model:
         :type position: tuple(int, int)
         """
         text = UserText(text, position)
-        self.user_text.add(text)
+
+        with self.mutexes[ModelMutex.TEXT]:
+            self.user_text.add(text)
+
         self.update_needed = True
         self.actions.append(AddAction(text))
         return text
@@ -433,6 +442,7 @@ class Model:
                     Line.EXTERIOR_WALL, Line.EXTERIOR_WALL))
                 vertex.layer = line.layer
                 self.square_vertices.add(vertex)
+
             if line.end == other.end or line.end == other.start:
                 vertex = RectangularEntity(sdl2.SDL_Rect(
                     int(line.end[0] - Line.EXTERIOR_WALL / 2),

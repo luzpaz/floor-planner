@@ -44,4 +44,5 @@ ModelMutex = Enum(
     VERTICES\
     WINDOWS\
     DOORS\
-    TEXT')
+    TEXT\
+    SQUARE_VERTICES')

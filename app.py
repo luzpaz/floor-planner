@@ -9,7 +9,7 @@ class App:
     """Houses the MVC components and executes the application loop."""
 
     def __init__(self, load = ''):
-        """Initialize the application MVC components.
+        """Initializes the application MVC components.
         :param load: Saved filename to load from
         :type load: str
         """
