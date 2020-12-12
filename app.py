@@ -1,14 +1,12 @@
 import os, sdl2, sys, threading
 
-from background_updates import BackgroundUpdater
 from model import Model
 from controller import Controller
 from tools import Loader
 from view import View
 
 class App:
-    """The class responsible for housing the MVC components and executing
-    the application loop."""
+    """Houses the MVC components and executes the application loop."""
 
     def __init__(self, load = ''):
         """Initialize the application MVC components.
@@ -84,6 +82,15 @@ class App:
                                                   + filename,))
             self.model = Model() # reset model
 
+class BackgroundUpdater:
+    """Performs background updates."""
+
+    def update(self, app, condition):
+        """Performs background updates when notified by the model."""
+
+        with condition:
+            condition.wait()
+            # Future background updates can be added here
             
 if __name__ == '__main__':
     load = ''

@@ -8,7 +8,7 @@ from tools import Tools, ExportCommand
 from polling import PollingType
 
 class Controller:
-    """The class responsible for handling user input on the model."""
+    """Handles user input on the model."""
 
     def __init__(self):
         """Initializes the user camera, UI text displayers, and UI panels."""
@@ -1524,7 +1524,8 @@ class SettingsButton:
 
     def __init__(self, button_relative_y = 0, top_text = '', bottom_text = '',
                  num_buttons = 0):
-
+        """Initializes the top/bottom texts and buttons at the
+        relative location."""
         self.top_text = Text(
             SettingsPanel.RELATIVE_X + SettingsPanel.RELATIVE_WIDTH / 2,
             button_relative_y - SettingsButton.TEXT_BUFFER, FontSize.LARGE,
@@ -1553,6 +1554,8 @@ class GraphicsButton(SettingsButton):
     BUTTON_BUFFER = 0.05
 
     def __init__(self):
+        """Initializes the rasterize and vectorize button and top/bottom text.
+        """
         SettingsButton.__init__(self, GraphicsButton.TEXT_RELATIVE_Y,
                                 'Vectorize Graphics:',
                                 'OFF / ON', 2)

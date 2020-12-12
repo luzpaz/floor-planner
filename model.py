@@ -8,8 +8,7 @@ from threading import Lock
 from tools import Tools
 
 class Model:
-    """The class responsible for containing entities and
-    performing queries on them."""
+    """Contains the application entities and provides queries on them."""
 
     def __init__(self):
         """Initializes entity containers.

@@ -32,7 +32,7 @@ class ExportCommand(Command):
         export = Exporter(app.view.renderer, app.view.textures.layers[0])
 
 class Exporter:
-    """The class responsible for exporting the drawing into a png file."""
+    """Exports the drawing into a png file."""
 
     # Minimum interval (ms) between exports
     EXPORT_INTERVAL = 5000
@@ -75,7 +75,7 @@ class Exporter:
         last_export = sdl2.SDL_GetTicks()
 
 class Loader:
-    """The class responsible for loading model entities from a save file."""
+    """Loads model entities from a save file."""
 
     def __init__(self, model, filename = 'save.pkl'):
         """Loads the model entities.
