@@ -30,7 +30,7 @@ class Line(Entity):
 
     def __init__(self, start = (0, 0), end = (0, 0),
                  thickness = 1, color = (0, 0, 0)):
-        """ Initalizes the line class.
+        """ Initializes the line class.
         :param start: line segment starting vertex
         :param end: line segment ending vertex
         :type start, end: tuple(int, int)
@@ -70,7 +70,7 @@ class Line(Entity):
         """Returns whether the rectangle collides with this line.
         :param rectangle: the rectangle containing the top-left x and y position
         and the width and height
-        :type rectange: SDL_Rect
+        :type rectangle: SDL_Rect
         """
 
         # Rectangle vertices
@@ -79,7 +79,7 @@ class Line(Entity):
         bottom_left = (rectangle.x, rectangle.y + rectangle.h)
         bottom_right = (rectangle.x + rectangle.w, rectangle.y + rectangle.h)
 
-        # Check for interesection between rectangle edges
+        # Check for intersection between rectangle edges
         left = Line.intersect(top_left, bottom_left, self.start, self.end)
         right = Line.intersect(top_right, bottom_right, self.start, self.end)
         top = Line.intersect(top_left, top_right, self.start, self.end)
@@ -291,7 +291,7 @@ class Window(RectangularEntity):
     # Default length (px)
     LENGTH = 36
 
-    # Default widht (px)
+    # Default width (px)
     WIDTH = 6
 
     # Maximum distance an exterior wall can be from the user's mouse positions
