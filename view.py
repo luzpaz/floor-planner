@@ -27,7 +27,7 @@ class View:
 
         # Initialize SDL window and renderer
         self.window = sdl2.SDL_CreateWindow(
-            b'House Planner',
+            b'Floor Planner',
             sdl2.SDL_WINDOWPOS_CENTERED,
             sdl2.SDL_WINDOWPOS_CENTERED,
             self.screen_width,
@@ -83,6 +83,7 @@ class View:
                 self.rasterized_render(model, controller)
             else:
                 self.vectorized_render(model, controller)
+            self.render_text_from_model(controller, model)
 
             # Render UI panels
             self.render_ui_panels(controller)
@@ -213,16 +214,6 @@ class View:
                 self.render_adjusted_door(door)
             entities_rendered += 1
 
-        # Render user text
-        for text in model.user_text:
-            if text.layer != controller.current_layer:
-                continue
-            if not adjusted:
-                self.render_absolute_text(text)
-            else:
-                self.render_adjusted_text(text)
-            entities_rendered += 1
-
         sdl2.SDL_SetRenderTarget(self.renderer, None)
         return entities_rendered
 
@@ -237,6 +228,18 @@ class View:
                           int(-self.camera_y),
                           int(self.layer_width * self.camera_scale),
                           int(self.layer_height * self.camera_scale)))
+
+    def render_text_from_model(self, controller, model):
+        """Renders the user placed text from the model.
+        :param controller: The application controller
+        :type controller: Controller from 'controller.py'
+        :param model: The application model
+        :type model: Model from 'model.py'
+        """
+        for text in model.user_text:
+            if text.layer != controller.current_layer:
+                continue
+            self.render_user_text(text)
 
     def render_ui_text(self, controller):
         """Renders all text in text displayers from the user interface.
@@ -304,8 +307,8 @@ class View:
         sdl2.SDL_DestroyTexture(texture)
         return True
 
-    def render_absolute_text(self, text, centered = True):
-        """Renders text at its absolute location in black with small font.
+    def render_user_text(self, text, centered = True):
+        """Renders text at its absolute location in black with tiny font.
         :param text: The text to render
         :type text: UserText from 'entities.py'
         :param centered: Whether to center the text within its location
@@ -314,7 +317,7 @@ class View:
         if not text or not text.text:
             return None
 
-        font = self.small_text
+        font = self.tiny_text
 
         surface = sdl2.sdlttf.TTF_RenderText_Solid(
             font, str.encode(text.text), sdl2.SDL_Color(0, 0, 0))
@@ -337,6 +340,10 @@ class View:
         if centered:
             text_x -= int(width / 2)
             text_y -= int(height / 2)
+
+        # Adjust to camera
+        text_x = int(text_x * self.camera_scale - self.camera_x)
+        text_y = int(text_y * self.camera_scale - self.camera_y)
 
         # Underline text if selected
         if text.selected:
@@ -680,10 +687,13 @@ class View:
         :type free_current: boolean.
         """
         if free_current:
+            sdl2.sdlttf.TTF_CloseFont(self.tiny_text)
             sdl2.sdlttf.TTF_CloseFont(self.small_text)
             sdl2.sdlttf.TTF_CloseFont(self.medium_text)
             sdl2.sdlttf.TTF_CloseFont(self.large_text)
-
+            
+        self.tiny_text = sdl2.sdlttf.TTF_OpenFont(
+            b'cour.ttf', int(self.screen_height * 0.013))
         self.small_text = sdl2.sdlttf.TTF_OpenFont(
             b'cour.ttf', int(self.screen_height * 0.017))
         self.medium_text = sdl2.sdlttf.TTF_OpenFont(

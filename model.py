@@ -295,7 +295,8 @@ class Model:
 
         for line in self.lines:
             # Exterior walls only for windows
-            if exterior_only and line.thickness != Line.EXTERIOR_WALL:
+            if (exterior_only and line.thickness != Line.EXTERIOR_WALL)\
+                or (not exterior_only and line.thickness == Line.REGULAR_LINE):
                 continue
 
             # Horizontal or vertical walls only

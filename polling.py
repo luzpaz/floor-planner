@@ -170,9 +170,14 @@ class Settings:
                screen_dimensions, commands):
         """Toggles whether to display the settings panel.
         """
-        controller.center_text.set_top_text(
-            'Press ESC to close settings.')
-        controller.settings_panel.visible = True
+        # Not implemented yet
+        controller.message_stack.insert(('Coming Soon',))
+        controller.reset()
+        return
+
+        # controller.center_text.set_top_text(
+        #   'Press ESC to close settings.')
+        # controller.settings_panel.visible = True
 
 class Undoing:
     """The polling event handler for undoing the last action."""
