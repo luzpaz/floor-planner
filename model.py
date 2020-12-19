@@ -283,7 +283,8 @@ class Model:
 
     def get_nearest_wall(self, location = (0, 0), exterior_only = False):
         """Returns the nearest horizontal or vertical wall to the
-        location, for window or door placement.
+        location and the closest point on that wall,
+        for window or door placement.
         :param location: Position coordinates to find nearest wall for
         :type location: tuple(int, int)
         """

@@ -54,6 +54,10 @@ class Controller:
 
         # Whether to rasterize or vectorize graphics
         self.rasterize_graphics = True
+        
+        # Entities moved by the user that need additional adjustments
+        # (entity that was moved : entity, new location : tuple(int, int))
+        self.moved_entities = set()
 
         # Allow dragging and dropping files
         sdl2.SDL_EventState(sdl2.SDL_DROPFILE, sdl2.SDL_ENABLE)
@@ -176,6 +180,9 @@ class Controller:
                     self.handlers[self.polling].handle(
                         self, model, keystate, event,
                         screen_dimensions, commands)
+
+                # Adjust moved entities if necessary
+                self.adjust_moved_entities(model)
 
                 # Hotkeys for polling
                 if keystate[sdl2.SDL_SCANCODE_LCTRL]\
@@ -639,6 +646,17 @@ class Controller:
                 line.layer = self.current_layer
 
             self.reset()
+
+    def adjust_moved_entities(self, model):
+        """Makes adjustments if necessary to entities moved by the user.
+        For example, snaps doors or windows to the nearest wall if the user
+        moved them to a new location.
+        :param model: The app model
+        :type model: Model from 'model.py'
+        """
+        for moved in self.moved_entities:
+            moved[0].adjust(model, moved[1])
+        self.moved_entities.clear()
 
     def handle_panel_input(self, event, screen_dimensions):
         """Handles user input on the user interface panels.

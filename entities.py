@@ -142,6 +142,10 @@ class Line(Entity):
         return ((b2 * c1 - b1 * c2) / determinant,\
             (a1 * c2 - a2 * c1) / determinant)
 
+    def adjust(self, model, move_location = (0, 0)):
+        """Additional adjustment after a move: none needed."""
+        pass
+
     def move(self, x, y, start_vertex = True):
         """Moves the line to the new location with respect to either the
         start or end vertex.
@@ -278,6 +282,10 @@ class RectangularEntity(Entity):
                 return (int(self.x + self.width / 2),
                         int(self.y + self.height))
 
+    def adjust(self, model, move_location = (0, 0)):
+        """Additional adjustment after a move: defined by child classes."""
+        pass
+
     def __deepcopy__(self, memodict = {}):
         """Copy constructor for rectangle.
         """
@@ -302,6 +310,25 @@ class Window(RectangularEntity):
         """Initializes the window as a rectangular entity.
         """
         RectangularEntity.__init__(self, rectangle)
+        
+    def adjust(self, model, move_location = (0, 0)):
+        """Snaps the entity to the nearest exterior wall that has
+        the same orientation.
+        """
+        result = model.get_nearest_wall(move_location, True)
+
+        # No exterior wall nearby, keep as is
+        if not result:
+            return
+        center_vertex = result[1]
+
+        # Attach window to the wall
+        if self.horizontal:
+            self.x = int(center_vertex[0] - Window.LENGTH / 2)
+            self.y = int(center_vertex[1] - Window.WIDTH / 2)
+        else:
+            self.x = int(center_vertex[0] - Window.WIDTH / 2)
+            self.y = int(center_vertex[1] - Window.LENGTH / 2)
 
     def __str__(self):
         """Returns window type string and its length.
@@ -324,6 +351,24 @@ class Door(RectangularEntity):
         """Initializes the door as a rectangular entity.
         """
         RectangularEntity.__init__(self, rectangle)
+        
+    def adjust(self, model, move_location = (0, 0)):
+        """Snaps the entity to the nearest wall that has the same orientation.
+        """
+        result = model.get_nearest_wall(move_location, False)
+
+        # No wall nearby, keep as is
+        if not result:
+            return
+        center_vertex = result[1]
+
+        # Attach door to the wall
+        if self.horizontal:
+            self.x = int(center_vertex[0] - Door.LENGTH / 2)
+            self.y = int(center_vertex[1] - self.height / 2)
+        else:
+            self.x = int(center_vertex[0] - self.width / 2)
+            self.y = int(center_vertex[1] - Door.LENGTH / 2)
 
     def __str__(self):
         """Returns door type string and its length.
@@ -348,3 +393,7 @@ class UserText(RectangularEntity):
 
         RectangularEntity.__init__(self, sdl2.SDL_Rect(
             self.position[0], self.position[1], len(self.text), len(self.text)))
+
+    def adjust(self, model, move_location = (0, 0)):
+        """Additional adjustment after a move: none needed."""
+        pass

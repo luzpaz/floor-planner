@@ -1277,6 +1277,42 @@ class RectangularTests(unittest.TestCase):
         # Vertical rectangle
         rectangle = RectangularEntity(sdl2.SDL_Rect(0, 10, 10, 50))
         self.assertEqual(rectangle.get_moving_vertex(False), (5, 60))
+        
+    def test_adjusting_window_to_wall(self):
+        """Ensure window is snapped to the nearest exterior wall when
+        an exterior wall exists.
+        """
+        model = Model()
+        model.add_line(EntityType.EXTERIOR_WALL, (0, 3), (360, 3))
+
+        window = Window(sdl2.SDL_Rect(0, 0, 36, 6))
+        window.adjust(model, (180 + Window.LENGTH / 2, Window.WIDTH))
+
+        self.assertEqual(window.x, 180)
+        self.assertEqual(window.y, 0)
+
+    def test_adjusting_window_to_no_wall(self):
+        """Ensure window does not snap to anything when there is no wall.
+        """
+        model = Model()
+
+        window = Window(sdl2.SDL_Rect(0, 0, 36, 6))
+        window.adjust(model, (150, 150))
+
+        self.assertEqual(window.x, 0)
+        self.assertEqual(window.y, 0)
+
+    def test_adjusting_door(self):
+        """Ensure door is snapped to the nearest wall when a wall exists.
+        """
+        model = Model()
+        model.add_line(EntityType.EXTERIOR_WALL, (0, 0), (0, 180))
+
+        door = Door(sdl2.SDL_Rect(0, 0, Line.EXTERIOR_WALL, Door.LENGTH))
+        door.adjust(model, (0, 90 + Door.LENGTH / 2))
+
+        self.assertEqual(door.x, -3)
+        self.assertEqual(door.y, 90)
 
 class PollingTests(unittest.TestCase):
     """Tests for classes in the polling.py module."""

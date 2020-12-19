@@ -74,10 +74,10 @@ class App:
 
     def cap_frame_rate(self, frame_duration):
         """Sleeps the main application thread if the last frame runs faster
-        than 120 fps, to decrease CPU usage."""
+        than 120 fps to decrease CPU usage."""
 
         # 120 fps = ~8 ms per frame
-        if frame_duration * 1000.0 < 8.0:
+        if frame_duration < 0.08:
             time.sleep(0.004) # sleep for 4 ms
 
     def load_from_file(self, filename = ''):

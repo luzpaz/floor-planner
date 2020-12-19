@@ -71,9 +71,13 @@ class Moving:
                 move_action = MoveAction(controller.item_to_move)
 
                 adjusted_mouse = controller.get_adjusted_mouse(model)
+
                 controller.item_to_move.move(
                     adjusted_mouse[0], adjusted_mouse[1],
                     controller.use_start_vertex)
+                controller.moved_entities.add(
+                    (controller.item_to_move,
+                    (adjusted_mouse[0], adjusted_mouse[1])))
                 
                 move_action.current = controller.item_to_move
                 model.actions.append(move_action)
