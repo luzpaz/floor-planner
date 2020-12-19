@@ -919,7 +919,6 @@ class Controller:
         self.handlers[PollingType.REDOING] = polling.Redoing()
         self.handlers[PollingType.SAVING] = polling.Saving()
         self.handlers[PollingType.LOADING] = polling.Loading()
-        self.handlers[PollingType.INVENTORY] = polling.WritingInventory()
         self.handlers[PollingType.EXPORTING] = polling.Exporting()
 
         # Left button panel
@@ -1255,7 +1254,7 @@ class CenterButtonPanel(Panel):
     """The main user interface panel appearing at the top center of the screen.
     """
 
-    NUM_BUTTONS = 18
+    NUM_BUTTONS = 17
 
     RELATIVE_X = 0.0
     RELATIVE_Y = 0.0
@@ -1363,11 +1362,6 @@ class CenterButtonPanel(Panel):
             CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE))
-        self.buttons.add(Button(len(self.buttons), EntityType.INVENTORY_BUTTON,
-            self.get_relative_x(),
-            CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
-            CenterButtonPanel.BUTTON_RELATIVE_SIZE,
-            CenterButtonPanel.BUTTON_RELATIVE_SIZE))
         self.buttons.add(Button(len(self.buttons), EntityType.EXIT_BUTTON,
             self.get_relative_x(),
             CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
@@ -1392,7 +1386,6 @@ class CenterButtonPanel(Panel):
                 'Save Drawing (CTRL + S)',
                 'Load Drawing',
                 'Export to PNG (CTRL + E)',
-                'List All Entities to File (CTRL + I)',
                 'Exit Application (ALT + F4)',
             ]
 
@@ -1458,8 +1451,8 @@ class LeftButtonPanel(Panel):
             [
                 'Draw Exterior Wall (0)',
                 'Draw Interior Wall (1)',
-                'Draw Window (2)',
-                'Draw Door (3)',
+                'Place Window (2)',
+                'Place Door (3)',
             ]
 
     def handle_mouse_click(self, mouse_x, mouse_y, center_text, polling_event):

@@ -421,22 +421,21 @@ class PollingType:
     SAVING = 13
     LOADING = 14
     EXPORTING = 15
-    INVENTORY = 16
-    EXITING = 17
+    EXITING = 16
 
-    DRAW_EXTERIOR_WALL = 18
-    DRAW_INTERIOR_WALL = 19
-    DRAW_WINDOW = 20
-    DRAW_DOOR = 21
+    DRAW_EXTERIOR_WALL = 17
+    DRAW_INTERIOR_WALL = 18
+    DRAW_WINDOW = 19
+    DRAW_DOOR = 20
 
     # TO DO: make layers dynamic
-    LAYER_0 = 22
-    LAYER_1 = 23
-    LAYER_2 = 24
-    LAYER_3 = 25
+    LAYER_0 = 21
+    LAYER_1 = 22
+    LAYER_2 = 23
+    LAYER_3 = 24
 
-    RASTERIZE = 26
-    VECTORIZE = 27
+    RASTERIZE = 25
+    VECTORIZE = 26
 
     NUM_TYPES = VECTORIZE + 1
 
