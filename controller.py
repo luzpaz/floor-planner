@@ -71,7 +71,7 @@ class Controller:
         :type commands: list
         """
 
-        # Retrive keys currently being pressed
+        # Retrieve keys currently being pressed
         keystate = sdl2.SDL_GetKeyboardState(None)
 
         for event in sdl2.ext.get_events():
@@ -80,7 +80,7 @@ class Controller:
                 return False
 
             try:
-                # Retrive mouse location
+                # Retrieve mouse location
                 self.get_mouse_location()
                 
                 # Handle text input
