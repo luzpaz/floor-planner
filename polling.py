@@ -52,7 +52,7 @@ class Moving:
         if keystate[sdl2.SDL_SCANCODE_TAB]:
             controller.use_start_vertex = not controller.use_start_vertex
 
-        # Allow time between mouse clicks so that the user does not accidently
+        # Allow time between mouse clicks so that the user does not accidentally
         # instantly move an entity after selecting it
         if len(controller.selected_entities) > 0\
             and sdl2.SDL_GetTicks() - controller.last_selection > 250:
@@ -469,7 +469,7 @@ class DeleteAction:
     
     def __init__(self, entity = None):
         """Initializes the delete action.
-        :param entity: The entity the user deleteed
+        :param entity: The entity the user deleted
         :type entity: Any entity class from 'entities.py'
         """
         self.entity = entity

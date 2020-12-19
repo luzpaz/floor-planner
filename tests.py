@@ -70,7 +70,7 @@ class ControllerTests(unittest.TestCase):
         self.assertTrue(line in app.controller.selected_entities)
 
     def test_handle_multiple_entity_selection(self):
-        """Ensure multiple selected entites are captured when the mouse
+        """Ensure multiple selected entities are captured when the mouse
         selection is colliding with all of them.
         """
         app = App()
@@ -683,7 +683,7 @@ class ModelTests(unittest.TestCase):
         app.model.vertices.clear()
 
     def test_none_vertex_on_axis(self):
-        """Ensure get_vertex_on_axis returns None when there are no axises
+        """Ensure get_vertex_on_axis returns None when there are no axes
         that align with the origin.
         """
         app = App()
@@ -693,7 +693,7 @@ class ModelTests(unittest.TestCase):
 
     def test_base_entity_on_location(self):
         """Ensure get_entity_on_location returns the line that the location
-        collidies with when the location is directly on the line.
+        collides with when the location is directly on the line.
         """
         app = App()
         app.model.add_line(EntityType.INTERIOR_WALL, (0, 0), (2, 2))
@@ -1444,7 +1444,7 @@ class PollingTests(unittest.TestCase):
         self.assertEqual(len(app.model.lines), 1)
 
     def test_redo_for_delete(self):
-        """Ensure the redo poll event handler removes the readded line.
+        """Ensure the redo poll event handler removes the re-added line.
         """
         app = App()
         

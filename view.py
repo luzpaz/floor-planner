@@ -11,7 +11,7 @@ class View:
 
     def __init__(self):
         """Initializes SDL subsystems, SDL components, textures, and fonts
-        necessary for renderering.
+        necessary for rendering.
         """
 
         # Initialize SDL subsystems
@@ -433,7 +433,7 @@ class View:
 
     def render_two_point_placement(self, controller, model):
         """Renders current line placement by the user and indicators
-        around vertices that it may snap to or axises it may align with.
+        around vertices that it may snap to or axes it may align with.
         :param controller: The application controller
         :type controller: Controller from 'controller.py'
         :param model: The application model
