@@ -1,4 +1,4 @@
-import os, sdl2, sys, threading
+import os, sdl2, sys, time, threading
 
 from model import Model
 from controller import Controller
@@ -38,10 +38,15 @@ class App:
         background_thread.start()
 
         while self.running:
+            start = time.time()
+
             self.running = self.controller.handle_input(
                 self.model, self.view.get_screen_dimensions(), self.commands)
             self.view.update(self.model, self.controller)
             self.execute_commands()
+
+            end = time.time()
+            self.cap_frame_rate(end - start)
 
         self.view.exit()
         background_thread.join()
@@ -66,6 +71,14 @@ class App:
 
         self.commands.clear()
         self.controller.loading = False
+
+    def cap_frame_rate(self, frame_duration):
+        """Sleeps the main application thread if the last frame runs faster
+        than 120 fps, to decrease CPU usage."""
+
+        # 120 fps = ~8 ms per frame
+        if frame_duration * 1000.0 < 8.0:
+            time.sleep(0.004) # sleep for 4 ms
 
     def load_from_file(self, filename = ''):
         """Tries to load model entities from the filename.
