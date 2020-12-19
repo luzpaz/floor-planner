@@ -587,9 +587,7 @@ class Controller:
 
         # Display the length of the line the user is currently projecting
         if self.first_point_placed:
-            if self.text and int(self.text) != 0:
-                length = int(self.text)
-            elif self.horizontal_line:
+            if self.horizontal_line:
                 length = abs(self.first_point_x - adjusted_mouse_x)
             elif self.vertical_line:
                 length = abs(self.first_point_y - adjusted_mouse_y)
