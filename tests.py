@@ -505,6 +505,11 @@ class ControllerTests(unittest.TestCase):
         keystate[sdl2.SDL_SCANCODE_S] = 1
         controller.handle_ctrl_hotkeys(keystate)
         self.assertEqual(controller.polling, PollingType.SAVING)
+
+        keystate = sdl2.SDL_GetKeyboardState(None)
+        keystate[sdl2.SDL_SCANCODE_O] = 1
+        controller.handle_ctrl_hotkeys(keystate)
+        self.assertEqual(controller.polling, PollingType.LOADING)
         
         # Inventory is temporarily disabled
         # keystate = sdl2.SDL_GetKeyboardState(None)

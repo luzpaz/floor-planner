@@ -291,13 +291,13 @@ class Controller:
         if keystate[sdl2.SDL_SCANCODE_Y]:
             self.polling = PollingType.REDOING
 
-        # Writing inventory to file
+        # Save to file
         if keystate[sdl2.SDL_SCANCODE_S]:
             self.polling = PollingType.SAVING
 
-        # Writing inventory to file
-        if keystate[sdl2.SDL_SCANCODE_I]:
-            self.polling = PollingType.INVENTORY
+        # Load file
+        if keystate[sdl2.SDL_SCANCODE_O]:
+            self.polling = PollingType.LOADING
 
         # Export drawing to png file
         if keystate[sdl2.SDL_SCANCODE_X]:
@@ -1370,10 +1370,10 @@ class CenterButtonPanel(Panel):
 
         self.button_labels =\
             [
-                'Select',
+                'Select (ESC)',
                 'Eraser Tool (CTRL + E)',
                 'Draw Line (CTRL + D)',
-                'Move',
+                'Move Entity',
                 'Measure Distance (CTRL + M)',
                 'Add Text (CTRL + T)',
                 'Pan Camera',
@@ -1384,7 +1384,7 @@ class CenterButtonPanel(Panel):
                 'Undo (CTRL + Z)',
                 'Redo (CTRL + Y)',
                 'Save Drawing (CTRL + S)',
-                'Load Drawing',
+                'Load Drawing (CTRL + O)',
                 'Export to PNG (CTRL + E)',
                 'Exit Application (ALT + F4)',
             ]
