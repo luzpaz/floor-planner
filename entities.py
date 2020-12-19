@@ -223,7 +223,7 @@ class RectangularEntity(Entity):
         self.y = rectangle.y
         self.width = rectangle.w
         self.height = rectangle.h
-        self.horizontal = self.width > self.height
+        self.horizontal = self.width >= self.height
 
     def check_collision(self, other = sdl2.SDL_Rect(0, 0, 0, 0)):
         """Returns true if a rectangular collision occurs with this rectangle

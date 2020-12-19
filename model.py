@@ -174,6 +174,9 @@ class Model:
         elif isinstance(entity, Door):
             with self.mutexes[ModelMutex.DOORS]:
                 self.doors.add(entity)
+        elif isinstance(entity, UserText):
+            with self.mutexes[ModelMutex.TEXT]:
+                self.user_text.add(entity)
 
         self.update_needed = True
         with self.update_background:

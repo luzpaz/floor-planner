@@ -4,7 +4,7 @@ from app import App
 from controller import Controller, Camera, Text, CenterText, Button, Panel,\
     MessageStack, FPSDisplayer
 from ctypes import c_int, pointer
-from entities import Line, RectangularEntity
+from entities import Line, RectangularEntity, Door, Window
 from entity_types import EntityType
 from model import Model, UserText
 from polling import PollingType
@@ -726,13 +726,16 @@ class ModelTests(unittest.TestCase):
         """
         app = App()
         app.model.add_line(EntityType.EXTERIOR_WALL, (0, 0), (5, 5))
+
+        text = UserText('Test Text', (3, 3))
+        app.model.add_entity(text)
         
         for line in app.model.lines:
-            if line.start == (0, 0) and line.end == (5, 5):
-                break
+            break
 
         entities = set()
         entities.add(line)
+        entities.add(text)
 
         self.assertEqual(app.model.get_entities_in_rectangle(
             sdl2.SDL_Rect(1, 1, 5, 5)), entities)
@@ -811,6 +814,32 @@ class ModelTests(unittest.TestCase):
         app.model.add_line(EntityType.EXTERIOR_WALL, (0, 0), (5, 5))
         app.model.add_line(EntityType.EXTERIOR_WALL, (5, 5), (0, 0))
         self.assertEqual(len(app.model.square_vertices), 4)
+
+    def test_add_door(self):
+        """Ensure door is added to the model using the add_entity method.
+        """
+        model = Model()
+
+        door = Door()
+        model.add_entity(door)
+        self.assertEqual(len(model.doors), 1)
+
+        for first_door in model.doors:
+            break
+        self.assertEqual(first_door, door)
+
+    def test_add_window(self):
+        """Ensure window is added to the model using the add_entity method.
+        """
+        model = Model()
+
+        window = Window()
+        model.add_entity(window)
+        self.assertEqual(len(model.windows), 1)
+
+        for first_window in model.windows:
+            break
+        self.assertEqual(first_window, window)
         
 class AppTests(unittest.TestCase):
     """Tests for the App class (app.py)."""
@@ -1219,6 +1248,36 @@ class RectangularTests(unittest.TestCase):
         self.assertEqual(rectangle.x, -10)
         self.assertEqual(rectangle.y, -10)
 
+    def test_get_moving_vertex_start(self):
+        """Ensure get_moving_vertex returns the start vertex for a horizontal
+        and vertical rectangle.
+        """
+
+        # Horizontal rectangle
+        rectangle = RectangularEntity(sdl2.SDL_Rect(10, 10, 20, 10))
+        self.assertEqual(rectangle.get_moving_vertex(True), (10, 15))
+
+        # Vertical rectangle
+        rectangle = RectangularEntity(sdl2.SDL_Rect(0, 0, 6, 30))
+        self.assertEqual(rectangle.get_moving_vertex(True), (3, 0))
+
+        # Square should be considered horizontal
+        square = RectangularEntity(sdl2.SDL_Rect(3, 4, 50, 50))
+        self.assertEqual(square.get_moving_vertex(True), (3, 29))
+
+    def test_get_moving_vertex_end(self):
+        """Ensure get_moving_vertex returns the end vertex for a horizontal
+        and vertical rectangle.
+        """
+
+        # Horizontal rectangle
+        rectangle = RectangularEntity(sdl2.SDL_Rect(25, 25, 10, 5))
+        self.assertEqual(rectangle.get_moving_vertex(False), (35, 27))
+
+        # Vertical rectangle
+        rectangle = RectangularEntity(sdl2.SDL_Rect(0, 10, 10, 50))
+        self.assertEqual(rectangle.get_moving_vertex(False), (5, 60))
+
 class PollingTests(unittest.TestCase):
     """Tests for classes in the polling.py module."""
 
@@ -1487,6 +1546,85 @@ class PollingTests(unittest.TestCase):
         # app.controller.polling = PollingType.VECTORIZE
         # app.controller.handle_input(app.model, (1920, 1080), [])
         # self.assertFalse(app.controller.rasterize_graphics)
+
+    def test_moving_hint_text(self):
+        """Ensure the moving poll event handler displayers the hint text.
+        """
+        app = App()
+        app.controller.polling = PollingType.MOVING
+        app.controller.handle_input(app.model, (1920, 1080), [])
+        self.assertEqual(app.controller.center_text.text[
+            CenterText.TOP_CENTER_TEXT].text,
+            'Select an entity and click on a new vertex location.'\
+                + ' Toggle between vertices with TAB.')
+
+    def test_toggling_vertex_when_moving(self):
+        """Ensure the moving poll event handler toggles whether to use the start
+        vertex when the user presses the TAB key.
+        """
+        app = App()
+
+        entities = set()
+        line = Line((0, 0), (10, 10))
+        entities.add(line)
+
+        app.controller.selected_entities = entities
+        app.controller.last_selection = -500
+
+        keystate = sdl2.SDL_GetKeyboardState(None)
+        keystate[sdl2.SDL_SCANCODE_TAB] = 1
+        event = sdl2.SDL_Event()
+
+        app.controller.handlers[PollingType.MOVING].handle(
+            app.controller, app.model, keystate, event, (1920, 1080), [])
+        self.assertFalse(app.controller.use_start_vertex)
+
+        keystate = sdl2.SDL_GetKeyboardState(None)
+        keystate[sdl2.SDL_SCANCODE_TAB] = 1
+        app.controller.handlers[PollingType.MOVING].handle(
+            app.controller, app.model, keystate, event, (1920, 1080), [])
+        self.assertTrue(app.controller.use_start_vertex)
+
+    def test_moving_entity(self):
+        """Ensure the moving poll event handler adds a move action to the model
+        when the user has an entity selected and presses on a location.
+        """
+        app = App()
+
+        entities = set()
+        line = Line((0, 0), (-10, -10))
+        entities.add(line)
+
+        app.controller.selected_entities = entities
+        app.controller.last_selection = -500
+        app.controller.item_to_move = line
+
+        keystate = sdl2.SDL_GetKeyboardState(None)
+        event = sdl2.SDL_Event()
+        event.type = sdl2.SDL_MOUSEBUTTONDOWN
+
+        app.controller.handlers[PollingType.MOVING].handle(
+            app.controller, app.model, keystate, event, (1920, 1080), [])
+        
+        # Ensure line's previous state is the one stored in the move action
+        for action in app.model.actions:
+            break
+        self.assertEqual(action.previous.start, line.start)
+        self.assertEqual(action.previous.end, line.end)
+
+        self.assertTrue(app.model.update_needed)
+        self.assertEqual(app.controller.polling, PollingType.SELECTING)
+
+    def test_exporting(self):
+        """Ensure the exporting poll event handler adds an export command
+        to the app commands.
+        """
+        app = App()
+        app.controller.polling = PollingType.EXPORTING
+        app.controller.handle_input(app.model, (1920, 1080), app.commands)
+        self.assertEqual(len(app.commands), 1)
+        self.assertTrue(isinstance(app.commands[0], ExportCommand))
+        self.assertTrue(app.controller.loading)
 
 class ToolsTests(unittest.TestCase):
     """Tests for classes in the tools.py module."""
