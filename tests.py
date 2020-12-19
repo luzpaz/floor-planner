@@ -11,171 +11,6 @@ from polling import PollingType
 from tools import Tools, ExportCommand
 from view import View, Textures, FontSize
 
-class LineTests(unittest.TestCase):
-    """Tests for the Line class (entities.py)."""
-
-    horizontal_line = Line((0, 0), (5, 0))
-    vertical_line = Line((0, 0), (0, 5))
-    diagonal_line = Line((0, 0), (5, 5))
-
-    def test_base_point_collision(self):
-        """Ensures check_point_collision catches a point collision
-        where the location is colliding with the line.
-        """
-        self.assertTrue(
-            LineTests.horizontal_line.check_point_collision((0, 0)))
-        self.assertTrue(
-            LineTests.horizontal_line.check_point_collision((2, 0)))
-        self.assertTrue(
-            LineTests.horizontal_line.check_point_collision((5, 0)))
-
-    def test_no_point_collision(self):
-        """Ensures check_point_collision ignores a point collision
-        where the location is not colliding with the line.
-        """
-        self.assertFalse(
-            LineTests.horizontal_line.check_point_collision((0, 100)))
-        self.assertFalse(
-            LineTests.horizontal_line.check_point_collision((0, -1)))
-        self.assertFalse(
-            LineTests.horizontal_line.check_point_collision((6, 0)))
-
-    def test_base_rectangle_collision(self):
-        """Ensures check_rectangle_collision catches a rectangle
-        collision where the rectangle is overlapping with the line.
-        """
-
-        # Complete overlap
-        self.assertTrue(LineTests.horizontal_line.check_rectangle_collision(
-                        sdl2.SDL_Rect(2, 0, 5, 5)))
-        
-        # Partial overlap right side
-        self.assertTrue(LineTests.diagonal_line.check_rectangle_collision(
-                        sdl2.SDL_Rect(2, 0, 2, 7)))
-        
-        # Partial overlap bottom side
-        self.assertTrue(LineTests.vertical_line.check_rectangle_collision(
-                        sdl2.SDL_Rect(-2, 0, 5, 5)))
-
-        # Edge overlap only
-        self.assertTrue(LineTests.horizontal_line.check_rectangle_collision(
-                        sdl2.SDL_Rect(5, 0, 5, 5)))
-
-    def test_no_rectangle_collision(self):
-        """Ensures check_rectangle_collision ignores a rectangle
-        collision where the rectangle is not overlapping with the line.
-        """
-        self.assertFalse(LineTests.horizontal_line.check_rectangle_collision(
-                        sdl2.SDL_Rect(-6, 0, 5, 5)))
-        self.assertFalse(LineTests.diagonal_line.check_rectangle_collision(
-                        sdl2.SDL_Rect(6, 3, 2, 2)))
-
-    def test_zero_distance(self):
-        """Ensure distance returns 0 if the two vertices are the same.
-        """
-        self.assertEqual(Line.distance((10, 15), (10, 15)), 0.0)
-
-    def test_base_distance(self):
-        """Ensure distance returns expected answer for a base case.
-        """
-        self.assertEqual(Line.distance((0, 5), (5, 5)), 5.0)
-
-    def test_large_distance(self):
-        """Ensure distance works with large integers.
-        """
-        self.assertEqual(Line.distance((1E20, 5E30), (1E15, 3E6)), 5E30)
-
-    def test_base_intersection(self):
-        """Ensure intersect detects lines intersecting.
-        """
-        # Diagonal and horizontal
-        self.assertTrue(Line.intersect((0, 0), (5, 5), (0, 2), (5, 2)))
-
-        # Two diagonals
-        self.assertTrue(Line.intersect((0, 0), (25, 25), (25, 0), (0, 25)))
-
-    def test_no_intersection(self):
-        """Ensure intersect ignores non-intersecting lines.
-        """
-        # Parallel
-        self.assertFalse(Line.intersect((0, 0), (5, 0), (0, 2), (5, 2)))
-
-        # Overlap only
-        self.assertFalse(Line.intersect((0, 0), (5, 5), (0, 0), (5, 5)))
-
-    def test_point_intersection(self):
-        """Ensure intersection returns the intersecting point between two lines.
-        """
-        self.assertEqual(Line.intersection((0, 0), (5, 0), (2, -1), (2, 4)),
-                         (2, 0))
-
-    def test_move_start_vertex(self):
-        """Ensure moving a line with the start vertex as the reference
-        adjusts the start and end vertices accurately.
-        """
-        line = Line((0, 0), (10, 0))
-        line.move(10, 0, True)
-        self.assertEqual(line.start, (10, 0))
-        self.assertEqual(line.end, (20, 0))
-
-    def test_move_end_vertex_same_location(self):
-        """Ensure moving a line with the end vertex to the same position does
-        not affect the start and end veritices of the line.
-        """
-        line = Line((0, 0), (10, 0))
-        line.move(10, 0, False)
-        self.assertEqual(line.start, (0, 0))
-        self.assertEqual(line.end, (10, 0))
-
-class RectangularTests(unittest.TestCase):
-    """Tests for the RectangularEntity class (entities.py)."""
-    rectangle = RectangularEntity(sdl2.SDL_Rect(0, 0, 5, 5))
-
-    def test_no_collision(self):
-        """Ensure check_collision returns false if the two rectangles
-        are not colliding.
-        """
-        self.assertFalse(RectangularTests.rectangle.check_collision(
-            sdl2.SDL_Rect(-10, -10, 5, 5)))
-
-        # Touching on the edge but no overlap
-        self.assertFalse(RectangularTests.rectangle.check_collision(
-            sdl2.SDL_Rect(-5, -5, 5, 5)))
-
-    def test_base_collision(self):
-        """Ensure check_collision returns true if the two rectangles
-        are colliding on one side.
-        """
-        self.assertTrue(RectangularTests.rectangle.check_collision(
-            sdl2.SDL_Rect(2, 0, 5, 5)))
-        self.assertTrue(RectangularTests.rectangle.check_collision(
-            sdl2.SDL_Rect(-2, 0, 5, 5)))
-        self.assertTrue(RectangularTests.rectangle.check_collision(
-            sdl2.SDL_Rect(0, 3, 5, 5)))
-        self.assertTrue(RectangularTests.rectangle.check_collision(
-            sdl2.SDL_Rect(0, -3, 5, 5)))
-
-    def test_overlap_collision(self):
-        """Ensure check_collision returns true if the two rectangles
-        completely overlap.
-        """
-        self.assertTrue(RectangularTests.rectangle.check_collision(
-            sdl2.SDL_Rect(0, 0, 5, 5)))
-
-    def test_move(self):
-        """Ensure moving the rectangle from either vertex adjusts the 
-        rectangle's x and y positions accurately.
-        """
-        rectangle = RectangularEntity(sdl2.SDL_Rect(0, 0, 10, 10))
-        
-        rectangle.move(10, 10, True)
-        self.assertEqual(rectangle.x, 10)
-        self.assertEqual(rectangle.y, 10)
-
-        rectangle.move(0, 0, False)
-        self.assertEqual(rectangle.x, -10)
-        self.assertEqual(rectangle.y, -10)
-
 class ControllerTests(unittest.TestCase):
     """Tests for the Controller class (controller.py)."""
 
@@ -1178,6 +1013,166 @@ class PanelTests(unittest.TestCase):
         self.assertTrue(panel.mouse_over(0, 0, [1920, 1080]))
         self.assertEqual(panel.button_over, 1)
 
+class LineTests(unittest.TestCase):
+    """Tests for the Line class (entities.py)."""
+
+    horizontal_line = Line((0, 0), (5, 0))
+    vertical_line = Line((0, 0), (0, 5))
+    diagonal_line = Line((0, 0), (5, 5))
+
+    def test_base_point_collision(self):
+        """Ensures check_point_collision catches a point collision
+        where the location is colliding with the line.
+        """
+        self.assertTrue(
+            LineTests.horizontal_line.check_point_collision((0, 0)))
+        self.assertTrue(
+            LineTests.horizontal_line.check_point_collision((2, 0)))
+        self.assertTrue(
+            LineTests.horizontal_line.check_point_collision((5, 0)))
+
+    def test_no_point_collision(self):
+        """Ensures check_point_collision ignores a point collision
+        where the location is not colliding with the line.
+        """
+        self.assertFalse(
+            LineTests.horizontal_line.check_point_collision((0, 100)))
+        self.assertFalse(
+            LineTests.horizontal_line.check_point_collision((0, -1)))
+        self.assertFalse(
+            LineTests.horizontal_line.check_point_collision((6, 0)))
+
+    def test_base_rectangle_collision(self):
+        """Ensures check_rectangle_collision catches a rectangle
+        collision where the rectangle is overlapping with the line.
+        """
+
+        # Complete overlap
+        self.assertTrue(LineTests.horizontal_line.check_rectangle_collision(
+                        sdl2.SDL_Rect(2, 0, 5, 5)))
+        
+        # Partial overlap right side
+        self.assertTrue(LineTests.diagonal_line.check_rectangle_collision(
+                        sdl2.SDL_Rect(2, 0, 2, 7)))
+        
+        # Partial overlap bottom side
+        self.assertTrue(LineTests.vertical_line.check_rectangle_collision(
+                        sdl2.SDL_Rect(-2, 0, 5, 5)))
+
+        # Edge overlap only
+        self.assertTrue(LineTests.horizontal_line.check_rectangle_collision(
+                        sdl2.SDL_Rect(5, 0, 5, 5)))
+
+    def test_no_rectangle_collision(self):
+        """Ensures check_rectangle_collision ignores a rectangle
+        collision where the rectangle is not overlapping with the line.
+        """
+        self.assertFalse(LineTests.horizontal_line.check_rectangle_collision(
+                        sdl2.SDL_Rect(-6, 0, 5, 5)))
+        self.assertFalse(LineTests.diagonal_line.check_rectangle_collision(
+                        sdl2.SDL_Rect(6, 3, 2, 2)))
+
+    def test_zero_distance(self):
+        """Ensure distance returns 0 if the two vertices are the same.
+        """
+        self.assertEqual(Line.distance((10, 15), (10, 15)), 0.0)
+
+    def test_base_distance(self):
+        """Ensure distance returns expected answer for a base case.
+        """
+        self.assertEqual(Line.distance((0, 5), (5, 5)), 5.0)
+
+    def test_base_intersection(self):
+        """Ensure intersect detects lines intersecting.
+        """
+        # Diagonal and horizontal
+        self.assertTrue(Line.intersect((0, 0), (5, 5), (0, 2), (5, 2)))
+
+        # Two diagonals
+        self.assertTrue(Line.intersect((0, 0), (25, 25), (25, 0), (0, 25)))
+
+    def test_no_intersection(self):
+        """Ensure intersect ignores non-intersecting lines.
+        """
+        # Parallel
+        self.assertFalse(Line.intersect((0, 0), (5, 0), (0, 2), (5, 2)))
+
+        # Overlap only
+        self.assertFalse(Line.intersect((0, 0), (5, 5), (0, 0), (5, 5)))
+
+    def test_point_intersection(self):
+        """Ensure intersection returns the intersecting point between two lines.
+        """
+        self.assertEqual(Line.intersection((0, 0), (5, 0), (2, -1), (2, 4)),
+                         (2, 0))
+
+    def test_move_start_vertex(self):
+        """Ensure moving a line with the start vertex as the reference
+        adjusts the start and end vertices accurately.
+        """
+        line = Line((0, 0), (10, 0))
+        line.move(10, 0, True)
+        self.assertEqual(line.start, (10, 0))
+        self.assertEqual(line.end, (20, 0))
+
+    def test_move_end_vertex_same_location(self):
+        """Ensure moving a line with the end vertex to the same position does
+        not affect the start and end veritices of the line.
+        """
+        line = Line((0, 0), (10, 0))
+        line.move(10, 0, False)
+        self.assertEqual(line.start, (0, 0))
+        self.assertEqual(line.end, (10, 0))
+
+class RectangularTests(unittest.TestCase):
+    """Tests for the RectangularEntity class (entities.py)."""
+    rectangle = RectangularEntity(sdl2.SDL_Rect(0, 0, 5, 5))
+
+    def test_no_collision(self):
+        """Ensure check_collision returns false if the two rectangles
+        are not colliding.
+        """
+        self.assertFalse(RectangularTests.rectangle.check_collision(
+            sdl2.SDL_Rect(-10, -10, 5, 5)))
+
+        # Touching on the edge but no overlap
+        self.assertFalse(RectangularTests.rectangle.check_collision(
+            sdl2.SDL_Rect(-5, -5, 5, 5)))
+
+    def test_base_collision(self):
+        """Ensure check_collision returns true if the two rectangles
+        are colliding on one side.
+        """
+        self.assertTrue(RectangularTests.rectangle.check_collision(
+            sdl2.SDL_Rect(2, 0, 5, 5)))
+        self.assertTrue(RectangularTests.rectangle.check_collision(
+            sdl2.SDL_Rect(-2, 0, 5, 5)))
+        self.assertTrue(RectangularTests.rectangle.check_collision(
+            sdl2.SDL_Rect(0, 3, 5, 5)))
+        self.assertTrue(RectangularTests.rectangle.check_collision(
+            sdl2.SDL_Rect(0, -3, 5, 5)))
+
+    def test_overlap_collision(self):
+        """Ensure check_collision returns true if the two rectangles
+        completely overlap.
+        """
+        self.assertTrue(RectangularTests.rectangle.check_collision(
+            sdl2.SDL_Rect(0, 0, 5, 5)))
+
+    def test_move(self):
+        """Ensure moving the rectangle from either vertex adjusts the 
+        rectangle's x and y positions accurately.
+        """
+        rectangle = RectangularEntity(sdl2.SDL_Rect(0, 0, 10, 10))
+        
+        rectangle.move(10, 10, True)
+        self.assertEqual(rectangle.x, 10)
+        self.assertEqual(rectangle.y, 10)
+
+        rectangle.move(0, 0, False)
+        self.assertEqual(rectangle.x, -10)
+        self.assertEqual(rectangle.y, -10)
+
 class PollingTests(unittest.TestCase):
     """Tests for classes in the polling.py module."""
 
@@ -1446,7 +1441,6 @@ class PollingTests(unittest.TestCase):
         # app.controller.polling = PollingType.VECTORIZE
         # app.controller.handle_input(app.model, (1920, 1080), [])
         # self.assertFalse(app.controller.rasterize_graphics)
-
 
 class ToolsTests(unittest.TestCase):
     """Tests for classes in the tools.py module."""

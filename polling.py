@@ -174,7 +174,7 @@ class Undoing:
     """The polling event handler for undoing the last action."""
 
     # Minimum time required between undos (ms)
-    INTERVAL = 100
+    INTERVAL = 150
 
     def __init__(self):
         self.last_undo = sdl2.SDL_GetTicks()
@@ -203,7 +203,7 @@ class Redoing:
     """The polling event handler for redoing the last undo."""
     
     # Minimum time required between redos (ms)
-    INTERVAL = 100
+    INTERVAL = 150
 
     def __init__(self):
         self.last_redo = sdl2.SDL_GetTicks()

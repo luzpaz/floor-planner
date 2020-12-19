@@ -3,7 +3,7 @@ import pickle, sdl2, sdl2.sdlimage
 from ctypes import c_int, pointer
 
 class Tools:
-    """The class offering static utilities needed across various classes."""
+    """Offers static utilities needed across various classes."""
 
     def convert_to_unit_system(value, unit_system = 'ft'):
         """Returns the value in the unit system specified.

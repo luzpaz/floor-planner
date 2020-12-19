@@ -5,7 +5,7 @@ from entity_types import EntityType
 from enum import Enum
 
 class View:
-    """Class responsible for rendering entities from the model and the user
+    """Responsible for rendering entities from the model and the user
     interface onto the screen.
     """
 
@@ -707,7 +707,7 @@ class View:
         sdl2.SDL_Quit()
 
 class Textures:
-    """Class that contains and manages the application's textures and layers.
+    """Contains and manages the application's textures and layers.
     """
 
     # Number of layers the user can choose from

@@ -758,53 +758,108 @@ class Controller:
     def reset(self):
         """Resets the controller's state.
         """
+
+        # Current poll event
         self.polling = PollingType.SELECTING
 
+        # Whether the user is panning the camera
         self.panning_camera = False
+
+        # Camera pan start positions
         self.pan_start_x = 0
         self.pan_start_y = 0
 
+        # Current frame absolute mouse position (on the window)
         self.mouse_x = 0
         self.mouse_y = 0
 
+        # Whether the user is holding down the mouse
         self.mouse_down = False
+
+        # Mouse press and drag selection rectangle, relative to the camera
         self.mouse_selection = sdl2.SDL_Rect()
+
+        # Mouse press and drag selection rectangle, absolute to the window
         self.displayed_selection = sdl2.SDL_Rect()
 
-        self.place_one_point = False
-        self.place_two_points = False
-        self.first_point_placed = False
-        self.first_point_x = 0
-        self.first_point_y = 0
-        self.second_point_x = 0
-        self.second_point_y = 0
-        self.horizontal_line = False
-        self.vertical_line = False
-        self.line_thickness = 0
-        self.nearest_vertex = None
-        self.nearest_vertex_axis = None
-        self.nearest_line = None
-        self.placement_type = None
-
+        # Mouse press and drag starting positions
         self.mouse_down_starting_x = 0
         self.mouse_down_starting_y = 0
         self.displayed_selection_starting_x = 0
         self.displayed_selection_starting_y = 0
 
+        # Whether the user is placing an object that requires one point
+        # e.g. window, door
+        self.place_one_point = False
+
+        # Whether the user is placing an object that requires two points
+        # e.g. line, exterior/interior wall
+        self.place_two_points = False
+
+        # Whether the user placed the first point of the two-point placement
+        # e.g. placed first point of the line
+        self.first_point_placed = False
+
+        # First and second point positions
+        self.first_point_x = 0
+        self.first_point_y = 0
+        self.second_point_x = 0
+        self.second_point_y = 0
+
+        # Whether the line placement by the user is snapping to an axis
+        # e.g. user is placing a line while holding the shift key
+        self.horizontal_line = False
+        self.vertical_line = False
+
+        # Thickness of the current line placement
+        self.line_thickness = 0
+
+        # Nearest vertex to snap to
+        self.nearest_vertex = None
+
+        # Nearest vertex axis to snap to
+        self.nearest_vertex_axis = None
+
+        # Nearest line to place door/window on
+        self.nearest_line = None
+
+        # Line placement type: regular line, exterior line, interior line, etc.
+        self.placement_type = None
+
+        # Text typed by the user
         self.text = ''
 
+        # Filename to load
         self.load_filename = ''
 
+        # Entities selected by the user
         self.selected_entities = set()
+
+        # Whether the user is using the current selection
+        # e.g. user is moving the selected entity, so a subsequent mouse click
+        # for the move location should not deselect the entity
+        # or select a new entity
         self.using_selection = False
+
+        # Item that the user is moving
         self.item_to_move = None
+
+        # Last time user selected an entity
         self.last_selection = sdl2.SDL_GetTicks()
 
-        self.use_start_vertex = True
+        # Which vertex the user is moving an entity in reference too
+        # e.g. start or end vertex of a line, or left/right end of a
+        # horizontal window
         self.current_moving_vertex = None
 
+        # Whether the user is moving an entity based on the start or end vertex
+        # for a line, or the left/right top/bottom vertex for a door/window
+        self.use_start_vertex = True
+
+        # Whether to display the settings panel
         self.settings_panel.visible = False
 
+        # Calls the abstract reset method for all panels
         for panel in self.panels:
             panel.reset()
 

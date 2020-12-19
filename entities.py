@@ -15,7 +15,7 @@ class Entity:
         self.layer = layer
 
 class Line(Entity):
-    """The class representing a line segment created by the user.
+    """Represents a line segment created by the user.
     Contains the starting and ending coordinates, and the thickness and color.
     """
 
@@ -285,7 +285,7 @@ class RectangularEntity(Entity):
             self.x, self.y, self.width, self.height))
 
 class Window(RectangularEntity):
-    """The class representing a window that can be placed on an exterior wall.
+    """Represents a window that can be placed on an exterior wall.
     """
     
     # Default length (px)
@@ -314,7 +314,7 @@ class Window(RectangularEntity):
         return 'Window'
 
 class Door(RectangularEntity):
-    """The class representing a door that can be placed on a wall.
+    """Represents a door that can be placed on a wall.
     """
     
     # Default length (px)
@@ -336,7 +336,7 @@ class Door(RectangularEntity):
         return 'Door'
 
 class UserText(RectangularEntity):
-    """The class representing text that the user can place on the drawing.
+    """Represents text that the user can place on the drawing.
     """
 
     def __init__(self, text = '', position = (0, 0)):
