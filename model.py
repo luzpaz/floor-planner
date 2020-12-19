@@ -426,13 +426,13 @@ class Model:
         return inventory
 
     def close_gaps_between_walls(self, line):
-        """Adds a square vertex to close gaps between two connecting exterior
+        """Adds a square vertex to close gaps between two connecting
         walls for rendering.
         """
 
         for other in self.lines:
-            # Exterior walls only
-            if line.thickness != Line.EXTERIOR_WALL:
+            # Exterior and interior walls only
+            if line.thickness == Line.REGULAR_LINE:
                 continue
 
             # Do not compare against the same line
@@ -441,17 +441,17 @@ class Model:
 
             if line.start == other.start or line.start == other.end:
                 vertex = RectangularEntity(sdl2.SDL_Rect(
-                    int(line.start[0] - Line.EXTERIOR_WALL / 2),
-                    int(line.start[1] - Line.EXTERIOR_WALL / 2),
-                    Line.EXTERIOR_WALL, Line.EXTERIOR_WALL))
+                    int(line.start[0] - line.thickness / 2),
+                    int(line.start[1] - line.thickness / 2),
+                    line.thickness, line.thickness))
                 vertex.layer = line.layer
                 self.square_vertices.add(vertex)
 
             if line.end == other.end or line.end == other.start:
                 vertex = RectangularEntity(sdl2.SDL_Rect(
-                    int(line.end[0] - Line.EXTERIOR_WALL / 2),
-                    int(line.end[1] - Line.EXTERIOR_WALL / 2),
-                    Line.EXTERIOR_WALL, Line.EXTERIOR_WALL))
+                    int(line.end[0] - line.thickness / 2),
+                    int(line.end[1] - line.thickness / 2),
+                    line.thickness, line.thickness))
                 vertex.layer = line.layer
                 self.square_vertices.add(vertex)
 
