@@ -516,6 +516,52 @@ class ControllerTests(unittest.TestCase):
         controller.handle_ctrl_hotkeys(keystate)
         self.assertEqual(controller.polling, PollingType.EXPORTING)
 
+    def test_entity_hotkey_for_exterior_wall(self):
+        """Ensure user pressing 0 begins exterior wall placement.
+        """
+        app = App()
+        keystate = sdl2.SDL_GetKeyboardState(None)        
+        keystate[sdl2.SDL_SCANCODE_0] = 1
+        app.controller.handle_input(app.model, (1920, 1080), [])
+        self.assertTrue(app.controller.place_two_points)
+        self.assertEqual(app.controller.placement_type,
+                         EntityType.EXTERIOR_WALL)
+        self.assertEqual(app.controller.line_thickness,
+                         Line.EXTERIOR_WALL)
+        
+    def test_entity_hotkey_for_interior_wall(self):
+        """Ensure user pressing 1 begins interior wall placement.
+        """
+        app = App()
+        keystate = sdl2.SDL_GetKeyboardState(None)        
+        keystate[sdl2.SDL_SCANCODE_KP_1] = 1
+        app.controller.handle_input(app.model, (1920, 1080), [])
+        self.assertTrue(app.controller.place_two_points)
+        self.assertEqual(app.controller.placement_type,
+                         EntityType.INTERIOR_WALL)
+        self.assertEqual(app.controller.line_thickness,
+                         Line.INTERIOR_WALL)
+        
+    def test_entity_hotkey_for_window(self):
+        """Ensure user pressing 2 begins window placement.
+        """
+        app = App()
+        keystate = sdl2.SDL_GetKeyboardState(None)
+        keystate[sdl2.SDL_SCANCODE_2] = 1
+        app.controller.handle_input(app.model, (1920, 1080), [])
+        self.assertTrue(app.controller.place_one_point)
+        self.assertEqual(app.controller.placement_type, EntityType.WINDOW)
+        
+    def test_entity_hotkey_for_door(self):
+        """Ensure user pressing 3 begins door placement.
+        """
+        app = App()
+        keystate = sdl2.SDL_GetKeyboardState(None)
+        keystate[sdl2.SDL_SCANCODE_KP_3] = 1
+        app.controller.handle_input(app.model, (1920, 1080), [])
+        self.assertTrue(app.controller.place_one_point)
+        self.assertEqual(app.controller.placement_type, EntityType.DOOR)
+
 class ModelTests(unittest.TestCase):
     """Tests for the Model class (model.py)."""
 

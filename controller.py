@@ -123,17 +123,24 @@ class Controller:
                     self.handle_camera_pan(event)
 
                 # Place entity hotkeys
-                if not self.place_two_points:
-                    if keystate[sdl2.SDL_SCANCODE_KP_0]: # exterior wall
-                        self.reset()
-                        self.placement_type = EntityType.EXTERIOR_WALL
-                        self.line_thickness = Line.EXTERIOR_WALL
-                        self.place_two_points = True
-                    elif keystate[sdl2.SDL_SCANCODE_KP_1]: # interior wall
-                        self.reset()
-                        self.placement_type = EntityType.INTERIOR_WALL
-                        self.line_thickness = Line.INTERIOR_WALL
-                        self.place_two_points = True
+                if keystate[sdl2.SDL_SCANCODE_KP_0]\
+                    or keystate[sdl2.SDL_SCANCODE_0]: # exterior wall
+                    self.reset()
+                    self.placement_type = EntityType.EXTERIOR_WALL
+                    self.line_thickness = Line.EXTERIOR_WALL
+                    self.place_two_points = True
+                elif keystate[sdl2.SDL_SCANCODE_KP_1]\
+                    or keystate[sdl2.SDL_SCANCODE_1]: # interior wall
+                    self.reset()
+                    self.placement_type = EntityType.INTERIOR_WALL
+                    self.line_thickness = Line.INTERIOR_WALL
+                    self.place_two_points = True
+                elif keystate[sdl2.SDL_SCANCODE_KP_2]\
+                    or keystate[sdl2.SDL_SCANCODE_2]: # window
+                    self.polling = PollingType.DRAW_WINDOW
+                elif keystate[sdl2.SDL_SCANCODE_KP_3]\
+                    or keystate[sdl2.SDL_SCANCODE_3]: # door
+                    self.polling = PollingType.DRAW_DOOR
 
                 # Place point based entity
                 if self.place_one_point:
@@ -507,11 +514,18 @@ class Controller:
         if self.placement_type == EntityType.WINDOW:
             self.center_text.set_top_text(
                 'Select center location for window on an exterior wall.')
+        elif self.placement_type == EntityType.DOOR:
+            self.center_text.set_top_text(
+                'Select center location for door on a wall.')
 
         # No wall and user pressed
         if not result and event.type == sdl2.SDL_MOUSEBUTTONDOWN:
-            self.message_stack.insert(
+            if self.placement_type == EntityType.WINDOW:
+                self.message_stack.insert(
                 ('No exterior wall for window placement at that location.',))
+            elif self.placement_type == EntityType.DOOR:
+                self.message_stack.insert(
+                ('No wall for door placement at that location.',))
             self.reset()
             return
 
@@ -1424,10 +1438,10 @@ class LeftButtonPanel(Panel):
 
         self.button_labels =\
             [
-                'Draw Exterior Wall',
-                'Draw Interior Wall',
-                'Draw Window',
-                'Draw Door',
+                'Draw Exterior Wall (0)',
+                'Draw Interior Wall (1)',
+                'Draw Window (2)',
+                'Draw Door (3)',
             ]
 
     def handle_mouse_click(self, mouse_x, mouse_y, center_text, polling_event):
