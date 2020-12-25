@@ -337,13 +337,9 @@ class View:
         text_x = text.position[0]
         text_y = text.position[1]
 
-        if centered:
-            text_x -= int(width / 2)
-            text_y -= int(height / 2)
-
         # Adjust to camera
-        text_x = int(text_x * self.camera_scale - self.camera_x)
-        text_y = int(text_y * self.camera_scale - self.camera_y)
+        text_x = int(text_x * self.camera_scale - self.camera_x - width / 2)
+        text_y = int(text_y * self.camera_scale - self.camera_y - height / 2)
 
         # Underline text if selected
         if text.selected:
