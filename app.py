@@ -104,3 +104,7 @@ class BackgroundUpdater:
         with condition:
             condition.wait()
             # Future background updates can be added here
+
+if __name__ == '__main__':
+    app = App()
+    app.run()

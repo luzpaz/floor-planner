@@ -88,5 +88,5 @@ class Loader:
             model.windows = pickle.load(file)
             model.doors = pickle.load(file)
             model.user_text = pickle.load(file)
-            model.update_verticies()
+            model.update_vertices()
             model.update_needed = True

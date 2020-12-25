@@ -33,7 +33,7 @@ class Model:
         # Abstract factories
         self.line_factory = AbstractLineFactory()
 
-        # Mutexes for accessing the sets
+        # Mutexes for accessing the sets (for multi-threading)
         self.mutexes = {}
         self.mutexes[ModelMutex.LINES] = Lock()
         self.mutexes[ModelMutex.VERTICES] = Lock()
@@ -58,7 +58,7 @@ class Model:
         with self.mutexes[ModelMutex.LINES]:
             self.lines.add(line)
 
-        self.update_verticies()
+        self.update_vertices()
         self.update_needed = True
 
         with self.update_background:
@@ -118,7 +118,7 @@ class Model:
                 int(location[1] - thickness / 2),
                 Door.LENGTH, thickness))
         else:
-            door = Window(sdl2.SDL_Rect(
+            door = Door(sdl2.SDL_Rect(
                 int(location[0] - thickness / 2),
                 int(location[1] - Door.LENGTH / 2),
                 thickness, Door.LENGTH))
@@ -162,21 +162,7 @@ class Model:
         :param entity: The entity to add
         :type entity: Any entity type stored by the model
         """
-        
-        # This is the easiest method of doing this, given the limited scope
-        # of the application
-        if isinstance(entity, Line):
-            with self.mutexes[ModelMutex.LINES]:
-                self.lines.add(entity)
-        elif isinstance(entity, Window):
-            with self.mutexes[ModelMutex.WINDOWS]:
-                self.windows.add(entity)
-        elif isinstance(entity, Door):
-            with self.mutexes[ModelMutex.DOORS]:
-                self.doors.add(entity)
-        elif isinstance(entity, UserText):
-            with self.mutexes[ModelMutex.TEXT]:
-                self.user_text.add(entity)
+        entity.add_to_model(self)
 
         self.update_needed = True
         with self.update_background:
@@ -192,21 +178,7 @@ class Model:
         if not entity:
             return
 
-        # This is the easiest method of doing this, given the limited scope
-        # of the application
-        if isinstance(entity, Line):
-            with self.mutexes[ModelMutex.LINES]:
-                self.lines.remove(entity)
-                self.update_verticies()
-        elif isinstance(entity, Window):
-            with self.mutexes[ModelMutex.WINDOWS]:
-                self.windows.remove(entity)
-        elif isinstance(entity, Door):
-            with self.mutexes[ModelMutex.DOORS]:
-                self.doors.remove(entity)
-        elif isinstance(entity, UserText):
-            with self.mutexes[ModelMutex.TEXT]:
-                self.user_text.remove(entity)
+        entity.remove_from_model(self)
 
         self.update_needed = True
         with self.update_background:
@@ -215,7 +187,7 @@ class Model:
         if action:
             self.actions.append(DeleteAction(entity))
 
-    def update_verticies(self):
+    def update_vertices(self):
         """Clears current vertices and re-adds them for each line.
         """
         with self.mutexes[ModelMutex.VERTICES]:

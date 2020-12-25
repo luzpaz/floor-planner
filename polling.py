@@ -83,7 +83,7 @@ class Moving:
                 model.actions.append(move_action)
 
                 model.update_needed = True
-                model.update_verticies()
+                model.update_vertices()
                 controller.reset()
         
 class Measuring:
@@ -420,27 +420,26 @@ class PollingType:
     ZOOMING = 7
     DISPLAY_GRID = 8
     LAYERS = 9
-    SETTINGS = 10
-    UNDOING = 11
-    REDOING = 12
-    SAVING = 13
-    LOADING = 14
-    EXPORTING = 15
-    EXITING = 16
+    UNDOING = 10
+    REDOING = 11
+    SAVING = 12
+    LOADING = 13
+    EXPORTING = 14
+    EXITING = 15
 
-    DRAW_EXTERIOR_WALL = 17
-    DRAW_INTERIOR_WALL = 18
-    DRAW_WINDOW = 19
-    DRAW_DOOR = 20
+    DRAW_EXTERIOR_WALL = 16
+    DRAW_INTERIOR_WALL = 17
+    DRAW_WINDOW = 18
+    DRAW_DOOR = 19
 
     # TO DO: make layers dynamic
-    LAYER_0 = 21
-    LAYER_1 = 22
-    LAYER_2 = 23
-    LAYER_3 = 24
+    LAYER_0 = 20
+    LAYER_1 = 21
+    LAYER_2 = 22
+    LAYER_3 = 23
 
-    RASTERIZE = 25
-    VECTORIZE = 26
+    RASTERIZE = 24
+    VECTORIZE = 25
 
     NUM_TYPES = VECTORIZE + 1
 

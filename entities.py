@@ -141,6 +141,16 @@ class Line(Entity):
 
         return ((b2 * c1 - b1 * c2) / determinant,\
             (a1 * c2 - a2 * c1) / determinant)
+    
+    def add_to_model(self, model):
+        """Adds the line to the model."""
+        model.lines.add(self)
+        model.update_vertices()
+
+    def remove_from_model(self, model):
+        """Removes the line from the model."""
+        model.lines.remove(self)
+        model.update_vertices()
 
     def adjust(self, model, move_location = (0, 0)):
         """Additional adjustment after a move: none needed."""
@@ -311,6 +321,14 @@ class Window(RectangularEntity):
         """
         RectangularEntity.__init__(self, rectangle)
         
+    def add_to_model(self, model):
+        """Adds the window to the model."""
+        model.windows.add(self)
+
+    def remove_from_model(self, model):
+        """Removes the window from the model."""
+        model.windows.remove(self)
+
     def adjust(self, model, move_location = (0, 0)):
         """Snaps the entity to the nearest exterior wall that has
         the same orientation.
@@ -352,6 +370,14 @@ class Door(RectangularEntity):
         """
         RectangularEntity.__init__(self, rectangle)
         
+    def add_to_model(self, model):
+        """Adds the door to the model."""
+        model.doors.add(self)
+
+    def remove_from_model(self, model):
+        """Removes the door from the model."""
+        model.doors.remove(self)
+
     def adjust(self, model, move_location = (0, 0)):
         """Snaps the entity to the nearest wall that has the same orientation.
         """
@@ -393,6 +419,14 @@ class UserText(RectangularEntity):
 
         RectangularEntity.__init__(self, sdl2.SDL_Rect(
             self.position[0], self.position[1], len(self.text), len(self.text)))
+        
+    def add_to_model(self, model):
+        """Adds the text to the model."""
+        model.user_text.add(self)
+
+    def remove_from_model(self, model):
+        """Removes the text from the model."""
+        model.user_text.remove(self)
 
     def adjust(self, model, move_location = (0, 0)):
         """Additional adjustment after a move: none needed."""

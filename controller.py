@@ -167,7 +167,10 @@ class Controller:
                 # Delete selected entities
                 if keystate[sdl2.SDL_SCANCODE_DELETE]:
                     for entity in self.selected_entities:
-                        model.remove_entity(entity)
+                        try:
+                            model.remove_entity(entity)
+                        except:
+                            pass
                     self.selected_entities.clear()
                     
                 # Dragging and dropping files
@@ -914,7 +917,6 @@ class Controller:
         self.handlers[PollingType.ZOOMING] = polling.Zooming()
         self.handlers[PollingType.DISPLAY_GRID] = polling.DisplayGrid()
         self.handlers[PollingType.LAYERS] = polling.Layers()
-        self.handlers[PollingType.SETTINGS] = polling.Settings()
         self.handlers[PollingType.UNDOING] = polling.Undoing()
         self.handlers[PollingType.REDOING] = polling.Redoing()
         self.handlers[PollingType.SAVING] = polling.Saving()
@@ -1254,7 +1256,7 @@ class CenterButtonPanel(Panel):
     """The main user interface panel appearing at the top center of the screen.
     """
 
-    NUM_BUTTONS = 17
+    NUM_BUTTONS = 16
 
     RELATIVE_X = 0.0
     RELATIVE_Y = 0.0
@@ -1332,11 +1334,6 @@ class CenterButtonPanel(Panel):
             CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE,
             CenterButtonPanel.BUTTON_RELATIVE_SIZE))
-        self.buttons.add(Button(len(self.buttons), EntityType.SETTINGS_BUTTON,
-            self.get_relative_x(),
-            CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
-            CenterButtonPanel.BUTTON_RELATIVE_SIZE,
-            CenterButtonPanel.BUTTON_RELATIVE_SIZE))
         self.buttons.add(Button(len(self.buttons), EntityType.UNDO_BUTTON,
             self.get_relative_x(),
             CenterButtonPanel.RELATIVE_Y + CenterButtonPanel.BUTTONS_Y_BUFFER,
@@ -1380,7 +1377,6 @@ class CenterButtonPanel(Panel):
                 'Zoom Camera',
                 'Display Drawing Grid (CTRL + G)',
                 'Open Layers',
-                'Application Settings',
                 'Undo (CTRL + Z)',
                 'Redo (CTRL + Y)',
                 'Save Drawing (CTRL + S)',

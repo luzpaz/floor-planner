@@ -27,7 +27,7 @@ class View:
 
         # Initialize SDL window and renderer
         self.window = sdl2.SDL_CreateWindow(
-            b'Floor Planner',
+            b'Floor Sketcher',
             sdl2.SDL_WINDOWPOS_CENTERED,
             sdl2.SDL_WINDOWPOS_CENTERED,
             self.screen_width,
