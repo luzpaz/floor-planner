@@ -4,4 +4,4 @@ This is a desktop application for quickly sketching 2D house floor plans, writte
 
 ---
 
-![](demo.gif)
+![](timelapse.gif)
