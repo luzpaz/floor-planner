@@ -21,6 +21,7 @@ class View:
         self.set_dpi_awareness()
         self.init_textures()
         self.init_fonts()
+        self.reset_camera_values()
 
     def update(self, model, controller):
         """Updates the application window with entities from the model
@@ -648,6 +649,11 @@ class View:
         sdl2.sdlttf.TTF_CloseFont(self.small_text)
         sdl2.sdlttf.TTF_CloseFont(self.medium_text)
         sdl2.sdlttf.TTF_CloseFont(self.large_text)
+
+    def reset_camera_values(self):
+        self.camera_x = 0
+        self.camera_y = 0
+        self.camera_scale = 0
 
     def exit(self):
         """Exits SDL subsystems, unloads textures, and frees memory allocated

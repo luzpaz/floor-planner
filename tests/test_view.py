@@ -11,16 +11,16 @@ from view import View, FontSize
 
 class TexturesTests(unittest.TestCase):
     """Tests for the Texture class (view.py)."""
-    app = App()
 
     def test_create_and_get(self):
         """Ensure textures can create and get a test texture.
         """
-        TexturesTests.app.view.textures.textures[0]\
-            = TexturesTests.app.view.textures.create(
-            TexturesTests.app.view.renderer, b'../res/textures/test.png')
+        app = App()
+        app.view.textures.textures[0]\
+            = app.view.textures.create(
+            app.view.renderer, b'../res/textures/test.png')
 
-        texture = TexturesTests.app.view.textures.get(0)
+        texture = app.view.textures.get(0)
         self.assertIsNotNone(texture)
 
         # Ensure texture has expected size (matches png file).
@@ -35,110 +35,119 @@ class TexturesTests(unittest.TestCase):
     def test_destructor(self):
         """Ensure textures and layers are cleared after calling unload.
         """
-        TexturesTests.app.view.textures.unload()
-        self.assertEqual(len(TexturesTests.app.view.textures.textures), 0)
-        self.assertEqual(len(TexturesTests.app.view.textures.layers), 0)
+        app = App()
+        app.view.textures.unload()
+        self.assertEqual(len(app.view.textures.textures), 0)
+        self.assertEqual(len(app.view.textures.layers), 0)
 
 class ViewTests(unittest.TestCase):
     """Tests for the View class (view.py)."""
-    app = App()
 
     def test_initialization(self):
         """Ensure the view constructor initializes the SDL
         components and textures.
         """
-        self.assertIsNotNone(ViewTests.app.view.window)
-        self.assertIsNotNone(ViewTests.app.view.renderer)
-        self.assertIsInstance(ViewTests.app.view.textures, Textures)
+        app = App()
+        self.assertIsNotNone(app.view.window)
+        self.assertIsNotNone(app.view.renderer)
+        self.assertIsInstance(app.view.textures, Textures)
 
     def test_camera_values(self):
         """Ensure view takes in the UI camera's position and scale.
         """
-        ViewTests.app.controller.camera.x = 500
-        ViewTests.app.controller.camera.y = 1000
-        ViewTests.app.controller.camera.scale = 0.75
+        app = App()
+        app.controller.camera.x = 500
+        app.controller.camera.y = 1000
+        app.controller.camera.scale = 0.75
 
-        ViewTests.app.view.update(ViewTests.app.model, ViewTests.app.controller)
-        self.assertEqual(int(ViewTests.app.view.camera_x), 500)
-        self.assertEqual(int(ViewTests.app.view.camera_y), 1000)
-        self.assertEqual(ViewTests.app.view.camera_scale, 0.75)
+        app.view.update(app.model, app.controller)
+        self.assertEqual(int(app.view.camera_x), 500)
+        self.assertEqual(int(app.view.camera_y), 1000)
+        self.assertEqual(app.view.camera_scale, 0.75)
 
     def test_empty_update_layers(self):
         """Ensure no entities are rendered onto the layer if entities are empty.
         """
-        self.assertEqual(ViewTests.app.view.update_layer(
-            ViewTests.app.model, ViewTests.app.controller), 0)
+        app = App()
+        self.assertEqual(app.view.update_layer(
+            app.model, app.controller), 0)
 
     def test_base_update_layers(self):
         """Ensure expected number of entities are rendered onto the layer.
         """
+        app = App()
         for i in range(5):
-            ViewTests.app.model.add_line(EntityType.EXTERIOR_WALL)
+            app.model.add_line(EntityType.EXTERIOR_WALL)
 
         for i in range(3):
-            ViewTests.app.model.add_window()
+            app.model.add_window()
 
         for i in range(2):
-            ViewTests.app.model.add_door()
+            app.model.add_door()
 
-        self.assertEqual(ViewTests.app.view.update_layer(
-            ViewTests.app.model, ViewTests.app.controller), 50)
+        self.assertEqual(app.view.update_layer(
+            app.model, app.controller), 50)
 
-        ViewTests.app.model.lines.clear()
-        ViewTests.app.model.windows.clear()
-        ViewTests.app.model.doors.clear()
-        ViewTests.app.model.square_vertices.clear()
+        app.model.lines.clear()
+        app.model.windows.clear()
+        app.model.doors.clear()
+        app.model.square_vertices.clear()
 
     def test_render_ui_text(self):
         """Ensure expected number of text displayers are rendered from the UI.
         """
-        ViewTests.app.model.add_user_text('text')
-        self.assertEqual(ViewTests.app.view.render_ui_text(
-            ViewTests.app.controller), 3)
+        app = App()
+        app.model.add_user_text('text')
+        self.assertEqual(app.view.render_ui_text(
+            app.controller), 3)
 
     def test_empty_render_text(self):
         """Ensure render text returns None if the text is None or if the text
         string is empty.
         """
-        self.assertIsNone(ViewTests.app.view.render_relative_text(None))
-        self.assertIsNone(ViewTests.app.view.render_relative_text(Text()))
+        app = App()
+        self.assertIsNone(app.view.render_relative_text(None))
+        self.assertIsNone(app.view.render_relative_text(Text()))
 
     def test_render_text(self):
         """Ensure render_text completes rendering of a non-empty text.
         """
+        app = App()
         text = Text()
         text.text = 'Non empty text'
 
-        self.assertTrue(ViewTests.app.view.render_relative_text(text))
+        self.assertTrue(app.view.render_relative_text(text))
 
         text.font = FontSize.MEDIUM
-        self.assertTrue(ViewTests.app.view.render_relative_text(text))
+        self.assertTrue(app.view.render_relative_text(text))
 
         text.font = FontSize.LARGE
-        self.assertTrue(ViewTests.app.view.render_relative_text(text))
+        self.assertTrue(app.view.render_relative_text(text))
 
     def test_center_text(self):
         """Ensures center_text returns the expected values for base cases.
         """
-        ViewTests.app.view.screen_width = 1920
-        ViewTests.app.view.screen_height = 1080
-        self.assertEqual(ViewTests.app.view.center_text(250), 835)
-        self.assertEqual(ViewTests.app.view.center_text(0), 960)
+        app = App()
+        app.view.screen_width = 1920
+        app.view.screen_height = 1080
+        self.assertEqual(app.view.center_text(250), 835)
+        self.assertEqual(app.view.center_text(0), 960)
 
     def test_rendering_no_exceptions(self):
         """Ensure that functions that only render do not throw exceptions.
         These functions must be tested interactively.
         """
-        self.assertTrue(ViewTests.app.view.render_two_point_placement(
-            ViewTests.app.controller, ViewTests.app.model))
+        app = App()
+        self.assertTrue(app.view.render_two_point_placement(
+            app.controller, app.model))
         
         line = ((0, 0), (5, 5), 1)
-        self.assertTrue(ViewTests.app.view.render_line_placement(line))
+        self.assertTrue(app.view.render_line_placement(line))
 
-        self.assertTrue(ViewTests.app.view.render_mouse_selection(
-            ViewTests.app.controller))
+        self.assertTrue(app.view.render_mouse_selection(
+            app.controller))
 
-        self.assertTrue(ViewTests.app.view.render_user_text(
+        self.assertTrue(app.view.render_user_text(
             UserText('text')))
 
     def test_switching_between_layers(self):
