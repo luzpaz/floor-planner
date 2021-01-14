@@ -12,32 +12,9 @@ class Controller:
     def __init__(self):
         """Initializes the user camera, UI text displayers, and UI panels."""
 
-        # User camera
         self.camera = Camera()
-
-        # User interface text displayers
-        self.text_displayers = []
-        self.center_text = text.CenterText()
-        self.message_stack = text.MessageStack()
-        self.fps_displayer = text.FPSDisplayer()
-        self.text_displayers.append(self.center_text)
-        self.text_displayers.append(self.message_stack)
-
-        # FPS displayer only for debugging
-        # self.text_displayers.append(self.fps_displayer)
-
-        # User interface panels
-        self.panels = []
-        self.panels.append(panels.CenterButtonPanel())
-        self.panels.append(panels.LeftButtonPanel())
-        self.settings_panel = panels.SettingsPanel()
-        self.panels.append(self.settings_panel)
-
-        self.layers_panel = panels.RightButtonPanel()
-        self.panels.append(self.layers_panel)
-
-        # Polling event handlers
-        self.handlers = [None] * PollingType.NUM_TYPES
+        self.init_text_displayers()
+        self.init_panels()
         self.init_handlers()
 
         # Interval to snap the mouse (px)
@@ -890,9 +867,6 @@ class Controller:
         # for a line, or the left/right top/bottom vertex for a door/window
         self.use_start_vertex = True
 
-        # Whether to display the settings panel
-        self.settings_panel.visible = False
-
         # Calls the abstract reset method for all panels
         for panel in self.panels:
             panel.reset()
@@ -903,9 +877,29 @@ class Controller:
         self.center_text.set_top_text('')
         self.center_text.set_bottom_text('')
 
+    def init_text_displayers(self):
+        """Initializes the center text displayer and message stack.
+        """
+        self.text_displayers = []
+        self.center_text = text.CenterText()
+        self.message_stack = text.MessageStack()
+        self.text_displayers.append(self.center_text)
+        self.text_displayers.append(self.message_stack)
+
+    def init_panels(self):
+        """Initializes the center, left, and right button panels.
+        """
+        self.panels = []
+        self.panels.append(panels.CenterButtonPanel())
+        self.panels.append(panels.LeftButtonPanel())
+        self.layers_panel = panels.RightButtonPanel()
+        self.panels.append(self.layers_panel)
+
     def init_handlers(self):
         """Initializes the poll event handlers.
         """
+        self.handlers = [None] * PollingType.NUM_TYPES
+
         # Top button panel
         self.handlers[PollingType.ERASING] = polling.Erasing()
         self.handlers[PollingType.DRAWING] = polling.Drawing()

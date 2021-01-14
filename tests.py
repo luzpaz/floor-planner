@@ -9,8 +9,9 @@ from model import Model, UserText
 from panels import Button, Panel
 from polling import PollingType
 from text import Text, CenterText, MessageStack, FPSDisplayer
+from textures import Textures
 from tools import Tools, ExportCommand
-from view import View, Textures, FontSize
+from view import View, FontSize
 
 class ControllerTests(unittest.TestCase):
     """Tests for the Controller class (controller.py)."""
