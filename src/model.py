@@ -1,9 +1,9 @@
 import math, sdl2, sys, threading
 
+from actions import AddAction, DeleteAction
 from collections import deque
 from entities import Line, Window, Door, UserText, RectangularEntity
 from entity_types import EntityType, ModelMutex
-from polling import AddAction, DeleteAction
 from threading import Lock
 from tools import Tools
 

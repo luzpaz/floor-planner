@@ -1,10 +1,11 @@
 import glob, sdl2, sys, unittest, os.path
 sys.path.append("..\src")
 
+from actions import AddAction, DeleteAction
 from app import App
 from entities import Line, RectangularEntity, Door, Window
 from entity_types import EntityType
-from polling import AddingText, AddAction, DeleteAction, PollingType
+from polling import AddingText, PollingType
 from text import CenterText, MessageStack, FPSDisplayer
 from tools import ExportCommand
 

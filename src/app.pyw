@@ -51,8 +51,8 @@ class App:
             self.cap_frame_rate(end - start)
 
         self.view.exit()
+        self.notify_background_thread()
         background_thread.join()
-
         return True
 
     def background_updates(app, condition):
@@ -97,6 +97,13 @@ class App:
                                                   + filename,))
             self.model = Model() # reset model
 
+    def notify_background_thread(self):
+        """Notifies the condition variable for the background thread
+        so that it can exit its loop.
+        """
+        with self.model.update_background:
+            self.model.update_background.notify_all()
+
 class BackgroundUpdater:
     """Performs background updates."""
 
@@ -110,3 +117,4 @@ class BackgroundUpdater:
 if __name__ == '__main__':
     app = App()
     app.run()
+    sys.exit()
