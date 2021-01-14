@@ -47,146 +47,42 @@ class Controller:
         keystate = sdl2.SDL_GetKeyboardState(None)
 
         for event in sdl2.ext.get_events():
-            # User exited the app window or pressed ALT + F4
-            if self.user_quit(event, keystate):
+            if self.user_closed_window(event, keystate):
                 return False
 
             try:
-                # Retrieve mouse location
                 self.get_mouse_location()
+                self.find_nearest_vertex(model)
                 
-                # Handle text input
-                self.reset_text()
-                self.handle_text_input(event)
-
-                # Update text diplayers
                 self.update_bottom_right_text()
                 self.update_bottom_center_text(model)
-
-                # Zoom camera in/out
-                if event.type == sdl2.SDL_MOUSEWHEEL:
-                    self.handle_camera_zoom(event)
-
-                # Resize the screen
-                if event.type == sdl2.SDL_WINDOWEVENT:
-                    model.update_needed = True
-
-                # Find nearest vertex
-                self.find_nearest_vertex(model)
-
-                # Select a single entity
-                if event.type == sdl2.SDL_MOUSEBUTTONDOWN\
-                    and not self.using_selection:
-                    self.handle_single_entity_selection(model)
-                    self.last_selection = sdl2.SDL_GetTicks()
-                    self.update_item_to_move()
                 
-                # Select multiple entities
-                self.handle_mouse_drag(event)
-                if self.mouse_selection.w != 0 and self.mouse_selection.h != 0\
-                    and not self.using_selection:
-                    self.handle_multiple_entity_selection(model)
-                    self.last_selection = sdl2.SDL_GetTicks()
-                    self.update_item_to_move()
+                self.handle_text_input(event)
+                self.handle_mouse_events(model, event)
+                self.handle_keyboard_events(model, event, keystate)
 
-                # Panning camera
-                if keystate[sdl2.SDL_SCANCODE_LSHIFT]\
-                    or keystate[sdl2.SDL_SCANCODE_RSHIFT]:
-                    self.handle_camera_pan(event)
-
-                # Place entity hotkeys
-                if keystate[sdl2.SDL_SCANCODE_KP_0]\
-                    or keystate[sdl2.SDL_SCANCODE_0]: # exterior wall
-                    self.reset()
-                    self.placement_type = EntityType.EXTERIOR_WALL
-                    self.line_thickness = Line.EXTERIOR_WALL
-                    self.place_two_points = True
-                elif keystate[sdl2.SDL_SCANCODE_KP_1]\
-                    or keystate[sdl2.SDL_SCANCODE_1]: # interior wall
-                    self.reset()
-                    self.placement_type = EntityType.INTERIOR_WALL
-                    self.line_thickness = Line.INTERIOR_WALL
-                    self.place_two_points = True
-                elif keystate[sdl2.SDL_SCANCODE_KP_2]\
-                    or keystate[sdl2.SDL_SCANCODE_2]: # window
-                    self.polling = PollingType.DRAW_WINDOW
-                elif keystate[sdl2.SDL_SCANCODE_KP_3]\
-                    or keystate[sdl2.SDL_SCANCODE_3]: # door
-                    self.polling = PollingType.DRAW_DOOR
-
-                # Place point based entity
                 if self.place_one_point:
                     self.handle_one_point_placement(event, model)
-
-                # Place line based entity
                 if self.place_two_points:
                     self.handle_two_point_placement(event, keystate, model)
 
                 self.handle_panel_input(event, screen_dimensions)
-                     
-                # User pressed the exit button
-                if self.polling == PollingType.EXITING:
-                    return False
-
-                # Cancel any polling
-                if keystate[sdl2.SDL_SCANCODE_ESCAPE]:
-                    self.reset()
-
-                # Delete selected entities
-                if keystate[sdl2.SDL_SCANCODE_DELETE]:
-                    for entity in self.selected_entities:
-                        try:
-                            model.remove_entity(entity)
-                        except:
-                            pass
-                    self.selected_entities.clear()
-                    
-                # Dragging and dropping files
-                if self.polling == PollingType.LOADING\
-                    and event.type == sdl2.SDL_DROPFILE:
-                    self.load_filename = event.drop.file
-
-                # Polling event
-                if self.polling != PollingType.SELECTING:
+                
+                if self.user_has_button_selected():
                     self.handlers[self.polling].handle(
                         self, model, keystate, event,
                         screen_dimensions, commands)
 
-                # Adjust moved entities if necessary
                 self.adjust_moved_entities(model)
-
-                # Hotkeys for polling
-                if keystate[sdl2.SDL_SCANCODE_LCTRL]\
-                    or keystate[sdl2.SDL_SCANCODE_RCTRL]:
-                    self.handle_ctrl_hotkeys(keystate)
-
-                # + or - keys for camera zoom
-                if keystate[sdl2.SDL_SCANCODE_KP_PLUS]:
-                    # Create fake event to reuse camera zoom code
-                    mock_event = sdl2.SDL_Event()
-                    mock_event.wheel.y = 1
-                    self.handle_camera_zoom(mock_event)
-                if keystate[sdl2.SDL_SCANCODE_KP_MINUS]:
-                    mock_event = sdl2.SDL_Event()
-                    mock_event.wheel.y = -1
-                    self.handle_camera_zoom(mock_event)
 
             # If any errors occur, reset the UI state
             except:
                 self.reset()
 
-        # Scroll camera using keyboard input
-        # Do not scroll the camera if the user is typing text or if they
-        # are pressing the CTRL key
-        if self.polling != PollingType.ADDING_TEXT\
-            and not keystate[sdl2.SDL_SCANCODE_LCTRL]:   
-            self.camera.scroll(keystate)
+        self.scroll_camera(keystate)
 
         # Remove expired user interface messages and adjust positioning
         self.message_stack.update()
-        
-        # FPS displayer only for debugging
-        # self.fps_displayer.update()
 
         return True
 
@@ -201,14 +97,21 @@ class Controller:
         self.mouse_y = mouse_y_ptr.contents.value
 
     def find_nearest_vertex(self, model):
-        """Finds nearest vertex within range to the mouse position."""
+        """Finds nearest vertex within range to the mouse position.
+        :param model: The app model
+        :type model: Model from 'model.py'"""
         self.nearest_vertex = model.get_vertex_within_range((
             self.get_mouse_adjusted_to_camera_x(),
             self.get_mouse_adjusted_to_camera_y()))
 
-    def user_quit(self, event, keystate):
-        """Returns true if the user exited the application window or
-        pressed ALT + F4 on the keyboard.
+    def user_closed_window(self, event, keystate):
+        """Returns true if the user exited the application window,
+        pressed the quit button the center panel,
+        or pressed ALT + F4 on the keyboard.
+        :param event: The current event being polled.
+        :type event: SDL_Event
+        :param keystate: SDL keystate for checking the keys being pressed
+        :type keystate: int[]
         """
         if event.type == sdl2.SDL_QUIT:
             return True
@@ -217,12 +120,105 @@ class Controller:
             if keystate[sdl2.SDL_SCANCODE_F4]:
                 return True
 
+        if self.polling == PollingType.EXITING:
+            return True
+
         return False
+
+    def handle_mouse_events(self, model, event):
+        """Handles mouse input events from the user.
+        :param model: The app model
+        :type model: Model from 'model.py'
+        :param event: The current event being polled.
+        :type event: SDL_Event
+        """
+
+        # Select a single entity
+        if event.type == sdl2.SDL_MOUSEBUTTONDOWN\
+            and not self.using_selection:
+            self.handle_single_entity_selection(model)
+            self.last_selection = sdl2.SDL_GetTicks()
+            self.update_item_to_move()
+        
+        # Select multiple entities
+        self.handle_mouse_drag(event)
+        if self.mouse_selection.w != 0 and self.mouse_selection.h != 0\
+            and not self.using_selection:
+            self.handle_multiple_entity_selection(model)
+            self.last_selection = sdl2.SDL_GetTicks()
+            self.update_item_to_move()
+
+        # Zoom camera with mouse wheel
+        if event.type == sdl2.SDL_MOUSEWHEEL:
+            self.handle_camera_zoom(event)
+
+        # Window resized by user
+        if event.type == sdl2.SDL_WINDOWEVENT:
+            model.update_needed = True
+    
+        # Drag and drop file for loading
+        if self.polling == PollingType.LOADING\
+            and event.type == sdl2.SDL_DROPFILE:
+            self.load_filename = event.drop.file
+
+    def handle_keyboard_events(self, model, event, keystate):
+        """Handles keyboard events from the user.
+        :param model: The app model
+        :type model: Model from 'model.py'
+        :param event: The current event being polled.
+        :type event: SDL_Event
+        :param keystate: SDL keystate for checking the keys being pressed
+        :type keystate: int[]
+        """
+
+        self.handle_entity_placement_hotkeys(keystate)
+
+        if keystate[sdl2.SDL_SCANCODE_LSHIFT]\
+            or keystate[sdl2.SDL_SCANCODE_RSHIFT]:
+            self.handle_camera_pan(event)
+
+        # Cancel any polling
+        if keystate[sdl2.SDL_SCANCODE_ESCAPE]:
+            self.reset()
+
+        if keystate[sdl2.SDL_SCANCODE_DELETE]:
+            self.delete_selected_entities(model)
+
+        if keystate[sdl2.SDL_SCANCODE_LCTRL]\
+            or keystate[sdl2.SDL_SCANCODE_RCTRL]:
+            self.handle_ctrl_hotkeys(keystate)
+
+        self.zoom_camera_with_keyboard(keystate)
+            
+    def handle_entity_placement_hotkeys(self, keystate):
+        """Toggles entity placement if user pressed
+        on a hotkey for placing walls, windows, or doors.
+        :param keystate: SDL keystate for checking the keys being pressed
+        :type keystate: int[]
+        """
+        if keystate[sdl2.SDL_SCANCODE_KP_0]\
+            or keystate[sdl2.SDL_SCANCODE_0]: # exterior wall
+            self.reset()
+            self.placement_type = EntityType.EXTERIOR_WALL
+            self.line_thickness = Line.EXTERIOR_WALL
+            self.place_two_points = True
+        elif keystate[sdl2.SDL_SCANCODE_KP_1]\
+            or keystate[sdl2.SDL_SCANCODE_1]: # interior wall
+            self.reset()
+            self.placement_type = EntityType.INTERIOR_WALL
+            self.line_thickness = Line.INTERIOR_WALL
+            self.place_two_points = True
+        elif keystate[sdl2.SDL_SCANCODE_KP_2]\
+            or keystate[sdl2.SDL_SCANCODE_2]: # window
+            self.polling = PollingType.DRAW_WINDOW
+        elif keystate[sdl2.SDL_SCANCODE_KP_3]\
+            or keystate[sdl2.SDL_SCANCODE_3]: # door
+            self.polling = PollingType.DRAW_DOOR
 
     def handle_ctrl_hotkeys(self, keystate):
         """Handles keyboard input if the user holds the CTRL key and pressed
         another key by setting the polling event accordingly.
-        :param keystate: SDL keystate for checking if using is pressing SHIFT
+        :param keystate: SDL keystate for checking the keys being pressed
         :type keystate: int[]
         """
 
@@ -273,11 +269,29 @@ class Controller:
         # Export drawing to png file
         if keystate[sdl2.SDL_SCANCODE_X]:
             self.polling = PollingType.EXPORTING
+        
+    def zoom_camera_with_keyboard(self, keystate):
+        """Zooms the camera if the user is pressing the + or - keys.
+        :param keystate: SDL keystate for checking the keys being pressed
+        :type keystate: int[]
+        """
+        if keystate[sdl2.SDL_SCANCODE_KP_PLUS]:
+            # Create fake event to reuse camera zoom code
+            mock_event = sdl2.SDL_Event()
+            mock_event.wheel.y = 1
+            self.handle_camera_zoom(mock_event)
+        if keystate[sdl2.SDL_SCANCODE_KP_MINUS]:
+            mock_event = sdl2.SDL_Event()
+            mock_event.wheel.y = -1
+            self.handle_camera_zoom(mock_event)
 
     def handle_text_input(self, event):
         """Updates the text the user is currently typing. Text can only
         consist of numbers if adding text is not the current polling event.
+        :param event: The current event being polled.
+        :type event: SDL_Event
         """
+        self.reset_text()
         if event.type == sdl2.SDL_TEXTINPUT:
             if not self.polling == PollingType.ADDING_TEXT\
                 and not str(event.text.text)[2:3].isdigit():
@@ -318,6 +332,33 @@ class Controller:
             self.center_text.set_bottom_text()
         else:
             self.center_text.set_bottom_text(str(entity))
+
+    def delete_selected_entities(self, model):
+        """Deletes the entities selected by the user from the model.
+        """
+        for entity in self.selected_entities:
+            try:
+                model.remove_entity(entity)
+            except:
+                pass
+        self.selected_entities.clear()
+
+    def scroll_camera(self, keystate):
+        """Scrolls the camera using keyboard input if the user
+        is not pressing CTRL or typing text.
+        :param keystate: SDL keystate for checking the keys being pressed
+        :type keystate: int[]
+        """
+        if self.polling != PollingType.ADDING_TEXT\
+            and not keystate[sdl2.SDL_SCANCODE_LCTRL]:   
+            self.camera.scroll(keystate)
+
+    def user_has_button_selected(self):
+        """Returns whether the user has a button from the central
+        panel selected and it's not the default or the exit button.
+        """
+        return self.polling != PollingType.SELECTING\
+            and self.polling != PollingType.EXITING
 
     def handle_single_entity_selection(self, model):
         """Selects a single entity that the user clicked on.
@@ -541,7 +582,7 @@ class Controller:
         point, the line will snap to the nearest x or y-axis.
         :param event: SDL event for checking mouse clicks
         :type event: SDL_Event
-        :param keystate: SDL keystate for checking if using is pressing SHIFT
+        :param keystate: SDL keystate for checking the keys being pressed
         :type keystate: int[]
         :param model: The app model
         :type model: Model from 'model.py'

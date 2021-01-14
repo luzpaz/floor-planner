@@ -102,7 +102,7 @@ class View:
 
         # Render drawing grid
         if controller.display_grid:
-            sdl2.SDL_SetRenderDrawColor(self.renderer, 0xB2, 0xB2, 0xB2, 0xFF);
+            sdl2.SDL_SetRenderDrawColor(self.renderer, 0xB2, 0xB2, 0xB2, 0xFF)
             for i in range(self.layer_width):
                 sdl2.SDL_RenderDrawLine(
                     self.renderer, -controller.snap_interval,

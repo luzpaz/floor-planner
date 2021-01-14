@@ -135,7 +135,7 @@ class CenterButtonPanel(Panel):
         number of buttons already added."""
         return len(self.buttons) / CenterButtonPanel.NUM_BUTTONS\
             * CenterButtonPanel.BUTTONS_TOTAL_WIDTH\
-            + CenterButtonPanel.BUTTONS_X_BUFFER;
+            + CenterButtonPanel.BUTTONS_X_BUFFER
 
     def __init__(self):
         """Initializes the buttons."""

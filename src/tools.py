@@ -38,7 +38,7 @@ class Exporter:
         height = height.contents.value
 
         surface = sdl2.SDL_CreateRGBSurface(
-            0, width, height, 32, 0, 0, 0, 0);
+            0, width, height, 32, 0, 0, 0, 0)
 
         sdl2.SDL_RenderReadPixels(
             renderer, None, surface.contents.format.contents.format,
