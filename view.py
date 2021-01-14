@@ -1,6 +1,7 @@
 import ctypes, sdl2, sdl2.sdlgfx, sdl2.sdlimage, sdl2.sdlttf
 
 from ctypes import c_int, pointer
+from entity_types import EntityType
 from enum import Enum
 from textures import Textures
 
@@ -13,82 +14,33 @@ class View:
         """Initializes SDL subsystems, SDL components, textures, and fonts
         necessary for rendering.
         """
-
-        # Initialize SDL subsystems
-        sdl2.SDL_Init(sdl2.SDL_INIT_VIDEO)
-        sdl2.sdlttf.TTF_Init()
-
-        # Set initial window size to the user's current display resolution
-        display_mode = sdl2.SDL_DisplayMode()
-        sdl2.SDL_GetCurrentDisplayMode(0, display_mode)
-
-        self.screen_width = int(display_mode.w)
-        self.screen_height = int(display_mode.h)
-
-        # Initialize SDL window and renderer
-        self.window = sdl2.SDL_CreateWindow(
-            b'Floor Sketcher',
-            sdl2.SDL_WINDOWPOS_CENTERED,
-            sdl2.SDL_WINDOWPOS_CENTERED,
-            self.screen_width,
-            self.screen_height,
-            sdl2.SDL_WINDOW_SHOWN | sdl2.SDL_WINDOW_RESIZABLE
-            | sdl2.SDL_WINDOW_ALLOW_HIGHDPI)
-
-        # Set minimum window size to 720p
-        sdl2.SDL_SetWindowMinimumSize(self.window, 1280, 720)
-
-        self.renderer = sdl2.SDL_CreateRenderer(
-            self.window, -1, sdl2.SDL_RENDERER_ACCELERATED)
-        sdl2.SDL_RenderSetIntegerScale(self.renderer, sdl2.SDL_FALSE)
-        sdl2.SDL_SetHint(sdl2.SDL_HINT_RENDER_SCALE_QUALITY, b'2')
-
+        self.init_sdl_subsystems()
+        self.determine_window_size()
+        self.init_window()
+        self.init_renderer()
         self.set_dpi_awareness()
-
-        # Initialize textures
-        self.textures = Textures()
-        layer_dimensions = self.textures.load(self.renderer)
-        self.layer_width = layer_dimensions[0]
-        self.layer_height = layer_dimensions[1]
-
-        self.initialize_fonts(False)
+        self.init_textures()
+        self.init_fonts()
 
     def update(self, model, controller):
         """Updates the application window with entities from the model
-        and the user interface, in reference to the camera position and scale.
+        and the user interface.
         """
 
         try:
-            # Clear contents on window
-            sdl2.SDL_SetRenderDrawColor(self.renderer, 128, 128, 128, 255)
-            sdl2.SDL_RenderClear(self.renderer)
-
-            # Store camera attributes as class values for easier access
-            self.camera_x = controller.camera.x
-            self.camera_y = controller.camera.y
-            self.camera_scale = controller.camera.scale
+            self.clear_buffer()
+            self.fetch_camera_values(controller)
 
             if model.update_needed:
-                # Update screen size
-                width = pointer(c_int(0))
-                height = pointer(c_int(0))
-                sdl2.SDL_GetWindowSize(self.window, width, height)
-                self.screen_width = width.contents.value
-                self.screen_height = height.contents.value
+                self.update_screen_size()
+                self.resize_fonts()
+                self.update_layer(model, controller)
+                model.update_needed = False
 
-                # Resize fonts
-                self.initialize_fonts()
-
-            if controller.rasterize_graphics:
-                self.rasterized_render(model, controller)
-            else:
-                self.vectorized_render(model, controller)
+            self.render_layer(controller.current_layer)
             self.render_text_from_model(controller, model)
 
-            # Render UI panels
             self.render_ui_panels(controller)
-
-            # Render text from the UI and other indicators
             self.render_ui_text(controller)
             self.render_two_point_placement(controller, model)
             self.render_moving_vertex(controller)
@@ -97,42 +49,37 @@ class View:
             if controller.loading:
                 self.render_loading()
 
-            # Update window with new contents
-            sdl2.SDL_RenderPresent(self.renderer)
+            self.swap_buffer()
         except:
             return
-
-    def rasterized_render(self, model, controller):
-        """Renders entities onto a layer only when added/removed, and
-        renders that layer to the screen, instead of rendering each entity
-        individually. More performant, but low graphics quality when zoomed in.
-        """
         
-        # Only update the layers if new entities were added or removed
-        if model.update_needed:
-            self.update_layer(model, controller)
-            model.update_needed = False
-
-        # Render layers currently set as visible by the user
-        self.render_layer(controller.current_layer)
-
-    def vectorized_render(self, model, controller):
-        """Renders all entities individually every frame for maximum graphics
-        quality, but requires higher performance with higher number of entities.
+    def clear_buffer(self):
+        """Clears the contents displayed on the window.
         """
+        sdl2.SDL_SetRenderDrawColor(self.renderer, 128, 128, 128, 255)
+        sdl2.SDL_RenderClear(self.renderer)
 
-        # Not currently implemented
-        return
+    def swap_buffer(self):
+        """Updates the window with the rendered content.
+        """
+        sdl2.SDL_RenderPresent(self.renderer)
 
-        # Render empty white rectangle for canvas
-        sdl2.SDL_SetRenderDrawColor(self.renderer, 255, 255, 255, 255)
-        sdl2.SDL_RenderFillRect(self.renderer,
-            sdl2.SDL_Rect(int(-self.camera_x),
-                          int(-self.camera_y),
-                          int(self.layer_width * self.camera_scale),
-                          int(self.layer_height * self.camera_scale)))
+    def fetch_camera_values(self, controller):
+        """Stores camera attributes as class values for easier access.
+        """
+        self.camera_x = controller.camera.x
+        self.camera_y = controller.camera.y
+        self.camera_scale = controller.camera.scale
 
-        return self.render_entities(model, controller, True)
+    def update_screen_size(self):
+        """Sets the screen width and height to the application's current
+        window resolution, necessary when user resizes the window.
+        """
+        width = pointer(c_int(0))
+        height = pointer(c_int(0))
+        sdl2.SDL_GetWindowSize(self.window, width, height)
+        self.screen_width = width.contents.value
+        self.screen_height = height.contents.value
 
     def update_layer(self, model, controller):
         """Renders entities from model onto their corresponding layer.
@@ -144,15 +91,10 @@ class View:
         sdl2.SDL_SetRenderDrawColor(self.renderer, 255, 255, 255, 255)
         sdl2.SDL_RenderClear(self.renderer)
 
-        return self.render_entities(model, controller, False)
+        return self.render_entities(model, controller)
 
-    def render_entities(self, model, controller, adjusted):
-        """Renders the entities from the model onto the current renderer target,
-        which is either the current layer (rasterized graphics) or the
-        application window (vectorized graphics).
-        :param adjusted: Whether to adjust the entities to the camera
-        False for rasterized, True for vectorized
-        :type adjusted: boolean
+    def render_entities(self, model, controller):
+        """Renders the entities from the model onto the renderer target.
         """
 
         entities_rendered = 0
@@ -176,40 +118,28 @@ class View:
         for line in model.lines:
             if line.layer != controller.current_layer:
                 continue
-            if not adjusted:
-                self.render_line(line, controller.current_layer)
-            else:
-                self.render_adjusted_line(line)
+            self.render_line(line, controller.current_layer)
             entities_rendered += 1
 
         # Render square vertices to close the gap between connecting lines
         for vertex in model.square_vertices:
             if vertex.layer != controller.current_layer:
                 continue
-            if not adjusted:
-                self.render_square_vertex(vertex)
-            else:
-                self.render_adjusted_square_vertex(vertex)
+            self.render_square_vertex(vertex)
             entities_rendered += 1
 
         # Render windows
         for window in model.windows:
             if window.layer != controller.current_layer:
                 continue
-            if not adjusted:
-                self.render_window(window, controller.current_layer)
-            else:
-                self.render_adjusted_window(window)
+            self.render_window(window, controller.current_layer)
             entities_rendered += 1
 
         # Render doors
         for door in model.doors:
             if door.layer != controller.current_layer:
                 continue
-            if not adjusted:
-                self.render_door(door, controller.current_layer)
-            else:
-                self.render_adjusted_door(door)
+            self.render_door(door, controller.current_layer)
             entities_rendered += 1
 
         sdl2.SDL_SetRenderTarget(self.renderer, None)
@@ -631,40 +561,9 @@ class View:
             self.renderer, self.textures.get(EntityType.LOADING), None,
             sdl2.SDL_Rect(0, 0, self.screen_width, self.screen_height))
 
-    def render_adjusted_line(self, line):
-        """Renders the line provided adjusted to the camera.
-        :param line: The line to render
-        :type line: Line from 'entities.py'
-        """
-        thickness = int(line.thickness * self.camera_scale)
-        if thickness < 1: thickness = 1
-
-        sdl2.sdlgfx.thickLineRGBA(
-            self.renderer,
-            int(line.start[0] * self.camera_scale - self.camera_x),
-            int(line.start[1] * self.camera_scale - self.camera_y),
-            int(line.end[0] * self.camera_scale - self.camera_x),
-            int(line.end[1] * self.camera_scale - self.camera_y),
-            thickness, line.get_color()[0],
-            line.get_color()[1], line.get_color()[2], 255)
-        return True
-
-    def render_adjusted_square_vertex(self, vertex):
-        """Renders the square vertex provided adjusted to the camera.
-        Renders a solid black rectangle.
-        :param vertex: The square vertex to render
-        :type vertex: RectangularEntity from 'entities.py'
-        """
-        sdl2.SDL_SetRenderDrawColor(self.renderer, 0, 0, 0, 255)
-        sdl2.SDL_RenderFillRect(self.renderer, sdl2.SDL_Rect(
-            int(vertex.x * self.camera_scale - self.camera_x),
-            int(vertex.y * self.camera_scale - self.camera_y),
-            int(vertex.width * self.camera_scale),
-            int(vertex.height * self.camera_scale)))
-
     def set_dpi_awareness(self):
         """Sets the applications DPI awareness to per-monitor-aware,
-        so that the window scale is always absolute (100%).
+        so that the window scale is absolute (100%).
         """
         awareness = ctypes.c_int()
         error = ctypes.windll.shcore.SetProcessDpiAwareness(2)
@@ -672,8 +571,54 @@ class View:
     def get_screen_dimensions(self):
         """Returns the screen dimensions as a tuple."""
         return (self.screen_width, self.screen_height)
+    
+    def init_sdl_subsystems(self):
+        """Initializes SDL video and TTF subsystems.
+        """
+        sdl2.SDL_Init(sdl2.SDL_INIT_VIDEO)
+        sdl2.sdlttf.TTF_Init()
 
-    def initialize_fonts(self, free_current = True):
+    def determine_window_size(self):
+        """Sets the window size to the user's current display resolution.
+        """
+        display_mode = sdl2.SDL_DisplayMode()
+        sdl2.SDL_GetCurrentDisplayMode(0, display_mode)
+
+        self.screen_width = int(display_mode.w)
+        self.screen_height = int(display_mode.h)
+
+    def init_window(self):
+        """Initializes the SDL window ands sets the minimum window size.
+        """
+        self.window = sdl2.SDL_CreateWindow(
+            b'Floor Sketcher',
+            sdl2.SDL_WINDOWPOS_CENTERED,
+            sdl2.SDL_WINDOWPOS_CENTERED,
+            self.screen_width,
+            self.screen_height,
+            sdl2.SDL_WINDOW_SHOWN | sdl2.SDL_WINDOW_RESIZABLE
+            | sdl2.SDL_WINDOW_ALLOW_HIGHDPI)
+
+        # Set minimum window size to 720p
+        sdl2.SDL_SetWindowMinimumSize(self.window, 1280, 720)
+
+    def init_renderer(self):
+        """Initializes the SDL renderer and sets the renderer hints.
+        """
+        self.renderer = sdl2.SDL_CreateRenderer(
+            self.window, -1, sdl2.SDL_RENDERER_ACCELERATED)
+        sdl2.SDL_RenderSetIntegerScale(self.renderer, sdl2.SDL_FALSE)
+        sdl2.SDL_SetHint(sdl2.SDL_HINT_RENDER_SCALE_QUALITY, b'2')
+
+    def init_textures(self):
+        """Loads textures from file and sets the layer dimensions.
+        """
+        self.textures = Textures()
+        layer_dimensions = self.textures.load(self.renderer)
+        self.layer_width = layer_dimensions[0]
+        self.layer_height = layer_dimensions[1]
+
+    def init_fonts(self, free_current = False):
         """Initializes the fonts based on the current screen dimensions.
         :param free_current: Whether to free the memory allocated for the
         current fonts. Necessary if re-initializing the fonts after changing
@@ -681,11 +626,8 @@ class View:
         :type free_current: boolean.
         """
         if free_current:
-            sdl2.sdlttf.TTF_CloseFont(self.tiny_text)
-            sdl2.sdlttf.TTF_CloseFont(self.small_text)
-            sdl2.sdlttf.TTF_CloseFont(self.medium_text)
-            sdl2.sdlttf.TTF_CloseFont(self.large_text)
-            
+            self.free_fonts()
+
         self.tiny_text = sdl2.sdlttf.TTF_OpenFont(
             b'cour.ttf', int(self.screen_height * 0.013))
         self.small_text = sdl2.sdlttf.TTF_OpenFont(
@@ -695,11 +637,24 @@ class View:
         self.large_text = sdl2.sdlttf.TTF_OpenFont(
             b'cour.ttf', int(self.screen_height * 0.021))
 
+    def resize_fonts(self):
+        """Re-initializes the fonts."""
+        self.init_fonts(True)
+
+    def free_fonts(self):
+        """Frees memory allocated by TTF for the fonts.
+        """
+        sdl2.sdlttf.TTF_CloseFont(self.tiny_text)
+        sdl2.sdlttf.TTF_CloseFont(self.small_text)
+        sdl2.sdlttf.TTF_CloseFont(self.medium_text)
+        sdl2.sdlttf.TTF_CloseFont(self.large_text)
+
     def exit(self):
         """Exits SDL subsystems, unloads textures, and frees memory allocated
         by SDL for the window and renderer.
         """
         self.textures.unload()
+        self.free_fonts()
 
         sdl2.SDL_DestroyWindow(self.window)
         self.window = None

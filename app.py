@@ -6,10 +6,11 @@ from tools import Loader
 from view import View
 
 class App:
-    """Houses the MVC components and executes the application loop."""
+    """Contains the model, view, controller components
+    and executes the application loop."""
 
     def __init__(self, load = ''):
-        """Initializes the application MVC components.
+        """Initializes the application components.
         :param load: Saved filename to load from
         :type load: str
         """
@@ -28,10 +29,11 @@ class App:
 
     def run(self):
         """Begins execution of application loop, which handles user input and
-        renders entities onto the window.
+        renders entities and the user interface onto the window.
         """
         self.running = True
 
+        # Start background updates thread
         background_thread = threading.Thread(
             target = App.background_updates,
             args = (self, self.model.update_background))
@@ -74,11 +76,11 @@ class App:
 
     def cap_frame_rate(self, frame_duration):
         """Sleeps the main application thread if the last frame runs faster
-        than 120 fps to decrease CPU usage."""
+        than 60 fps to decrease CPU usage."""
 
-        # 120 fps = ~8 ms per frame
-        if frame_duration < 0.08:
-            time.sleep(0.004) # sleep for 4 ms
+        # 60 fps = ~16 ms per frame
+        if frame_duration < 0.16:
+            time.sleep(0.008) # sleep for 8 ms
 
     def load_from_file(self, filename = ''):
         """Tries to load model entities from the filename.

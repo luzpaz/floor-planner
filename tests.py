@@ -27,15 +27,15 @@ class ControllerTests(unittest.TestCase):
 
         event.text.text = b'1'
         controller.handle_text_input(event)
-        self.assertEqual(controller.text, '1');
+        self.assertEqual(controller.text, '1')
 
         event.text.text = b'0'
         controller.handle_text_input(event)
-        self.assertEqual(controller.text, '10');
+        self.assertEqual(controller.text, '10')
 
         event.text.text = b'a'
         controller.handle_text_input(event)
-        self.assertEqual(controller.text, '');
+        self.assertEqual(controller.text, '')
 
     def test_update_bottom_right_text(self):
         """Ensure the bottom right text displays the current mouse coordinates

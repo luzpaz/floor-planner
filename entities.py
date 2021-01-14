@@ -30,7 +30,7 @@ class Line(Entity):
 
     def __init__(self, start = (0, 0), end = (0, 0),
                  thickness = 1, color = (0, 0, 0)):
-        """ Initializes the line class.
+        """ Initializes the line.
         :param start: line segment starting vertex
         :param end: line segment ending vertex
         :type start, end: tuple(int, int)
