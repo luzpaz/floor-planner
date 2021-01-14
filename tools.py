@@ -21,12 +21,7 @@ class Tools:
             return str(int(feet)) + " ft " + str(int(inches)) + " in"
         return ''
 
-class Command:
-    """The base class for a command to execute using the application."""
-    def execute(self, app):
-        pass
-
-class ExportCommand(Command):
+class ExportCommand:
     """The command that exports the drawing to a png file."""
     def execute(self, app):
         export = Exporter(app.view.renderer, app.view.textures.layers[0])

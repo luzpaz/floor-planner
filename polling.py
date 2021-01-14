@@ -6,12 +6,11 @@ from entity_types import EntityType
 from tools import ExportCommand, Loader
 
 class Erasing:
-    """The polling event handler for erasing entities."""
+    """Event handler for erasing entities."""
 
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
         """Allows the user to erase entities simply by clicking them.
-        User does not have to select entities then press the DELETE key.
         """
 
         # Display hint
@@ -23,7 +22,7 @@ class Erasing:
         controller.selected_entities.clear()
 
 class Drawing:
-    """The polling event handler for drawing a regular line."""
+    """Event handler for drawing a regular line."""
 
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
@@ -35,7 +34,7 @@ class Drawing:
         controller.polling = PollingType.SELECTING
 
 class Moving:
-    """The polling event handler for moving an entity."""
+    """Event handler for moving an entity."""
 
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
@@ -87,7 +86,7 @@ class Moving:
                 controller.reset()
         
 class Measuring:
-    """The polling event handler for measuring a line."""
+    """Event handler for measuring a line."""
 
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
@@ -100,7 +99,7 @@ class Measuring:
         
 
 class AddingText:
-    """The polling event handler for adding user text."""
+    """Event handler for adding user text."""
 
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
@@ -117,7 +116,7 @@ class AddingText:
             text.layer = controller.current_layer
      
 class Panning:
-    """The polling event handler for panning the camera."""
+    """Event handler for panning the camera."""
 
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
@@ -127,7 +126,7 @@ class Panning:
         controller.handle_camera_pan(event)
         
 class Zooming:
-    """The polling event handler for zooming the camera.
+    """Event handler for zooming the camera.
     Currently does not add any additional functionality that the user cannot
     do without the poll event, but displays the hint message in case the user
     does not know the hotkeys necessary for zooming the camera.
@@ -141,7 +140,7 @@ class Zooming:
             'Scroll mouse wheel or use +/- on the numpad to zoom the camera.')
 
 class DisplayGrid:
-    """The polling event handler for displaying the drawing grid."""
+    """Event handler for displaying the drawing grid."""
 
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
@@ -152,7 +151,7 @@ class DisplayGrid:
         controller.reset()
 
 class Layers:
-    """The polling event handler for toggling the visibility of the layers
+    """Event handler for toggling the visibility of the layers
     panel on the right side of the screen."""
 
     def handle(self, controller, model, keystate, event,
@@ -163,7 +162,7 @@ class Layers:
         controller.reset()
 
 class Settings:
-    """The polling event handler for toggling the visibility of the settings
+    """Event handler for toggling the visibility of the settings
     panel in the center of the screen."""
 
     def handle(self, controller, model, keystate, event,
@@ -180,7 +179,7 @@ class Settings:
         # controller.settings_panel.visible = True
 
 class Undoing:
-    """The polling event handler for undoing the last action."""
+    """Event handler for undoing the last action."""
 
     # Minimum time required between undos (ms)
     INTERVAL = 150
@@ -209,7 +208,7 @@ class Undoing:
         self.last_undo = sdl2.SDL_GetTicks()
 
 class Redoing:
-    """The polling event handler for redoing the last undo."""
+    """Event handler for redoing the last undo."""
     
     # Minimum time required between redos (ms)
     INTERVAL = 150
@@ -238,7 +237,7 @@ class Redoing:
         self.last_redo = sdl2.SDL_GetTicks()
         
 class Saving:
-    """The polling event handler for saving the model entities to file."""
+    """Event handler for saving the model entities to file."""
 
     # Minimum time required between saves (ms)
     INTERVAL = 1000
@@ -276,7 +275,7 @@ class Saving:
         controller.reset()
 
 class Loading:
-    """The polling event handler for loading the model entities from file."""
+    """Event handler for loading the model entities from file."""
 
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
@@ -305,7 +304,7 @@ class Loading:
         controller.reset()
         
 class WritingInventory:
-    """The polling event handler for exporting the inventory to a txt tile."""
+    """Event handler for exporting the inventory to a txt tile."""
 
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
@@ -317,7 +316,7 @@ class WritingInventory:
         controller.reset()
         
 class Exporting:
-    """The polling event handler for exporting the drawing to png."""
+    """Event handler for exporting the drawing to png."""
 
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
@@ -329,7 +328,7 @@ class Exporting:
         controller.loading = True
         
 class DrawExteriorWall:
-    """The polling event handler for drawing a exterior wall."""
+    """Event handler for drawing a exterior wall."""
 
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
@@ -341,7 +340,7 @@ class DrawExteriorWall:
         controller.polling = PollingType.SELECTING
         
 class DrawInteriorWall:
-    """The polling event handler for drawing a interior wall."""
+    """Event handler for drawing a interior wall."""
 
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
@@ -353,7 +352,7 @@ class DrawInteriorWall:
         controller.polling = PollingType.SELECTING
         
 class DrawWindow:
-    """The polling event handler for drawing a window."""
+    """Event handler for drawing a window."""
 
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
@@ -364,7 +363,7 @@ class DrawWindow:
         controller.polling = PollingType.SELECTING
         
 class DrawDoor:
-    """The polling event handler for drawing a door."""
+    """Event handler for drawing a door."""
 
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
@@ -375,7 +374,7 @@ class DrawDoor:
         controller.polling = PollingType.SELECTING
 
 class SetLayer:
-    """The polling event handler for setting the layer."""
+    """Event handler for setting the layer."""
 
     def __init__(self, layer = 0):
         """Sets the layer for this handler to set to."""
@@ -389,7 +388,7 @@ class SetLayer:
         model.update_needed = True
 
 class RasterizeGraphics:
-    """The polling event handler for changing to rasterized graphics rendering.
+    """Event handler for changing to rasterized graphics rendering.
     """
 
     def handle(self, controller, model, keystate, event,
@@ -399,7 +398,7 @@ class RasterizeGraphics:
         controller.polling = PollingType.SETTINGS
 
 class VectorizeGraphics:
-    """The polling event handler for changing to vectorized graphics rendering.
+    """Event handler for changing to vectorized graphics rendering.
     """
 
     def handle(self, controller, model, keystate, event,

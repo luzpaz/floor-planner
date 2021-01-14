@@ -384,8 +384,6 @@ class Model:
                     interior_walls[line.length] = 1
 
         # Add to inventory string
-
-        # TO DO: Make function for these calls
         for wall in exterior_walls:
             inventory += 'Exterior wall: '\
                 + str(exterior_walls[wall]) + ' x '\

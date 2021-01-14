@@ -1,6 +1,7 @@
 import ctypes, glob, polling, sdl2, threading, unittest, os.path
 
 from app import App
+from camera import Camera
 from controller import Controller, Camera
 from ctypes import c_int, pointer
 from entities import Line, RectangularEntity, Door, Window
