@@ -1,6 +1,9 @@
 import sdl2
 
 class Camera:
+    """Dictates the user's view of the drawing.
+    """
+
     # Regular camera scrolling speed (in/s)
     REGULAR_SCROLL_SPEED = 500
 
@@ -18,7 +21,7 @@ class Camera:
     def scroll(self, keystate):
         """Scrolls the camera up, down, left, or right at normal or fast speed
         depending on the user's keyboard input.
-        :param keystate: SDL keystate for checking if using is pressing SHIFT
+        :param keystate: SDL keystate for checking currently pressed keys
         :type keystate: int[]
         """
         time_elapsed = (sdl2.SDL_GetTicks() - self.last_scrolled) / 1000.0

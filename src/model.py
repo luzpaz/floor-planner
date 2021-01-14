@@ -11,7 +11,7 @@ class Model:
     """Contains the application entities and provides queries on them."""
 
     def __init__(self):
-        """Initializes entity containers.
+        """Initializes the entity containers, factories, and mutexes.
         """
         self.lines = set()
         self.vertices = set()
@@ -25,22 +25,14 @@ class Model:
         self.actions = deque()
         self.undos = deque()
 
-        # Whether the renderer must update the layers
-        self.update_needed = False
-
         self.update_background = threading.Condition()
 
-        # Abstract factories
         self.line_factory = AbstractLineFactory()
 
-        # Mutexes for accessing the sets (for multi-threading)
-        self.mutexes = {}
-        self.mutexes[ModelMutex.LINES] = Lock()
-        self.mutexes[ModelMutex.VERTICES] = Lock()
-        self.mutexes[ModelMutex.WINDOWS] = Lock()
-        self.mutexes[ModelMutex.DOORS] = Lock()
-        self.mutexes[ModelMutex.TEXT] = Lock()
-        self.mutexes[ModelMutex.SQUARE_VERTICES] = Lock()
+        self.init_mutexes()
+
+        # Whether the renderer must update the layers
+        self.update_needed = False
 
     def add_line(self, type, start = (0, 0), end = (0, 0), color = (0, 0, 0)):
         """Adds a line and its vertices to the model.
@@ -426,6 +418,18 @@ class Model:
                 vertex.layer = line.layer
                 self.square_vertices.add(vertex)
 
+    def init_mutexes(self):
+        """Initializes the model mutexes for synchronization
+        of accessing the entity containers.
+        """
+        self.mutexes = {}
+        self.mutexes[ModelMutex.LINES] = Lock()
+        self.mutexes[ModelMutex.VERTICES] = Lock()
+        self.mutexes[ModelMutex.WINDOWS] = Lock()
+        self.mutexes[ModelMutex.DOORS] = Lock()
+        self.mutexes[ModelMutex.TEXT] = Lock()
+        self.mutexes[ModelMutex.SQUARE_VERTICES] = Lock()
+
 class ExteriorWallFactory:
     """Factory for exterior wall."""
     def create(self, start = (0, 0), end = (0, 0), color = (0, 0, 0)):
@@ -471,6 +475,8 @@ class AbstractLineFactory:
 
     def create(self, type, start = (0, 0), end = (0, 0), color = (0, 0, 0)):
         """Creates and returns the line of type.
+        :param type: The type of line to create.
+        :type type: EntityType
         :param start: The starting vertex of the line
         :param end: The ending vertex of the line
         :type start, end: tuple(int, int)

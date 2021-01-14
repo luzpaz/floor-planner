@@ -1,5 +1,7 @@
 from enum import Enum
 
+# Indices used for retrieving textures
+# and creating entities from factories 
 EntityType = Enum(
     'EntityType',
     'NONE\
@@ -38,6 +40,7 @@ EntityType = Enum(
     VECTORIZE\
     LOADING')
 
+# Keys used for accessing mutexes in the model
 ModelMutex = Enum(
     'ModelMutex',
     'LINES\
