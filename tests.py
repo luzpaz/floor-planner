@@ -1,13 +1,14 @@
 import ctypes, glob, polling, sdl2, threading, unittest, os.path
 
 from app import App
-from controller import Controller, Camera, Text, CenterText, Button, Panel,\
-    MessageStack, FPSDisplayer
+from controller import Controller, Camera
 from ctypes import c_int, pointer
 from entities import Line, RectangularEntity, Door, Window
 from entity_types import EntityType
 from model import Model, UserText
+from panels import Button, Panel
 from polling import PollingType
+from text import Text, CenterText, MessageStack, FPSDisplayer
 from tools import Tools, ExportCommand
 from view import View, Textures, FontSize
 
