@@ -394,7 +394,7 @@ class RasterizeGraphics:
     def handle(self, controller, model, keystate, event,
                screen_dimensions, commands):
         """Sets the graphics rendering to rasterized."""
-        controller.rasterize_graphics = True
+        # Not Implemented...
         controller.polling = PollingType.SETTINGS
 
 class VectorizeGraphics:

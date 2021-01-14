@@ -17,9 +17,8 @@ class Controller:
         self.init_text_displayers()
         self.init_panels()
         self.init_handlers()
-
-        # Interval to snap the mouse (px)
-        self.snap_interval = 6
+        self.allow_drag_and_drop()
+        self.reset()
 
         self.current_layer = 0
 
@@ -28,17 +27,10 @@ class Controller:
 
         # Whether to display the drawing grid
         self.display_grid = False
-
-        # Whether to rasterize or vectorize graphics
-        self.rasterize_graphics = True
         
         # Entities moved by the user that need additional adjustments
         # (entity that was moved : entity, new location : tuple(int, int))
         self.moved_entities = set()
-
-        self.allow_drag_and_drop()
-
-        self.reset()
 
     def handle_input(self, model, screen_dimensions, commands = []):
         """Handles user mouse and keyboard input and operates on the model.
@@ -871,6 +863,9 @@ class Controller:
         # Whether the user is moving an entity based on the start or end vertex
         # for a line, or the left/right top/bottom vertex for a door/window
         self.use_start_vertex = True
+
+        # Set to default interval to snap the mouse (px)
+        self.snap_interval = 6
 
         # Calls the abstract reset method for all panels
         for panel in self.panels:
