@@ -1,4 +1,5 @@
-import ctypes, polling, sdl2, threading, unittest, os.path
+import ctypes, sdl2, sys, threading, unittest, os.path
+sys.path.append("..\src")
 
 from app import App
 from camera import Camera

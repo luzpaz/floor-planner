@@ -1,4 +1,5 @@
-import sdl2, unittest
+import sdl2, sys, unittest
+sys.path.append("..\src")
 
 from app import App
 from ctypes import c_int, pointer
@@ -17,7 +18,7 @@ class TexturesTests(unittest.TestCase):
         """
         TexturesTests.app.view.textures.textures[0]\
             = TexturesTests.app.view.textures.create(
-            TexturesTests.app.view.renderer, b'textures/test.png')
+            TexturesTests.app.view.renderer, b'../res/textures/test.png')
 
         texture = TexturesTests.app.view.textures.get(0)
         self.assertIsNotNone(texture)

@@ -1,9 +1,10 @@
-import glob, polling, sdl2, unittest, os.path
+import glob, sdl2, sys, unittest, os.path
+sys.path.append("..\src")
 
 from app import App
 from entities import Line, RectangularEntity, Door, Window
 from entity_types import EntityType
-from polling import PollingType
+from polling import AddingText, AddAction, DeleteAction, PollingType
 from text import CenterText, MessageStack, FPSDisplayer
 from tools import ExportCommand
 
@@ -48,7 +49,7 @@ class PollingTests(unittest.TestCase):
         keystate = sdl2.SDL_GetKeyboardState(None)
         keystate[sdl2.SDL_SCANCODE_RETURN] = 1
 
-        handler = polling.AddingText()
+        handler = AddingText()
         handler.handle(app.controller, app.model, keystate, None, (0, 0), [])
         self.assertEqual(len(app.model.user_text), 1)
         
@@ -148,7 +149,7 @@ class PollingTests(unittest.TestCase):
         app = App()
         
         line = Line()
-        app.model.undos.append(polling.AddAction(line))
+        app.model.undos.append(AddAction(line))
         app.model.lines.add(line)
 
         app.controller.handlers[PollingType.REDOING].last_redo = -5000
@@ -180,7 +181,7 @@ class PollingTests(unittest.TestCase):
         app = App()
         
         line = Line()
-        app.model.undos.append(polling.DeleteAction(line))
+        app.model.undos.append(DeleteAction(line))
         app.model.lines.add(line)
 
         app.controller.handlers[PollingType.REDOING].last_redo = -5000
@@ -223,7 +224,7 @@ class PollingTests(unittest.TestCase):
         app = App()
         
         app.controller.polling = PollingType.LOADING
-        app.controller.load_filename = 'test.pkl'
+        app.controller.load_filename = '../res/test.pkl'
         app.controller.handle_input(app.model, (1920, 1080), [])
         
         self.assertEqual(len(app.model.lines), 4)

@@ -1,4 +1,5 @@
-import sdl2, unittest
+import sdl2, sys, unittest
+sys.path.append("..\src")
 
 from entities import Line, RectangularEntity, Door, Window
 from entity_types import EntityType

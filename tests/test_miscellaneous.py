@@ -1,4 +1,5 @@
-import unittest, os.path
+import sys, unittest, os.path
+sys.path.append("..\src")
 
 from app import App
 from controller import Controller
@@ -41,7 +42,7 @@ class AppTests(unittest.TestCase):
     def test_loading(self):
         """Ensure app can load entities into the model from a save file.
         """
-        app = App('test.pkl')
+        app = App('../res/test.pkl')
         self.assertEqual(len(app.model.lines), 4)
         self.assertEqual(len(app.model.windows), 2)
         self.assertEqual(len(app.model.doors), 1)

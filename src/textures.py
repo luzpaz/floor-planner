@@ -43,69 +43,69 @@ class Textures:
 
         # Create textures from png files in textures directory
         self.textures[EntityType.BUTTON_PANEL.value] = self.create(
-            renderer, b'textures/button_panel.png')
+            renderer, b'../res/textures/button_panel.png')
         
         self.textures[EntityType.BUTTON_BACKGROUND.value] = self.create(
-            renderer, b'textures/button.png')
+            renderer, b'../res/textures/button.png')
         self.textures[EntityType.SELECTED_BUTTON.value] = self.create(
-            renderer, b'textures/button_alternate.png')
+            renderer, b'../res/textures/button_alternate.png')
 
         self.textures[EntityType.SELECT_BUTTON.value] = self.create(
-            renderer, b'textures/select_button.png')
+            renderer, b'../res/textures/select_button.png')
         self.textures[EntityType.ERASE_BUTTON.value] = self.create(
-            renderer, b'textures/erase_button.png')
+            renderer, b'../res/textures/erase_button.png')
         self.textures[EntityType.DRAW_BUTTON.value] = self.create(
-            renderer, b'textures/draw_button.png')
+            renderer, b'../res/textures/draw_button.png')
         self.textures[EntityType.MOVE_BUTTON.value] = self.create(
-            renderer, b'textures/move_button.png')
+            renderer, b'../res/textures/move_button.png')
         self.textures[EntityType.MEASURE_BUTTON.value] = self.create(
-            renderer, b'textures/measure_button.png')
+            renderer, b'../res/textures/measure_button.png')
         self.textures[EntityType.ADD_TEXT_BUTTON.value] = self.create(
-            renderer, b'textures/add_text_button.png')
+            renderer, b'../res/textures/add_text_button.png')
         self.textures[EntityType.PAN_BUTTON.value] = self.create(
-            renderer, b'textures/pan_button.png')
+            renderer, b'../res/textures/pan_button.png')
         self.textures[EntityType.ZOOM_BUTTON.value] = self.create(
-            renderer, b'textures/zoom_button.png')
+            renderer, b'../res/textures/zoom_button.png')
         self.textures[EntityType.GRID_BUTTON.value] = self.create(
-            renderer, b'textures/grid_button.png')
+            renderer, b'../res/textures/grid_button.png')
         self.textures[EntityType.LAYERS_BUTTON.value] = self.create(
-            renderer, b'textures/layers_button.png')
+            renderer, b'../res/textures/layers_button.png')
         self.textures[EntityType.SETTINGS_BUTTON.value] = self.create(
-            renderer, b'textures/settings_button.png')
+            renderer, b'../res/textures/settings_button.png')
         self.textures[EntityType.UNDO_BUTTON.value] = self.create(
-            renderer, b'textures/undo_button.png')
+            renderer, b'../res/textures/undo_button.png')
         self.textures[EntityType.REDO_BUTTON.value] = self.create(
-            renderer, b'textures/redo_button.png')
+            renderer, b'../res/textures/redo_button.png')
         self.textures[EntityType.SAVE_BUTTON.value] = self.create(
-            renderer, b'textures/save_button.png')
+            renderer, b'../res/textures/save_button.png')
         self.textures[EntityType.LOAD_BUTTON.value] = self.create(
-            renderer, b'textures/load_button.png')
+            renderer, b'../res/textures/load_button.png')
         self.textures[EntityType.INVENTORY_BUTTON.value] = self.create(
-            renderer, b'textures/inventory_button.png')
+            renderer, b'../res/textures/inventory_button.png')
         self.textures[EntityType.EXPORT_BUTTON.value] = self.create(
-            renderer, b'textures/export_button.png')
+            renderer, b'../res/textures/export_button.png')
         self.textures[EntityType.EXIT_BUTTON.value] = self.create(
-            renderer, b'textures/exit_button.png')
+            renderer, b'../res/textures/exit_button.png')
 
         self.textures[EntityType.EXTERIOR_WALL_BUTTON.value] = self.create(
-            renderer, b'textures/exterior_wall_button.png')
+            renderer, b'../res/textures/exterior_wall_button.png')
         self.textures[EntityType.INTERIOR_WALL_BUTTON.value] = self.create(
-            renderer, b'textures/interior_wall_button.png')
+            renderer, b'../res/textures/interior_wall_button.png')
         self.textures[EntityType.WINDOW_BUTTON.value] = self.create(
-            renderer, b'textures/window_button.png')
+            renderer, b'../res/textures/window_button.png')
         self.textures[EntityType.DOOR_BUTTON.value] = self.create(
-            renderer, b'textures/door_button.png')
+            renderer, b'../res/textures/door_button.png')
 
         self.textures[EntityType.LAYER.value] = self.create(
-            renderer, b'textures/layer.png')
+            renderer, b'../res/textures/layer.png')
 
         self.textures[EntityType.RASTERIZE.value] = self.create(
-            renderer, b'textures/rasterize.png')
+            renderer, b'../res/textures/rasterize.png')
         self.textures[EntityType.VECTORIZE.value] = self.create(
-            renderer, b'textures/vectorize.png')
+            renderer, b'../res/textures/vectorize.png')
 
         self.textures[EntityType.LOADING.value] = self.create(
-            renderer, b'textures/loading.png')
+            renderer, b'../res/textures/loading.png')
 
         # Get maximum texture size
         info = sdl2.SDL_RendererInfo()
